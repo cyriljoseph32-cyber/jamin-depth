@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { sanitizeMessages, buildSystemPrompt, ASSISTANT } from "./assistant";
-import { SITE } from "@/content/site";
+import { SITE, DIVE_CENTER } from "@/content/site";
 
 describe("sanitizeMessages", () => {
   it("drops non-array input", () => {
@@ -62,5 +62,13 @@ describe("buildSystemPrompt", () => {
     expect(prompt.toLowerCase()).toContain("never invent");
     expect(prompt.toLowerCase()).toContain("padi");
     expect(prompt.toLowerCase()).toContain("prices");
+  });
+
+  it("knows the Discovery Divers course lineup but holds no prices", () => {
+    expect(prompt).toContain(DIVE_CENTER.name);
+    expect(prompt.toLowerCase()).toContain("open water");
+    expect(prompt.toLowerCase()).toContain("discover scuba");
+    // Must not itself claim to be a PADI school.
+    expect(prompt.toLowerCase()).toContain("not claim");
   });
 });

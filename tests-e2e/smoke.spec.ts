@@ -71,6 +71,17 @@ test("assistant widget opens and degrades gracefully without a key", async ({ pa
   await expect(dialog.getByText(/assistant isn't configured|WhatsApp/i).last()).toBeVisible();
 });
 
+test("diving page lists PADI courses and links to Discovery Divers", async ({ page }) => {
+  await page.goto("/diving");
+  await expect(page.getByRole("heading", { name: /PADI courses/i })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Open Water", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Discover Scuba Diving/i })).toBeVisible();
+
+  const link = page.getByRole("link", { name: /see courses & prices/i });
+  await expect(link).toHaveAttribute("href", /discoverydivers\.com/);
+  await expect(link).toHaveAttribute("rel", /noopener/);
+});
+
 test("404 page is branded", async ({ page }) => {
   const res = await page.goto("/this-does-not-exist");
   expect(res?.status()).toBe(404);

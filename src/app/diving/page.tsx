@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { t } from "@/content/i18n";
+import { DIVE_CENTER } from "@/content/site";
 import { pageMetadata } from "@/lib/metadata";
 import { PageHeader } from "@/components/site/PageHeader";
 import { Section } from "@/components/ui/Section";
@@ -7,7 +8,7 @@ import { Kicker } from "@/components/ui/Kicker";
 import { Reveal } from "@/components/ui/Reveal";
 import { MediaSlot } from "@/components/ui/MediaSlot";
 import { ButtonLink } from "@/components/ui/Button";
-import { WhatsAppIcon } from "@/components/ui/Icons";
+import { WhatsAppIcon, ArrowIcon } from "@/components/ui/Icons";
 import { buildWaLink, divingPrefill } from "@/lib/whatsapp";
 
 export const metadata: Metadata = pageMetadata({
@@ -46,6 +47,62 @@ export default function DivingPage() {
             </Reveal>
           </div>
         </div>
+      </Section>
+
+      {/* Courses — with Discovery Divers */}
+      <Section id="courses" className="hairline-top">
+        <Reveal>
+          <Kicker>{d.coursesKicker}</Kicker>
+          <h2 className="mt-5 max-w-3xl text-balance text-4xl sm:text-5xl">{d.coursesTitle}</h2>
+          <p className="mt-5 max-w-2xl text-pretty text-foam-dim">{d.coursesIntro}</p>
+        </Reveal>
+
+        <div className="mt-10 grid gap-4 sm:grid-cols-2">
+          {d.courses.map((course, i) => (
+            <Reveal key={course.code} delay={i * 60} as="article">
+              <div className="flex h-full flex-col rounded-[var(--radius)] border border-foam/10 bg-abyss-2/50 p-6">
+                <div className="flex items-center justify-between gap-3">
+                  <span
+                    className={`font-mono text-[0.6rem] uppercase tracking-[0.16em] ${
+                      course.cert ? "text-signal" : "text-sand-dim"
+                    }`}
+                  >
+                    {course.cert ? d.certBadge : d.noCertBadge}
+                  </span>
+                  <span className="font-mono text-[0.62rem] uppercase tracking-[0.14em] text-sand-dim">
+                    {course.duration}
+                  </span>
+                </div>
+                <h3 className="mt-3 text-2xl text-foam">{course.name}</h3>
+                <p className="mt-2 flex-1 text-sm text-foam-dim">{course.summary}</p>
+                {course.priceFrom ? (
+                  <p className="mt-4 font-mono text-sm text-foam">
+                    <span className="text-sand-dim">from</span> {course.priceFrom}
+                  </p>
+                ) : null}
+              </div>
+            </Reveal>
+          ))}
+        </div>
+
+        <Reveal>
+          <p className="mt-8 max-w-3xl border-l-2 border-signal/60 pl-5 text-sm text-sand">
+            {d.coursesDisclaimer}
+          </p>
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+            <ButtonLink href={DIVE_CENTER.pricingUrl} variant="primary" size="lg">
+              {d.coursesCtaLabel}
+              <ArrowIcon width={16} height={16} />
+            </ButtonLink>
+            <ButtonLink href={buildWaLink(divingPrefill())} variant="outline" size="lg">
+              <WhatsAppIcon width={18} height={18} />
+              {t.nav.askDiving}
+            </ButtonLink>
+          </div>
+          <p className="mt-4 font-mono text-[0.62rem] uppercase tracking-[0.16em] text-sand-dim">
+            {DIVE_CENTER.status} · {DIVE_CENTER.name}
+          </p>
+        </Reveal>
       </Section>
 
       {/* Preparation */}

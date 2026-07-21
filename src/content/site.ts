@@ -26,6 +26,24 @@ export const SITE = {
   },
 } as const;
 
+/**
+ * Dive-course partner. Diving courses are delivered WITH Discovery Divers
+ * Koh Samui, where the diver is a PADI instructor. Facts below are the ones
+ * verified from Discovery Divers' own public pages — nothing invented.
+ * Prices are NOT hardcoded (their site blocks fetching); we link out for
+ * current, accurate pricing instead.
+ */
+export const DIVE_CENTER = {
+  name: "Discovery Divers Koh Samui",
+  shortName: "Discovery Divers",
+  status: "PADI 5-Star Dive Center",
+  note: "Koh Samui's longest-operating dive centre (25+ years)",
+  instructorRole: "PADI instructor",
+  url: "https://discoverydivers.com",
+  coursesUrl: "https://discoverydivers.com/dive-courses/",
+  pricingUrl: "https://discoverydivers.com/pricing",
+} as const;
+
 export const NAV: ReadonlyArray<{ href: string; label: string }> = [
   { href: "/recovery", label: "Recovery" },
   { href: "/diving", label: "Diving" },

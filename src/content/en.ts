@@ -33,8 +33,14 @@ export const en = {
     diving: {
       title: "Diving in Koh Samui",
       description:
-        "Dive Koh Samui with a local diver who knows the water. Honest, personal, respectful of the marine environment. Ask about diving on WhatsApp.",
-      keywords: ["diving Koh Samui", "diver Koh Samui", "dive Koh Samui"],
+        "Dive Koh Samui with a local diver who knows the water. PADI courses with Discovery Divers Koh Samui — Discover Scuba, Open Water and beyond. Honest, personal, respectful of the sea.",
+      keywords: [
+        "diving Koh Samui",
+        "diver Koh Samui",
+        "dive Koh Samui",
+        "PADI diving courses Koh Samui",
+        "learn to dive Koh Samui",
+      ],
     },
     about: {
       title: "About the Diver",
@@ -197,6 +203,60 @@ export const en = {
       "Look, don't touch. Take nothing but pictures, leave nothing behind. Keep off the reef, keep your distance from marine life, and let the water stay exactly as wild as it is.",
     ctaTitle: "Curious about diving here?",
     ctaBody: "Ask anything — conditions, experience needed, how a day looks. One message and we'll talk.",
+
+    coursesKicker: "Learn to dive",
+    coursesTitle: "PADI courses — with Discovery Divers",
+    coursesIntro:
+      "Want a certification, not just a taster? Courses run with Discovery Divers Koh Samui — a PADI 5-Star centre and the island's longest-running dive shop (25+ years) — where the diver behind Jammin's Depths teaches. Same water, same honest, unhurried approach.",
+    coursesDisclaimer:
+      "Courses are booked and run through Discovery Divers. Scuba equipment is included; exact prices and availability are confirmed at booking — see current prices on their site.",
+    coursesCtaLabel: "See courses & prices",
+    certBadge: "Certification",
+    noCertBadge: "No certification",
+    /**
+     * Verified PADI course lineup offered with Discovery Divers Koh Samui.
+     * `priceFrom` is intentionally empty — their site blocks fetching, so no
+     * price is invented. Set an exact "from ฿X" string here once the owner
+     * confirms current prices; the UI shows it automatically.
+     */
+    courses: [
+      {
+        code: "DSD",
+        name: "Discover Scuba Diving",
+        cert: false,
+        duration: "1 day",
+        summary:
+          "A guided first breath underwater — no experience and no certification needed. The simplest way to find out if diving is for you.",
+        priceFrom: undefined as string | undefined,
+      },
+      {
+        code: "OW",
+        name: "Open Water",
+        cert: true,
+        duration: "3–4 days",
+        summary:
+          "The core entry-level certification. Learn the skills to plan and make your own dives, over three or four days.",
+        priceFrom: undefined as string | undefined,
+      },
+      {
+        code: "AOW",
+        name: "Advanced Open Water",
+        cert: true,
+        duration: "2 days",
+        summary:
+          "Five adventure dives across two days — including a Deep dive and Underwater Navigation, plus three you choose.",
+        priceFrom: undefined as string | undefined,
+      },
+      {
+        code: "SPEC",
+        name: "Specialty courses",
+        cert: true,
+        duration: "Varies",
+        summary:
+          "Go deeper on what you love — from navigation to deep and more. Ask what's running and we'll point you the right way.",
+        priceFrom: undefined as string | undefined,
+      },
+    ],
   },
 
   about: {
@@ -214,12 +274,13 @@ export const en = {
       { title: "Honest", body: "We tell you what's possible before we start, not after." },
     ],
     /**
-     * Owner-editable credential block. These are placeholders the owner should
-     * confirm and fill in with verified facts. They are NOT presented as fact.
+     * Background. The Discovery Divers affiliation below is the owner-provided,
+     * verified fact used to feature diving courses. Adjust wording as preferred;
+     * add further roles/experience only when confirmed.
      */
     credentialsTitle: "Background",
     credentialsNote:
-      "Verified background details go here once confirmed by the owner (for example roles, experience or affiliations). This block is intentionally left for authentic information only.",
+      "PADI instructor at Discovery Divers Koh Samui — a PADI 5-Star Dive Center and the island's longest-running dive shop. Diving courses are taught and booked through Discovery Divers; underwater recovery is Jammin's Depths' own work.",
     portraitCaption: "Authentic photo of the diver — ready to drop in.",
   },
 
