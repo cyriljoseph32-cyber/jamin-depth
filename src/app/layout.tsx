@@ -6,6 +6,7 @@ import { t } from "@/content/i18n";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { WhatsAppFab } from "@/components/site/WhatsAppFab";
+import { ChatWidget } from "@/components/assistant/ChatWidget";
 import { DepthBackground } from "@/components/visuals/DepthBackground";
 import { professionalServiceJsonLd, websiteJsonLd } from "@/lib/seo";
 
@@ -88,6 +89,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </main>
         <Footer />
         <WhatsAppFab />
+        <ChatWidget />
       </body>
     </html>
   );

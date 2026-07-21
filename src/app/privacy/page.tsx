@@ -45,6 +45,15 @@ export default function PrivacyPage() {
             </p>
           </div>
           <div>
+            <h2 className="text-2xl text-foam">AI assistant</h2>
+            <p className="mt-3">
+              The optional chat assistant sends your messages to our AI provider (Anthropic) purely to generate a
+              reply — nothing more. The conversation is kept only in your browser for the current session and is
+              cleared when you close the tab; it isn&apos;t saved on our servers. Please don&apos;t share sensitive
+              personal details in the chat — for a real request, message us on WhatsApp.
+            </p>
+          </div>
+          <div>
             <h2 className="text-2xl text-foam">Photos</h2>
             <p className="mt-3">
               If you pick a photo in the recovery form, it stays on your device — it&apos;s only used to help you

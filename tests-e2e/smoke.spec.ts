@@ -55,6 +55,22 @@ test("contact page exposes tel and wa links", async ({ page }) => {
   await expect(page.locator(`main a[href*="${WA}"]`).first()).toBeVisible();
 });
 
+test("assistant widget opens and degrades gracefully without a key", async ({ page }) => {
+  await page.goto("/");
+  const launcher = page.getByRole("button", { name: /open the assistant/i });
+  await expect(launcher).toBeVisible();
+  await launcher.click();
+
+  const dialog = page.getByRole("dialog", { name: /assistant/i });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByText(/Jammin's Depths assistant/i)).toBeVisible();
+
+  // Sending with no ANTHROPIC_API_KEY configured returns a friendly 503 message.
+  await page.fill("#jd-chat-input", "I lost my ring off a boat");
+  await page.getByRole("button", { name: /send message/i }).click();
+  await expect(dialog.getByText(/assistant isn't configured|WhatsApp/i).last()).toBeVisible();
+});
+
 test("404 page is branded", async ({ page }) => {
   const res = await page.goto("/this-does-not-exist");
   expect(res?.status()).toBe(404);
