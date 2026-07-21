@@ -64,10 +64,13 @@ describe("buildSystemPrompt", () => {
     expect(prompt.toLowerCase()).toContain("prices");
   });
 
-  it("knows the Discovery Divers course lineup but holds no prices", () => {
+  it("knows the Discovery Divers courses, trips and prices", () => {
     expect(prompt).toContain(DIVE_CENTER.name);
     expect(prompt.toLowerCase()).toContain("open water");
     expect(prompt.toLowerCase()).toContain("discover scuba");
+    expect(prompt.toLowerCase()).toContain("sail rock");
+    expect(prompt).toContain("฿17,900");
+    expect(prompt).toContain("฿4,550");
     // Must not itself claim to be a PADI school.
     expect(prompt.toLowerCase()).toContain("not claim");
   });

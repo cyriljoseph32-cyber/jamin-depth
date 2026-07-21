@@ -105,6 +105,39 @@ export default function DivingPage() {
         </Reveal>
       </Section>
 
+      {/* Fun dives & trips */}
+      <Section id="trips" className="hairline-top">
+        <Reveal>
+          <Kicker>{d.tripsKicker}</Kicker>
+          <h2 className="mt-5 max-w-3xl text-balance text-4xl sm:text-5xl">{d.tripsTitle}</h2>
+          <p className="mt-5 max-w-2xl text-pretty text-foam-dim">{d.tripsIntro}</p>
+        </Reveal>
+        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {d.trips.map((trip, i) => (
+            <Reveal key={trip.name} delay={i * 60} as="article">
+              <div className="flex h-full flex-col justify-between rounded-[var(--radius)] border border-foam/10 bg-abyss-2/50 p-5">
+                <div>
+                  <h3 className="text-xl text-foam">{trip.name}</h3>
+                  <p className="mt-1 font-mono text-[0.6rem] uppercase tracking-[0.16em] text-sand-dim">
+                    {trip.detail}
+                  </p>
+                </div>
+                <p className="mt-6 font-mono text-lg text-signal">{trip.price}</p>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+        <Reveal>
+          <p className="mt-8 max-w-3xl border-l-2 border-signal/60 pl-5 text-sm text-sand">{d.tripsNote}</p>
+          <div className="mt-8">
+            <ButtonLink href={buildWaLink(divingPrefill())} variant="primary" size="lg">
+              <WhatsAppIcon width={18} height={18} />
+              {t.nav.askDiving}
+            </ButtonLink>
+          </div>
+        </Reveal>
+      </Section>
+
       {/* Preparation */}
       <Section className="hairline-top">
         <Reveal>

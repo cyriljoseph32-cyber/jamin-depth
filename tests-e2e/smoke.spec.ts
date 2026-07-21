@@ -77,6 +77,12 @@ test("diving page lists PADI courses and links to Discovery Divers", async ({ pa
   await expect(page.getByRole("heading", { name: "Open Water", exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { name: /Discover Scuba Diving/i })).toBeVisible();
 
+  // Real prices render on courses and fun-dive trips.
+  await expect(page.getByText(/17,900/).first()).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Fun dives/i })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Sail Rock", exact: true })).toBeVisible();
+  await expect(page.getByText(/4,550/).first()).toBeVisible();
+
   const link = page.getByRole("link", { name: /see courses & prices/i });
   await expect(link).toHaveAttribute("href", /discoverydivers\.com/);
   await expect(link).toHaveAttribute("rel", /noopener/);

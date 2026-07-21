@@ -209,15 +209,14 @@ export const en = {
     coursesIntro:
       "Want a certification, not just a taster? Courses run with Discovery Divers Koh Samui — a PADI 5-Star centre and the island's longest-running dive shop (25+ years) — where the diver behind Jammin's Depths teaches. Same water, same honest, unhurried approach.",
     coursesDisclaimer:
-      "Courses are booked and run through Discovery Divers. Scuba equipment is included; exact prices and availability are confirmed at booking — see current prices on their site.",
+      "Courses are booked and run through Discovery Divers. Scuba equipment is included; prices are per person, subject to change and confirmed at booking.",
     coursesCtaLabel: "See courses & prices",
     certBadge: "Certification",
     noCertBadge: "No certification",
     /**
-     * Verified PADI course lineup offered with Discovery Divers Koh Samui.
-     * `priceFrom` is intentionally empty — their site blocks fetching, so no
-     * price is invented. Set an exact "from ฿X" string here once the owner
-     * confirms current prices; the UI shows it automatically.
+     * PADI course lineup offered with Discovery Divers Koh Samui.
+     * Prices are owner-provided (Discovery Divers' current rates); update the
+     * `priceFrom` strings if they change. Specialty is left "on request".
      */
     courses: [
       {
@@ -227,7 +226,7 @@ export const en = {
         duration: "1 day",
         summary:
           "A guided first breath underwater — no experience and no certification needed. The simplest way to find out if diving is for you.",
-        priceFrom: undefined as string | undefined,
+        priceFrom: "฿5,850",
       },
       {
         code: "OW",
@@ -236,7 +235,7 @@ export const en = {
         duration: "3–4 days",
         summary:
           "The core entry-level certification. Learn the skills to plan and make your own dives, over three or four days.",
-        priceFrom: undefined as string | undefined,
+        priceFrom: "฿17,900",
       },
       {
         code: "AOW",
@@ -245,7 +244,7 @@ export const en = {
         duration: "2 days",
         summary:
           "Five adventure dives across two days — including a Deep dive and Underwater Navigation, plus three you choose.",
-        priceFrom: undefined as string | undefined,
+        priceFrom: "฿13,900",
       },
       {
         code: "SPEC",
@@ -256,6 +255,19 @@ export const en = {
           "Go deeper on what you love — from navigation to deep and more. Ask what's running and we'll point you the right way.",
         priceFrom: undefined as string | undefined,
       },
+    ],
+
+    tripsKicker: "Already certified?",
+    tripsTitle: "Fun dives & day trips.",
+    tripsIntro:
+      "Got your card? Jump on the boat with Discovery Divers to the region's best water — the famous Sail Rock pinnacle, Koh Tao and Chumphon — or just come along to snorkel.",
+    tripsNote:
+      "Prices are per person with Discovery Divers — equipment included, subject to change and confirmed at booking.",
+    trips: [
+      { name: "Sail Rock", detail: "Fun dive", price: "฿4,550" },
+      { name: "Koh Tao", detail: "2 dives", price: "฿4,850" },
+      { name: "Chumphon Pinnacle", detail: "Certified divers", price: "฿5,050" },
+      { name: "Snorkelling", detail: "All sites", price: "฿2,450" },
     ],
   },
 
