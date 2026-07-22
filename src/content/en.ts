@@ -11,7 +11,7 @@ export const en = {
     home: {
       title: "Diving in Koh Samui — Courses, Fun Dives & Underwater Recovery",
       description:
-        "Dive Koh Samui with a local PADI instructor — courses with Discovery Divers, fun dives to Sail Rock and beyond, plus professional underwater recovery when something's lost in the water.",
+        "Dive the Gulf of Thailand from Koh Samui with a local PADI instructor — courses with Discovery Divers, fun dives to Sail Rock and beyond, plus professional underwater recovery when something's lost in the water.",
       keywords: [
         "diving Koh Samui",
         "PADI diving courses Koh Samui",
@@ -35,7 +35,7 @@ export const en = {
     diving: {
       title: "Diving in Koh Samui",
       description:
-        "Dive Koh Samui with a local diver who knows the water. PADI courses with Discovery Divers Koh Samui — Discover Scuba, Open Water and beyond. Honest, personal, respectful of the sea.",
+        "Dive the Gulf of Thailand from Koh Samui with a local diver who knows the water. PADI courses with Discovery Divers — Discover Scuba, Open Water and beyond. Honest, personal, respectful of the sea.",
       keywords: [
         "diving Koh Samui",
         "diver Koh Samui",
@@ -74,10 +74,10 @@ export const en = {
 
   home: {
     heroKicker: "Diving · Underwater Recovery · Koh Samui",
-    heroTitle: "Dive Koh Samui with someone who knows the water.",
+    heroTitle: "Dive the Gulf of Thailand with someone who knows the water.",
     heroSlogan: SITE.slogan,
     heroLead:
-      "Personal PADI courses and fun dives with a local instructor who keeps it honest and unhurried — plus professional underwater recovery when something's gone over the side.",
+      "Personal PADI courses and fun dives out of Koh Samui — to the Gulf of Thailand's best sites like Sail Rock, honest and unhurried. Plus professional underwater recovery when something's gone over the side.",
     recoveryLink: "Lost something in the water? Underwater recovery",
     badges: ["PADI courses", "Fun dives", "Koh Samui"],
     worldsKicker: "Two worlds, one diver",
@@ -176,10 +176,10 @@ export const en = {
   },
 
   diving: {
-    heroKicker: "Diving · Koh Samui",
-    heroTitle: "Dive Koh Samui with someone who knows the water.",
+    heroKicker: "Diving · Gulf of Thailand · Koh Samui",
+    heroTitle: "Dive the Gulf of Thailand with someone who knows the water.",
     heroLead:
-      "Not a conveyor-belt dive centre. A personal, honest way into the underwater world around Koh Samui — at your pace, on your questions.",
+      "Not a conveyor-belt dive centre. A personal, honest way into the Gulf of Thailand's underwater world — diving out of Koh Samui, at your pace and on your questions.",
     experienceKicker: "The experience",
     experienceTitle: "Quiet, close, real.",
     experienceBody:
