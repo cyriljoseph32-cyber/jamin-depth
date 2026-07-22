@@ -4,8 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { NAV, SITE, tel } from "@/content/site";
 import { t } from "@/content/i18n";
-import { buildWaLink } from "@/lib/whatsapp";
-import { recoveryPrefill } from "@/lib/whatsapp";
+import { buildWaLink, divingPrefill } from "@/lib/whatsapp";
 import { MenuIcon, CloseIcon, WhatsAppIcon, PhoneIcon } from "@/components/ui/Icons";
 
 /** Accessible mobile menu: focus-trap-lite, ESC to close, scroll lock. */
@@ -73,7 +72,7 @@ export function MobileNav() {
 
           <div className="grid grid-cols-2 gap-3 px-6 pb-10">
             <a
-              href={buildWaLink(recoveryPrefill())}
+              href={buildWaLink(divingPrefill())}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center justify-center gap-2 bg-signal px-4 py-4 font-mono text-xs uppercase tracking-[0.14em] text-ink"

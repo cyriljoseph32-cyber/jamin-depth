@@ -4,7 +4,8 @@ const WA = "wa.me/66633753316";
 
 test("home renders hero, slogan and WhatsApp FAB", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("Lost something underwater");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Dive Koh Samui");
+  // Slogan is preserved on the closing recovery band.
   await expect(page.getByText("You drop it. We dive for it.").first()).toBeVisible();
 
   const fab = page.getByRole("link", { name: /request a recovery on whatsapp/i });

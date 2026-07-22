@@ -9,14 +9,16 @@ import { SITE } from "./site";
 export const en = {
   meta: {
     home: {
-      title: "Underwater Recovery & Diving in Koh Samui",
+      title: "Diving in Koh Samui — Courses, Fun Dives & Underwater Recovery",
       description:
-        "Lost something underwater in Koh Samui? Jammin's Depths recovers dropped items from beach, boat or waterfall zones — and dives with you. Direct, local, methodical.",
+        "Dive Koh Samui with a local PADI instructor — courses with Discovery Divers, fun dives to Sail Rock and beyond, plus professional underwater recovery when something's lost in the water.",
       keywords: [
+        "diving Koh Samui",
+        "PADI diving courses Koh Samui",
+        "learn to dive Koh Samui",
+        "diver Koh Samui",
         "underwater recovery Koh Samui",
         "lost item recovery Koh Samui",
-        "diver Koh Samui",
-        "diving Koh Samui",
       ],
     },
     recovery: {
@@ -71,14 +73,15 @@ export const en = {
   },
 
   home: {
-    heroKicker: "Underwater Recovery · Diving · Koh Samui",
-    heroTitle: "Lost something underwater in Koh Samui?",
+    heroKicker: "Diving · Underwater Recovery · Koh Samui",
+    heroTitle: "Dive Koh Samui with someone who knows the water.",
     heroSlogan: SITE.slogan,
     heroLead:
-      "A dropped ring off the boat. A phone gone over the side. A camera on the reef. The moment it sinks, it feels gone for good. It often isn't — that's what we do.",
-    badges: ["Fast response", "Koh Samui", "Professional diver"],
+      "Personal PADI courses and fun dives with a local instructor who keeps it honest and unhurried — plus professional underwater recovery when something's gone over the side.",
+    recoveryLink: "Lost something in the water? Underwater recovery",
+    badges: ["PADI courses", "Fun dives", "Koh Samui"],
     worldsKicker: "Two worlds, one diver",
-    worldsTitle: "Recovery when it matters. Diving when you're ready.",
+    worldsTitle: "Diving when you're ready. Recovery when it matters.",
     recoveryCardTitle: "Underwater Recovery",
     recoveryCardBody:
       "Professional search and recovery of lost objects in the water — from a boat, near a beach, or in certain waterfall zones. Methodical, calm, honest about what's possible.",
@@ -361,7 +364,7 @@ export const en = {
   },
 
   footer: {
-    blurb: "Underwater recovery and diving in Koh Samui, Thailand. Direct, local, methodical.",
+    blurb: "Diving and underwater recovery in Koh Samui, Thailand. Direct, local, methodical.",
     rights: "All rights reserved.",
     builtNote: "Media slots are ready for authentic photos and clips.",
   },

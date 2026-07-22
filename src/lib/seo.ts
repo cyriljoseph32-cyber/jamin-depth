@@ -11,7 +11,7 @@ export function professionalServiceJsonLd() {
     "@type": "ProfessionalService",
     name: SITE.name,
     description:
-      "Underwater recovery and diving in Koh Samui, Thailand. Lost item recovery from beach, boat or certain waterfall zones, plus accompanied diving — direct, local and methodical.",
+      "Diving and underwater recovery in Koh Samui, Thailand. PADI courses with Discovery Divers and fun dives, plus professional recovery of lost objects from beach, boat or certain waterfall zones — direct, local and methodical.",
     slogan: SITE.slogan,
     url: siteUrl(),
     image: `${siteUrl()}/opengraph-image`,
@@ -25,9 +25,11 @@ export function professionalServiceJsonLd() {
     },
     sameAs: [SITE.social.instagram, SITE.social.facebook],
     knowsAbout: [
+      "diving",
+      "PADI courses",
+      "fun dives",
       "underwater recovery",
       "lost item recovery",
-      "diving",
       "Koh Samui",
     ],
   };

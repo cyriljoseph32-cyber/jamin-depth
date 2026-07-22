@@ -7,7 +7,7 @@
 export const SITE = {
   name: "Jammin's Depths",
   legalName: "Jammin's Depths",
-  tagline: "Underwater Recovery & Diving",
+  tagline: "Diving & Underwater Recovery",
   slogan: "You drop it. We dive for it.",
   location: "Koh Samui, Thailand",
   /** Only a public area is claimed — no exact address or map pin (none verified). */
@@ -45,8 +45,8 @@ export const DIVE_CENTER = {
 } as const;
 
 export const NAV: ReadonlyArray<{ href: string; label: string }> = [
-  { href: "/recovery", label: "Recovery" },
   { href: "/diving", label: "Diving" },
+  { href: "/recovery", label: "Recovery" },
   { href: "/about", label: "About" },
   { href: "/contact", label: "Contact" },
 ];

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { NAV } from "@/content/site";
 import { t } from "@/content/i18n";
-import { buildWaLink, recoveryPrefill } from "@/lib/whatsapp";
+import { buildWaLink, divingPrefill } from "@/lib/whatsapp";
 import { Logo } from "./Logo";
 import { MobileNav } from "./MobileNav";
 import { WhatsAppIcon } from "@/components/ui/Icons";
@@ -29,13 +29,13 @@ export function Header() {
 
         <div className="flex items-center gap-2">
           <a
-            href={buildWaLink(recoveryPrefill())}
+            href={buildWaLink(divingPrefill())}
             target="_blank"
             rel="noopener noreferrer"
             className="hidden items-center gap-2 bg-signal px-4 py-2.5 font-mono text-xs uppercase tracking-[0.14em] text-ink transition-colors hover:bg-signal-600 sm:inline-flex"
           >
             <WhatsAppIcon width={16} height={16} />
-            {t.nav.requestRecovery}
+            {t.nav.askDiving}
           </a>
           <MobileNav />
         </div>

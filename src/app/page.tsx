@@ -35,18 +35,18 @@ export default function HomePage() {
         <div className="mt-12 grid gap-6 lg:grid-cols-2">
           {[
             {
-              title: h.recoveryCardTitle,
-              body: h.recoveryCardBody,
-              cta: h.recoveryCardCta,
-              href: "/recovery",
-              label: "Field frame 01 — recovery dive · @granola51",
-            },
-            {
               title: h.divingCardTitle,
               body: h.divingCardBody,
               cta: h.divingCardCta,
               href: "/diving",
-              label: "Field frame 02 — diving · @granola51",
+              label: "Field frame 01 — diving · @granola51",
+            },
+            {
+              title: h.recoveryCardTitle,
+              body: h.recoveryCardBody,
+              cta: h.recoveryCardCta,
+              href: "/recovery",
+              label: "Field frame 02 — recovery dive · @granola51",
             },
           ].map((card, i) => (
             <Reveal key={card.href} delay={i * 80} as="article">
