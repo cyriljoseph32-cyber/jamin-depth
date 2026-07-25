@@ -109,7 +109,7 @@ export const en = {
     galleryKicker: "From the water",
     galleryTitle: "Real dives, real recoveries.",
     galleryNote:
-      "This gallery is reserved for authentic photos and clips from the field. Drop-in slots are ready — nothing here is stock or staged.",
+      "Real dives in the Gulf of Thailand — Sail Rock, the Similan Islands and beyond. Nothing here is stock or staged.",
     finalKicker: "Ready when you are",
     finalTitle: "You drop it. We dive for it.",
     finalBody:
@@ -296,7 +296,7 @@ export const en = {
     credentialsTitle: "Background",
     credentialsNote:
       "PADI instructor at Discovery Divers Koh Samui — a PADI 5-Star Dive Center and the island's longest-running dive shop. Diving courses are taught and booked through Discovery Divers; underwater recovery is Jammin's Depths' own work.",
-    portraitCaption: "Authentic photo of the diver — ready to drop in.",
+    portraitCaption: "The diver · Gulf of Thailand",
   },
 
   contact: {

@@ -40,10 +40,22 @@ export default function DivingPage() {
           </Reveal>
           <div className="grid grid-cols-2 gap-4">
             <Reveal>
-              <MediaSlot label="Underwater · @granola51" ratio="3 / 4" index="D-01" />
+              <MediaSlot
+                label="Fusiliers · Sail Rock"
+                src="/media/fusiliers.jpg"
+                alt="A school of yellow fusiliers over the reef at Sail Rock"
+                ratio="3 / 4"
+                index="D-01"
+              />
             </Reveal>
             <Reveal delay={90} className="pt-10">
-              <MediaSlot label="Descent · @granola51" ratio="3 / 4" index="D-02" />
+              <MediaSlot
+                label="Reef life"
+                src="/media/reef-nudibranch.jpg"
+                alt="Colourful nudibranch on the reef in the Gulf of Thailand"
+                ratio="3 / 4"
+                index="D-02"
+              />
             </Reveal>
           </div>
         </div>

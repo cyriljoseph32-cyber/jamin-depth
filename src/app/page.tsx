@@ -39,14 +39,18 @@ export default function HomePage() {
               body: h.divingCardBody,
               cta: h.divingCardCta,
               href: "/diving",
-              label: "Field frame 01 — diving · @granola51",
+              label: "Diving · Gulf of Thailand",
+              src: "/media/diver.jpg",
+              alt: "Scuba diver with an underwater camera on a reef in the Gulf of Thailand",
             },
             {
               title: h.recoveryCardTitle,
               body: h.recoveryCardBody,
               cta: h.recoveryCardCta,
               href: "/recovery",
-              label: "Field frame 02 — recovery dive · @granola51",
+              label: "Into the blue",
+              src: "/media/barracuda.jpg",
+              alt: "A large school of barracuda in the blue",
             },
           ].map((card, i) => (
             <Reveal key={card.href} delay={i * 80} as="article">
@@ -54,7 +58,14 @@ export default function HomePage() {
                 href={card.href}
                 className="group flex h-full flex-col overflow-hidden rounded-[var(--radius)] border border-foam/10 bg-abyss-2/60 transition-colors hover:border-signal/40"
               >
-                <MediaSlot label={card.label} ratio="16 / 10" index={`0${i + 1}`} className="rounded-none border-0" />
+                <MediaSlot
+                  label={card.label}
+                  src={card.src}
+                  alt={card.alt}
+                  ratio="16 / 10"
+                  index={`0${i + 1}`}
+                  className="rounded-none border-0"
+                />
                 <div className="flex flex-1 flex-col p-7">
                   <h3 className="text-3xl">{card.title}</h3>
                   <p className="mt-3 flex-1 text-pretty text-foam-dim">{card.body}</p>
@@ -98,9 +109,20 @@ export default function HomePage() {
           </Reveal>
         </div>
         <div className="mt-10 grid grid-cols-2 gap-4 lg:grid-cols-4">
-          {["Reef & light", "Recovery in progress", "Surface & boat", "Gear & hands"].map((label, i) => (
-            <Reveal key={label} delay={i * 60}>
-              <MediaSlot label={`${label} · @granola51`} ratio={i % 2 === 0 ? "3 / 4" : "4 / 5"} index={`G-0${i + 1}`} />
+          {[
+            { label: "Reef life · Gulf of Thailand", src: "/media/reef-nudibranch.jpg", alt: "Colourful nudibranch on the reef in the Gulf of Thailand" },
+            { label: "Fusiliers · Sail Rock", src: "/media/fusiliers.jpg", alt: "A school of yellow fusiliers over the reef at Sail Rock" },
+            { label: "Similan Islands", src: "/media/similan-surface.jpg", alt: "The Similan Islands seen from the dive boat" },
+            { label: "Barracuda · Sail Rock", src: "/media/barracuda.jpg", alt: "A school of barracuda in the blue at Sail Rock" },
+          ].map((photo, i) => (
+            <Reveal key={photo.label} delay={i * 60}>
+              <MediaSlot
+                label={photo.label}
+                src={photo.src}
+                alt={photo.alt}
+                ratio={i % 2 === 0 ? "3 / 4" : "4 / 5"}
+                index={`G-0${i + 1}`}
+              />
             </Reveal>
           ))}
         </div>

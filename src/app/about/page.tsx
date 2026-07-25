@@ -53,7 +53,13 @@ export default function AboutPage() {
           </div>
 
           <Reveal delay={80}>
-            <MediaSlot label={a.portraitCaption} ratio="4 / 5" index="PORTRAIT" />
+            <MediaSlot
+              label={a.portraitCaption}
+              src="/media/diver.jpg"
+              alt="The diver behind Jammin's Depths, underwater with a camera in the Gulf of Thailand"
+              ratio="4 / 5"
+              index="PORTRAIT"
+            />
           </Reveal>
         </div>
       </Section>
