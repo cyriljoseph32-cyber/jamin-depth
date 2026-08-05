@@ -87,9 +87,13 @@ export default function DivingPage() {
                 </div>
                 <h3 className="mt-3 text-2xl text-foam">{course.name}</h3>
                 <p className="mt-2 flex-1 text-sm text-foam-dim">{course.summary}</p>
+                {/* Filled chip — priced content is the data that matters most on this page. */}
                 {course.priceFrom ? (
-                  <p className="mt-4 font-mono text-sm text-foam">
-                    <span className="text-sand-dim">from</span> {course.priceFrom}
+                  <p className="mt-4">
+                    <span className="inline-flex items-baseline gap-2 rounded-[var(--radius)] border border-signal/30 bg-signal/10 px-3 py-1.5 font-mono text-sm text-foam">
+                      <span className="text-[0.62rem] uppercase tracking-[0.16em] text-sand-dim">from</span>
+                      {course.priceFrom}
+                    </span>
                   </p>
                 ) : null}
               </div>

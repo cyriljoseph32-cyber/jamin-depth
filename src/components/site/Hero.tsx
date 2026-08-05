@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { t } from "@/content/i18n";
 import { ButtonLink } from "@/components/ui/Button";
 import { Kicker } from "@/components/ui/Kicker";
@@ -10,12 +11,31 @@ export function Hero() {
   const h = t.home;
   return (
     <section className="relative flex min-h-[calc(100svh-4rem)] items-center overflow-hidden">
+      {/* Full-bleed photographic hero. Decorative — the headline carries the meaning. */}
+      <Image
+        src="/brand/diver-bg.jpg"
+        alt=""
+        aria-hidden
+        fill
+        priority
+        sizes="100vw"
+        className="object-cover object-[center_30%]"
+      />
+      {/*
+        Scrim keeps the headline legible over the photo: bottom-up on narrow screens where the
+        crop sits behind the text, diagonal on wide ones so the diver stays visible at right.
+      */}
+      <div
+        aria-hidden
+        className="absolute inset-0 bg-[linear-gradient(to_top,rgba(5,8,13,0.9),rgba(5,8,13,0.35))] sm:bg-[linear-gradient(100deg,rgba(5,8,13,0.92)_30%,rgba(5,8,13,0.55)_65%,rgba(5,8,13,0.25)_100%)]"
+      />
+
       {/* faint sonar sweep, decorative */}
       <SonarRings
         className="pointer-events-none absolute -right-24 top-1/2 hidden h-[36rem] w-[36rem] -translate-y-1/2 text-foam/[0.06] lg:block"
       />
 
-      <div className="mx-auto w-full max-w-6xl px-5 py-20 sm:px-8">
+      <div className="relative z-10 mx-auto w-full max-w-6xl px-5 py-20 sm:px-8">
         <div className="max-w-3xl">
           <Kicker>{h.heroKicker}</Kicker>
 

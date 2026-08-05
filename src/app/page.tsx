@@ -86,9 +86,14 @@ export default function HomePage() {
           <Kicker>{h.reassuranceKicker}</Kicker>
           <h2 className="mt-5 max-w-2xl text-balance text-4xl sm:text-5xl">{h.reassuranceTitle}</h2>
         </Reveal>
-        <div className="mt-12 grid gap-px overflow-hidden rounded-[var(--radius)] border border-foam/10 bg-foam/10 sm:grid-cols-3">
+        {/* Hairline rules, not card islands — the divider is the rhythm. */}
+        <div className="mt-12 grid divide-y divide-foam/10 border-y border-foam/10 sm:grid-cols-3 sm:divide-x sm:divide-y-0 sm:border-b-0">
           {h.reassuranceItems.map((item, i) => (
-            <Reveal key={item.title} delay={i * 80} className="bg-abyss p-7">
+            <Reveal
+              key={item.title}
+              delay={i * 80}
+              className="py-7 sm:px-7 sm:first:pl-0 sm:last:pr-0"
+            >
               <span className="font-mono text-xs tracking-[0.2em] text-sand-dim">0{i + 1}</span>
               <h3 className="mt-4 text-2xl text-foam">{item.title}</h3>
               <p className="mt-3 text-sm text-foam-dim">{item.body}</p>
@@ -108,19 +113,52 @@ export default function HomePage() {
             <p className="text-sm text-foam-dim">{h.galleryNote}</p>
           </Reveal>
         </div>
-        <div className="mt-10 grid grid-cols-2 gap-4 lg:grid-cols-4">
+        {/*
+          Asymmetric mosaic on desktop — the grid rows set the heights, so each slot runs
+          with ratio={null}. Below lg it collapses to a 2-up grid where the wrapper's own
+          aspect ratio takes over instead.
+        */}
+        <div className="mt-10 grid grid-cols-2 gap-1.5 lg:h-[34rem] lg:grid-cols-[1.3fr_1fr_1fr] lg:grid-rows-2">
           {[
-            { label: "Reef life · Gulf of Thailand", src: "/media/reef-nudibranch.jpg", alt: "Colourful nudibranch on the reef in the Gulf of Thailand" },
-            { label: "Fusiliers · Sail Rock", src: "/media/fusiliers.jpg", alt: "A school of yellow fusiliers over the reef at Sail Rock" },
-            { label: "Similan Islands", src: "/media/similan-surface.jpg", alt: "The Similan Islands seen from the dive boat" },
-            { label: "Barracuda · Sail Rock", src: "/media/barracuda.jpg", alt: "A school of barracuda in the blue at Sail Rock" },
+            {
+              label: "Reef life · Gulf of Thailand",
+              src: "/media/reef-nudibranch.jpg",
+              alt: "Colourful nudibranch on the reef in the Gulf of Thailand",
+              aspect: "aspect-[3/4]",
+              place: "lg:col-start-1 lg:row-start-1 lg:row-span-2",
+            },
+            {
+              label: "Fusiliers · Sail Rock",
+              src: "/media/fusiliers.jpg",
+              alt: "A school of yellow fusiliers over the reef at Sail Rock",
+              aspect: "aspect-[4/5]",
+              place: "lg:col-start-2 lg:row-start-1",
+            },
+            {
+              label: "Similan Islands",
+              src: "/media/similan-surface.jpg",
+              alt: "The Similan Islands seen from the dive boat",
+              aspect: "aspect-[3/4]",
+              place: "lg:col-start-3 lg:row-start-1",
+            },
+            {
+              label: "Barracuda · Sail Rock",
+              src: "/media/barracuda.jpg",
+              alt: "A school of barracuda in the blue at Sail Rock",
+              aspect: "aspect-[4/5]",
+              place: "lg:col-start-2 lg:col-span-2 lg:row-start-2",
+            },
           ].map((photo, i) => (
-            <Reveal key={photo.label} delay={i * 60}>
+            <Reveal
+              key={photo.label}
+              delay={i * 60}
+              className={`${photo.aspect} ${photo.place} lg:aspect-auto lg:h-full`}
+            >
               <MediaSlot
                 label={photo.label}
                 src={photo.src}
                 alt={photo.alt}
-                ratio={i % 2 === 0 ? "3 / 4" : "4 / 5"}
+                ratio={null}
                 index={`G-0${i + 1}`}
               />
             </Reveal>

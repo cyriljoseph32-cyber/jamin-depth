@@ -21,6 +21,10 @@
   --color-signal-600: #e6ac00;
   --color-ink: #05080d; /* dark text sits on the yellow for AA contrast */
 
+  /* Semantic — kept minimal so neither competes with the accent */
+  --color-success: #6fae8c; /* form success only */
+  --color-error: #e2604f; /* form validation only */
+
   --font-display: var(--font-oswald), "Arial Narrow", sans-serif;
   --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-plex-mono), ui-monospace, monospace;

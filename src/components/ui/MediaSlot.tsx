@@ -6,6 +6,10 @@ import { SonarRings } from "@/components/visuals/SonarRings";
  * to the slot's aspect ratio) under a subtle caption gradient. Without a `src`
  * it falls back to the premium labelled placeholder — so slots without a photo
  * yet still look intentional.
+ *
+ * Pass `ratio={null}` to drop the intrinsic aspect ratio and let the slot fill
+ * whatever box it is placed in — used by the home gallery mosaic, where the grid
+ * rows dictate the height instead.
  */
 export function MediaSlot({
   label,
@@ -16,7 +20,7 @@ export function MediaSlot({
   alt,
 }: {
   label: string;
-  ratio?: string;
+  ratio?: string | null;
   className?: string;
   index?: string;
   src?: string;
@@ -24,8 +28,10 @@ export function MediaSlot({
 }) {
   return (
     <figure
-      className={`group relative overflow-hidden rounded-[var(--radius)] border border-foam/10 bg-abyss-2 ${className}`}
-      style={{ aspectRatio: ratio }}
+      className={`group relative overflow-hidden rounded-[var(--radius)] border border-foam/10 bg-abyss-2 ${
+        ratio ? "" : "h-full w-full"
+      } ${className}`}
+      style={ratio ? { aspectRatio: ratio } : undefined}
     >
       {src ? (
         <>

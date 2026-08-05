@@ -43,11 +43,14 @@ export default function AboutPage() {
               </ul>
             </Reveal>
 
-            {/* Owner-editable, verified-only credentials block. */}
+            {/*
+              Owner-editable, verified-only credentials block. This is the page's strongest
+              trust signal, so it gets a filled signal panel rather than a dashed placeholder.
+            */}
             <Reveal className="mt-12">
-              <div className="rounded-[var(--radius)] border border-dashed border-foam/20 bg-blueblack/40 p-6">
+              <div className="rounded-[var(--radius)] border border-signal bg-signal/[0.08] p-6">
                 <Kicker>{a.credentialsTitle}</Kicker>
-                <p className="mt-4 max-w-xl text-sm text-sand">{a.credentialsNote}</p>
+                <p className="mt-4 max-w-xl text-sm text-foam">{a.credentialsNote}</p>
               </div>
             </Reveal>
           </div>

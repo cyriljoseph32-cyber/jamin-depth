@@ -40,11 +40,11 @@ export function TextField({
         name={id}
         aria-invalid={error ? true : undefined}
         aria-describedby={error ? `${id}-error` : undefined}
-        className={`${fieldBase} ${error ? "border-signal" : "border-foam/15"}`}
+        className={`${fieldBase} ${error ? "border-error" : "border-foam/15"}`}
         {...rest}
       />
       {error ? (
-        <p id={`${id}-error`} className="mt-1.5 font-mono text-[0.66rem] uppercase tracking-[0.1em] text-signal">
+        <p id={`${id}-error`} className="mt-1.5 font-mono text-[0.66rem] uppercase tracking-[0.1em] text-error">
           {error}
         </p>
       ) : null}
@@ -68,11 +68,11 @@ export function TextArea({
         rows={4}
         aria-invalid={error ? true : undefined}
         aria-describedby={error ? `${id}-error` : undefined}
-        className={`${fieldBase} resize-y ${error ? "border-signal" : "border-foam/15"}`}
+        className={`${fieldBase} resize-y ${error ? "border-error" : "border-foam/15"}`}
         {...rest}
       />
       {error ? (
-        <p id={`${id}-error`} className="mt-1.5 font-mono text-[0.66rem] uppercase tracking-[0.1em] text-signal">
+        <p id={`${id}-error`} className="mt-1.5 font-mono text-[0.66rem] uppercase tracking-[0.1em] text-error">
           {error}
         </p>
       ) : null}
