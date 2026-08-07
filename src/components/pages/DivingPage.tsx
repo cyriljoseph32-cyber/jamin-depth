@@ -1,4 +1,6 @@
 import type { Locale, Dictionary } from "@/content/i18n";
+import { coursesJsonLd } from "@/lib/seo";
+import { pathFor } from "@/content/routes";
 import { DIVE_CENTER } from "@/content/site";
 import { PageHeader } from "@/components/site/PageHeader";
 import { Section } from "@/components/ui/Section";
@@ -7,12 +9,18 @@ import { Reveal } from "@/components/ui/Reveal";
 import { MediaSlot } from "@/components/ui/MediaSlot";
 import { ButtonLink } from "@/components/ui/Button";
 import { WhatsAppIcon, ArrowIcon } from "@/components/ui/Icons";
-import { buildWaLink, divingPrefill } from "@/lib/whatsapp";
+import { buildWaLink, divingPrefill, coursePrefill, tripPrefill } from "@/lib/whatsapp";
+import { trackable } from "@/lib/analytics";
 
-export function DivingPage({ dict }: { dict: Dictionary; locale: Locale }) {
+export function DivingPage({ dict, locale }: { dict: Dictionary; locale: Locale }) {
   const d = dict.diving;
   return (
     <>
+      {/* Verified Discovery Divers rates — safe to publish as Offers. */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(coursesJsonLd(locale)) }}
+      />
       <PageHeader kicker={d.heroKicker} title={d.heroTitle} lead={d.heroLead} />
 
       {/* Experience + gallery */}
@@ -89,6 +97,17 @@ export function DivingPage({ dict }: { dict: Dictionary; locale: Locale }) {
                     </span>
                   </p>
                 ) : null}
+                {/* Every priced card converts on its own — the visitor never has to scroll back up. */}
+                <a
+                  href={buildWaLink(coursePrefill(course.name, dict.wa))}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  {...trackable("whatsapp_click_offer", { kind: "course", offer: course.code })}
+                  className="mt-4 inline-flex items-center gap-2 font-mono text-[0.68rem] uppercase tracking-[0.14em] text-signal transition-colors hover:text-foam"
+                >
+                  <WhatsAppIcon width={15} height={15} />
+                  {d.courseCta}
+                </a>
               </div>
             </Reveal>
           ))}
@@ -106,6 +125,12 @@ export function DivingPage({ dict }: { dict: Dictionary; locale: Locale }) {
             <ButtonLink href={buildWaLink(divingPrefill(dict.wa))} variant="outline" size="lg">
               <WhatsAppIcon width={18} height={18} />
               {dict.nav.askDiving}
+            </ButtonLink>
+            {/* Internal link to the beginner landing page — keeps it out of the nav
+                while still giving it a crawlable path and real traffic. */}
+            <ButtonLink href={pathFor("baptism", locale)} variant="ghost" size="lg">
+              {dict.nav.pages.baptism}
+              <ArrowIcon width={16} height={16} />
             </ButtonLink>
           </div>
           <p className="mt-4 font-mono text-[0.62rem] uppercase tracking-[0.16em] text-sand-dim">
@@ -131,7 +156,19 @@ export function DivingPage({ dict }: { dict: Dictionary; locale: Locale }) {
                     {trip.detail}
                   </p>
                 </div>
-                <p className="mt-6 font-mono text-lg text-signal">{trip.price}</p>
+                <div className="mt-6">
+                  <p className="font-mono text-lg text-signal">{trip.price}</p>
+                  <a
+                    href={buildWaLink(tripPrefill(trip.name, dict.wa))}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    {...trackable("whatsapp_click_offer", { kind: "trip", offer: trip.name })}
+                    className="mt-3 inline-flex items-center gap-2 font-mono text-[0.66rem] uppercase tracking-[0.14em] text-foam-dim transition-colors hover:text-signal"
+                  >
+                    <WhatsAppIcon width={14} height={14} />
+                    {d.tripCta}
+                  </a>
+                </div>
               </div>
             </Reveal>
           ))}

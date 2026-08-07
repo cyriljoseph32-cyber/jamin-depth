@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { locales, isLocale, type Locale, type Dictionary } from "@/content/i18n";
 import { pathFor, pageKeyFromSlug, type PageKey } from "@/content/routes";
+import { track } from "@/lib/analytics";
 
 /**
  * Language switcher.
@@ -53,7 +54,10 @@ export function LocaleSwitcher({
               href={pathFor(currentKey, l)}
               hrefLang={l}
               lang={l}
-              onClick={onNavigate}
+              onClick={() => {
+                track("language_switch", { from: locale, to: l, page: currentKey });
+                onNavigate?.();
+              }}
               aria-label={dict.nav.languageNames[l]}
               className="text-foam-dim transition-colors hover:text-foam"
             >

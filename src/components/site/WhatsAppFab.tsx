@@ -1,5 +1,6 @@
 import { buildWaLink, recoveryPrefill } from "@/lib/whatsapp";
 import type { Dictionary } from "@/content/i18n";
+import { trackable } from "@/lib/analytics";
 import { WhatsAppIcon } from "@/components/ui/Icons";
 
 /**
@@ -14,6 +15,7 @@ export function WhatsAppFab({ dict }: { dict: Dictionary }) {
       target="_blank"
       rel="noopener noreferrer"
       aria-label={dict.nav.fabAria}
+      {...trackable("whatsapp_click_floating")}
       className="group fixed bottom-5 right-5 z-50 flex items-center gap-2 rounded-full bg-signal py-3 pl-3 pr-4 text-ink shadow-lg shadow-black/40 transition-transform duration-200 hover:scale-[1.03] focus-visible:scale-[1.03]"
       style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
     >

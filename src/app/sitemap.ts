@@ -11,6 +11,7 @@ import { PAGE_KEYS, pathFor, alternatesFor, type PageKey } from "@/content/route
 const PRIORITY: Record<PageKey, number> = {
   home: 1,
   diving: 0.9,
+  baptism: 0.9,
   recovery: 0.8,
   contact: 0.7,
   about: 0.6,

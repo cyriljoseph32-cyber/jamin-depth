@@ -88,3 +88,13 @@ export function contactSummary(fields: ContactFields, wa: WaCopy = defaultWa): s
   ].filter((l): l is string => l !== null);
   return lines.join("\n");
 }
+
+/** Pre-fill for a specific PADI course card. */
+export function coursePrefill(courseName: string, wa: WaCopy = defaultWa): string {
+  return wa.coursePrefill.replace("{course}", courseName);
+}
+
+/** Pre-fill for a specific fun-dive / day-trip card. */
+export function tripPrefill(tripName: string, wa: WaCopy = defaultWa): string {
+  return wa.tripPrefill.replace("{trip}", tripName);
+}

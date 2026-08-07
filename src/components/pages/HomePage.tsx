@@ -7,6 +7,8 @@ import { Section } from "@/components/ui/Section";
 import { Kicker } from "@/components/ui/Kicker";
 import { Reveal } from "@/components/ui/Reveal";
 import { MediaSlot } from "@/components/ui/MediaSlot";
+import { WhyUs } from "@/components/site/WhyUs";
+import { Faq } from "@/components/site/Faq";
 import { ButtonLink } from "@/components/ui/Button";
 import { ArrowIcon } from "@/components/ui/Icons";
 import { recoveryPrefill } from "@/lib/whatsapp";
@@ -162,6 +164,10 @@ export function HomePage({ dict, locale }: { dict: Dictionary; locale: Locale })
           </ButtonLink>
         </div>
       </Section>
+
+      <WhyUs dict={dict} />
+
+      <Faq dict={dict} locale={locale} />
 
       <FinalCta
         dict={dict}

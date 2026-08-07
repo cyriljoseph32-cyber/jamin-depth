@@ -26,6 +26,17 @@ export const fr: Dictionary = {
         "récupération sous-marine Koh Samui",
       ],
     },
+    baptism: {
+      title: "Baptême de plongée à Koh Samui — votre première plongée",
+      description:
+        "Votre première plongée à Koh Samui : baptême Discover Scuba Diving sur une journée, sans expérience ni brevet, matériel inclus. Encadré par un moniteur PADI francophone.",
+      keywords: [
+        "baptême plongée Koh Samui",
+        "première plongée Koh Samui",
+        "plongée débutant Koh Samui",
+        "essayer la plongée Koh Samui",
+      ],
+    },
     recovery: {
       title: "Récupération sous-marine — Objets perdus dans l'eau",
       description:
@@ -79,6 +90,7 @@ export const fr: Dictionary = {
     pages: {
       home: "Accueil",
       diving: "Plongée",
+      baptism: "Baptême de plongée",
       recovery: "Récupération",
       about: "Le plongeur",
       contact: "Contact",
@@ -233,6 +245,8 @@ export const fr: Dictionary = {
     coursesDisclaimer:
       "Les formations sont réservées et encadrées par Discovery Divers. Matériel de plongée inclus ; tarifs par personne, susceptibles d'évoluer et confirmés à la réservation.",
     coursesCtaLabel: "Voir les formations et tarifs",
+    courseCta: "Demander pour cette formation",
+    tripCta: "Demander pour cette sortie",
     coursesPriceFrom: "à partir de",
     certBadge: "Brevet",
     noCertBadge: "Sans brevet",
@@ -286,6 +300,83 @@ export const fr: Dictionary = {
       { name: "Koh Tao", detail: "2 plongées", price: "฿4,850" },
       { name: "Chumphon Pinnacle", detail: "Plongeurs brevetés", price: "฿5,050" },
       { name: "Snorkeling", detail: "Tous les sites", price: "฿2,450" },
+    ],
+  },
+
+  baptism: {
+    heroKicker: "Première plongée · Koh Samui",
+    heroTitle: "Votre baptême de plongée à Koh Samui.",
+    heroLead:
+      "Vous n'avez jamais respiré sous l'eau ? Le baptême Discover Scuba Diving est fait exactement pour ça — une journée, sans expérience, sans brevet, encadré du début à la fin.",
+    whatKicker: "En quoi ça consiste",
+    whatTitle: "Une journée, aucun prérequis.",
+    includedTitle: "Ce qui est confirmé",
+    ctaKicker: "Prêt à essayer",
+    ctaTitle: "Réservez votre baptême.",
+    ctaBody: "Dites-nous vos dates et combien vous êtes — on s'occupe du reste.",
+    seeAllCourses: "Voir toutes les formations PADI",
+  },
+
+  why: {
+    kicker: "Pourquoi plonger avec nous",
+    title: "Quatre raisons, toutes vérifiables.",
+    lead: "Pas de badges, pas de statistiques inventées — uniquement ce qui peut être vérifié.",
+    items: [
+      {
+        title: "Un moniteur PADI",
+        body: "Vos formations sont enseignées par un moniteur PADI chez Discovery Divers Koh Samui, pas par un guide saisonnier de passage.",
+      },
+      {
+        title: "Un centre PADI 5 étoiles",
+        body: "Formations et sorties se déroulent avec Discovery Divers — le plus ancien club de l'île, plus de 25 ans sur ces eaux.",
+      },
+      {
+        title: "En français comme en anglais",
+        body: "Réservez, posez vos questions et plongez en français. Vous ne subissez jamais un briefing dans une langue que vous suivez à moitié.",
+      },
+      {
+        title: "Directement au plongeur",
+        body: "Un message WhatsApp atteint la personne qui sera réellement dans l'eau avec vous. Pas d'agence, pas de standard.",
+      },
+    ],
+  },
+
+  faq: {
+    kicker: "Avant de réserver",
+    title: "Questions de débutants.",
+    lead: "Ce qu'on nous demande le plus avant une première plongée autour de Koh Samui.",
+    toConfirm: "À confirmer par le propriétaire",
+    items: [
+      {
+        q: "Puis-je plonger si je n'ai jamais plongé ?",
+        a: "Oui. Le baptême Discover Scuba Diving est fait pour ça — vos premières respirations sous l'eau, encadrées, sur une journée, sans expérience ni brevet requis. À partir de ฿5,850, matériel de plongée inclus.",
+        confirmed: true,
+      },
+      {
+        q: "Faut-il savoir nager ?",
+        a: "Les exigences de nage dépendent de la formation et des conditions du jour. Posez la question sur WhatsApp avant de réserver, vous aurez une réponse claire.",
+        confirmed: false,
+      },
+      {
+        q: "Que dois-je apporter ?",
+        a: "Le matériel de plongée est inclus avec Discovery Divers, vous n'avez donc rien à louer. Le reste des affaires personnelles à prévoir reste à confirmer.",
+        confirmed: false,
+      },
+      {
+        q: "Où se déroulent les sorties au départ de Koh Samui ?",
+        a: "Les sorties se font avec Discovery Divers vers les plus belles eaux de la région : le pinacle de Sail Rock, Koh Tao et Chumphon Pinnacle, plus le snorkeling sur tous les sites.",
+        confirmed: true,
+      },
+      {
+        q: "Comment réserver ?",
+        a: "Écrivez-nous sur WhatsApp avec votre niveau, le nombre de personnes et vos dates. Les formations et sorties sont ensuite réservées et encadrées par Discovery Divers.",
+        confirmed: true,
+      },
+      {
+        q: "Que se passe-t-il si la météo ne permet pas la sortie ?",
+        a: "La météo, le courant et la visibilité décident de la journée, et nous préférons décaler une plongée que la forcer. Les conditions exactes de report ou de remboursement restent à confirmer.",
+        confirmed: false,
+      },
     ],
   },
 
@@ -403,6 +494,10 @@ export const fr: Dictionary = {
       "Bonjour Jammin's Depths, j'ai besoin d'aide pour une récupération sous-marine à Koh Samui, en Thaïlande. Objet : [objet]. Lieu : [lieu]. Perdu le : [date/heure].",
     divingPrefill:
       "Bonjour, je souhaite avoir des informations pour une plongée à Koh Samui. Je suis [débutant/breveté], nous sommes [X] personnes et nous serons disponibles le [date].",
+    coursePrefill:
+      "Bonjour, je souhaite avoir des informations pour la formation {course} à Koh Samui. Je suis [débutant/breveté], nous sommes [X] personnes et nous serons disponibles le [date].",
+    tripPrefill:
+      "Bonjour, je souhaite avoir des informations pour la sortie {trip} au départ de Koh Samui. Je suis [débutant/breveté], nous sommes [X] personnes et nous serons disponibles le [date].",
     contactIntro: "Bonjour Jammin's Depths,",
     labels: {
       name: "Nom",

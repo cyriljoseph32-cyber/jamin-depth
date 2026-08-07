@@ -10,6 +10,7 @@ import {
   type ContactInput,
 } from "@/lib/validation";
 import { buildWaLink, buildMailto, contactSummary } from "@/lib/whatsapp";
+import { track } from "@/lib/analytics";
 import { TextField, TextArea, Honeypot } from "./Field";
 import { FormStatus, type Status } from "./FormStatus";
 import { Button } from "@/components/ui/Button";
@@ -53,6 +54,7 @@ export function ContactForm({ dict }: { dict: Dictionary }) {
     setWaHref(href);
     setStatus("success");
     setStatusMsg(undefined);
+    track("form_submit", { form: "contact" });
     if (typeof window !== "undefined") {
       window.open(href, "_blank", "noopener,noreferrer");
     }

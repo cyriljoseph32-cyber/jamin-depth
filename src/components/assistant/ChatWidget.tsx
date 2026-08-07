@@ -153,13 +153,15 @@ export function ChatWidget({ dict, locale }: { dict: Dictionary; locale: Locale 
         aria-expanded={open}
         aria-controls="jd-chat-panel"
         aria-label={open ? C.close : C.open}
-        className="fixed bottom-5 left-5 z-50 flex items-center gap-2 rounded-full border border-foam/15 bg-abyss-2/95 py-3 pl-3 pr-4 text-foam shadow-lg shadow-black/40 backdrop-blur transition-transform duration-200 hover:scale-[1.03] focus-visible:scale-[1.03]"
+        className="fixed bottom-5 left-5 z-50 flex items-center gap-2 rounded-full border border-foam/15 bg-abyss-2/95 p-3 text-foam shadow-lg shadow-black/40 backdrop-blur transition-transform duration-200 hover:scale-[1.03] focus-visible:scale-[1.03] sm:py-3 sm:pl-3 sm:pr-4"
         style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
       >
         <span className="flex h-6 w-6 items-center justify-center text-signal">
           {open ? <CloseIcon width={20} height={20} /> : <ChatIcon width={20} height={20} />}
         </span>
-        <span className="font-mono text-xs font-semibold uppercase tracking-[0.12em]">{C.launcherLabel}</span>
+        <span className="hidden font-mono text-xs font-semibold uppercase tracking-[0.12em] sm:inline">
+          {C.launcherLabel}
+        </span>
       </button>
 
       {open && (

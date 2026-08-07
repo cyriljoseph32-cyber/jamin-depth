@@ -7,6 +7,7 @@ import { Kicker } from "@/components/ui/Kicker";
 import { SonarRings } from "@/components/visuals/SonarRings";
 import { WhatsAppIcon, ArrowIcon, ArrowDownIcon } from "@/components/ui/Icons";
 import { buildWaLink, divingPrefill } from "@/lib/whatsapp";
+import { trackable } from "@/lib/analytics";
 
 export function Hero({ dict, locale }: { dict: Dictionary; locale: Locale }) {
   const h = dict.home;
@@ -51,7 +52,12 @@ export function Hero({ dict, locale }: { dict: Dictionary; locale: Locale }) {
               {dict.nav.exploreDiving}
               <ArrowIcon width={16} height={16} />
             </ButtonLink>
-            <ButtonLink href={buildWaLink(divingPrefill(dict.wa))} size="lg" variant="outline">
+            <ButtonLink
+              href={buildWaLink(divingPrefill(dict.wa))}
+              size="lg"
+              variant="outline"
+              {...trackable("whatsapp_click_hero", { locale })}
+            >
               <WhatsAppIcon width={18} height={18} />
               {dict.nav.askDiving}
             </ButtonLink>

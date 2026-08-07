@@ -10,6 +10,7 @@ import {
   type RecoveryInput,
 } from "@/lib/validation";
 import { buildWaLink, buildMailto, recoverySummary } from "@/lib/whatsapp";
+import { track } from "@/lib/analytics";
 import { TextField, TextArea, Honeypot } from "./Field";
 import { FormStatus, type Status } from "./FormStatus";
 import { Button } from "@/components/ui/Button";
@@ -75,6 +76,7 @@ export function RecoveryForm({ dict }: { dict: Dictionary }) {
     setWaHref(href);
     setStatus("success");
     setStatusMsg(undefined);
+    track("form_submit", { form: "recovery" });
 
     // Open WhatsApp in a new tab. If the browser blocks it, the success card
     // exposes the same link as a button.

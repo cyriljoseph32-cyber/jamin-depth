@@ -17,6 +17,7 @@ import { Footer } from "@/components/layout/Footer";
 import { WhatsAppFab } from "@/components/site/WhatsAppFab";
 import { ChatWidget } from "@/components/assistant/ChatWidget";
 import { DepthBackground } from "@/components/visuals/DepthBackground";
+import { AnalyticsListener } from "@/components/site/AnalyticsListener";
 import { professionalServiceJsonLd, websiteJsonLd } from "@/lib/seo";
 
 /**
@@ -138,6 +139,7 @@ export default async function LocaleLayout({
         <Footer dict={dict} locale={locale} />
         <WhatsAppFab dict={dict} />
         <ChatWidget dict={dict} locale={locale} />
+        <AnalyticsListener />
       </body>
     </html>
   );

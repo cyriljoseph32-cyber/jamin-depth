@@ -4,6 +4,7 @@ import { getDictionary, isLocale, type Locale } from "@/content/i18n";
 import { allSubPageParams, pageKeyFromSlug, type SubPageKey } from "@/content/routes";
 import { pageMetadata } from "@/lib/metadata";
 import { DivingPage } from "@/components/pages/DivingPage";
+import { BaptismPage } from "@/components/pages/BaptismPage";
 import { RecoveryPage } from "@/components/pages/RecoveryPage";
 import { AboutPage } from "@/components/pages/AboutPage";
 import { ContactPage } from "@/components/pages/ContactPage";
@@ -22,6 +23,7 @@ const PAGES: Record<
   (props: { dict: ReturnType<typeof getDictionary>; locale: Locale }) => React.ReactNode
 > = {
   diving: DivingPage,
+  baptism: BaptismPage,
   recovery: RecoveryPage,
   about: AboutPage,
   contact: ContactPage,

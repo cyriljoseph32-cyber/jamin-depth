@@ -21,6 +21,17 @@ export const en = {
         "lost item recovery Koh Samui",
       ],
     },
+    baptism: {
+      title: "Discover Scuba Diving in Koh Samui — your first dive",
+      description:
+        "Your first dive in Koh Samui: Discover Scuba Diving over one day, no experience and no certification needed, equipment included. Taught by a PADI instructor, in English or French.",
+      keywords: [
+        "discover scuba diving Koh Samui",
+        "first dive Koh Samui",
+        "try diving Koh Samui",
+        "beginner diving Koh Samui",
+      ],
+    },
     recovery: {
       title: "Underwater Recovery — Lost Item Recovery",
       description:
@@ -74,6 +85,7 @@ export const en = {
     pages: {
       home: "Home",
       diving: "Diving",
+      baptism: "Discover Scuba Diving",
       recovery: "Recovery",
       about: "About",
       contact: "Contact",
@@ -229,6 +241,8 @@ export const en = {
     coursesDisclaimer:
       "Courses are booked and run through Discovery Divers. Scuba equipment is included; prices are per person, subject to change and confirmed at booking.",
     coursesCtaLabel: "See courses & prices",
+    courseCta: "Ask about this course",
+    tripCta: "Ask about this trip",
     coursesPriceFrom: "from",
     certBadge: "Certification",
     noCertBadge: "No certification",
@@ -287,6 +301,101 @@ export const en = {
       { name: "Koh Tao", detail: "2 dives", price: "฿4,850" },
       { name: "Chumphon Pinnacle", detail: "Certified divers", price: "฿5,050" },
       { name: "Snorkelling", detail: "All sites", price: "฿2,450" },
+    ],
+  },
+
+  /**
+   * "Why dive with us" — every claim here is verifiable in the repo:
+   * the PADI instructor role and Discovery Divers partnership come from
+   * site.ts, French is owner-confirmed, and the direct-contact and
+   * respect-for-the-sea points restate existing about/diving copy.
+   * Do NOT add group sizes, transfers, boats or safety claims — unverified.
+   */
+  /**
+   * Discover Scuba landing page — the highest-volume beginner search.
+   * Everything factual on it is pulled from `diving.courses[0]`, the courses
+   * disclaimer, `why` and `faq`. The copy below adds framing only, never new
+   * facts: no inclusions, transfers, group sizes or swimming requirements.
+   */
+  baptism: {
+    heroKicker: "First dive · Koh Samui",
+    heroTitle: "Your first dive in Koh Samui.",
+    heroLead:
+      "Never breathed underwater before? Discover Scuba Diving is made exactly for that — one day, no experience, no certification, guided from start to finish.",
+    whatKicker: "What it is",
+    whatTitle: "One day, no prerequisites.",
+    includedTitle: "What's confirmed",
+    ctaKicker: "Ready to try",
+    ctaTitle: "Book your first dive.",
+    ctaBody: "Tell us your dates and how many of you there are — we'll take it from there.",
+    seeAllCourses: "See all PADI courses",
+  },
+
+  why: {
+    kicker: "Why dive with us",
+    title: "Four reasons, all checkable.",
+    lead: "No badges, no invented statistics — only what can actually be verified.",
+    items: [
+      {
+        title: "A PADI instructor",
+        body: "Your courses are taught by a PADI instructor at Discovery Divers Koh Samui, not by a rotating seasonal guide.",
+      },
+      {
+        title: "A PADI 5-Star centre",
+        body: "Courses and trips run with Discovery Divers — the island's longest-operating dive shop, 25+ years on this water.",
+      },
+      {
+        title: "French and English",
+        body: "Book, ask questions and dive in French or English. You're never guessing at a briefing in a language you half-follow.",
+      },
+      {
+        title: "Straight to the diver",
+        body: "One WhatsApp message reaches the person who will actually be in the water with you. No agency, no call centre.",
+      },
+    ],
+  },
+
+  /**
+   * FAQ. `confirmed: false` marks an answer the owner still has to supply —
+   * those render a visible [TO CONFIRM] badge and are deliberately EXCLUDED
+   * from the FAQPage structured data, so Google never sees a placeholder.
+   */
+  faq: {
+    kicker: "Before you book",
+    title: "Beginners' questions.",
+    lead: "The things people ask most before a first dive around Koh Samui.",
+    toConfirm: "To be confirmed by the owner",
+    items: [
+      {
+        q: "Can I dive if I have never dived before?",
+        a: "Yes. Discover Scuba Diving is exactly that — a guided first breath underwater over one day, with no experience and no certification needed. From ฿5,850, scuba equipment included.",
+        confirmed: true,
+      },
+      {
+        q: "Do I need to know how to swim?",
+        a: "Swimming requirements depend on the course and the day's conditions. Ask on WhatsApp before booking and you'll get a straight answer.",
+        confirmed: false,
+      },
+      {
+        q: "What should I bring?",
+        a: "Scuba equipment is included with Discovery Divers, so you don't need to rent gear. The rest of the personal packing list still needs to be confirmed.",
+        confirmed: false,
+      },
+      {
+        q: "Where do the dives take place from Koh Samui?",
+        a: "Trips run with Discovery Divers to the region's best water: the Sail Rock pinnacle, Koh Tao and Chumphon Pinnacle, plus snorkelling at all sites.",
+        confirmed: true,
+      },
+      {
+        q: "How do I book?",
+        a: "Message us on WhatsApp with your level, how many of you there are and your dates. Courses and trips are then booked and run through Discovery Divers.",
+        confirmed: true,
+      },
+      {
+        q: "What happens if the weather doesn't allow the trip?",
+        a: "Weather, current and visibility decide the day, and we would rather move a dive than force one. The exact rescheduling and refund terms still need to be confirmed.",
+        confirmed: false,
+      },
     ],
   },
 
@@ -402,6 +511,10 @@ export const en = {
     recoveryPrefill:
       "Hello Jammin's Depths, I need underwater recovery assistance in Koh Samui, Thailand. Object: [object]. Location: [location]. Lost on: [date/time].",
     divingPrefill: "Hello Jammin's Depths, I'd like to ask about diving in Koh Samui, Thailand.",
+    coursePrefill:
+      "Hello Jammin's Depths, I'd like information about the {course} course in Koh Samui. I am [beginner/certified], we are [X] people and we're available on [date].",
+    tripPrefill:
+      "Hello Jammin's Depths, I'd like information about the {trip} dive trip from Koh Samui. I am [beginner/certified], we are [X] people and we're available on [date].",
     contactIntro: "Hello Jammin's Depths,",
     labels: {
       name: "Name",

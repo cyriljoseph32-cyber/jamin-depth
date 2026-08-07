@@ -90,6 +90,20 @@ h4 {
 /* ------------------------------------------------------------------ *
  * Utilities
  * ------------------------------------------------------------------ */
+/*
+ * Sentence-case heading escape hatch.
+ *
+ * The h1–h4 rule above is unlayered, so it beats Tailwind's layered
+ * `normal-case` utility no matter the specificity. FAQ questions are full
+ * sentences and are markedly harder to read in caps, so they opt out here —
+ * in the same unlayered context, where a class does win over an element.
+ */
+.heading-sentence {
+  text-transform: none;
+  line-height: 1.3;
+  letter-spacing: 0;
+}
+
 .mono-kicker {
   font-family: var(--font-mono);
   font-size: 0.72rem;

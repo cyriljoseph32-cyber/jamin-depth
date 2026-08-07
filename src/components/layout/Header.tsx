@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Locale, Dictionary } from "@/content/i18n";
 import { NAV_KEYS, pathFor } from "@/content/routes";
 import { buildWaLink, divingPrefill } from "@/lib/whatsapp";
+import { trackable } from "@/lib/analytics";
 import { Logo } from "./Logo";
 import { MobileNav } from "./MobileNav";
 import { LocaleSwitcher } from "./LocaleSwitcher";
@@ -38,6 +39,7 @@ export function Header({ dict, locale }: { dict: Dictionary; locale: Locale }) {
             href={buildWaLink(divingPrefill(dict.wa))}
             target="_blank"
             rel="noopener noreferrer"
+            {...trackable("whatsapp_click_nav", { locale })}
             className="hidden items-center gap-2 bg-signal px-4 py-2.5 font-mono text-xs uppercase tracking-[0.14em] text-ink transition-colors hover:bg-signal-600 sm:inline-flex"
           >
             <WhatsAppIcon width={16} height={16} />

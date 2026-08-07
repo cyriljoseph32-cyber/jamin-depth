@@ -11,7 +11,7 @@ import { locales, type Locale } from "./i18n";
  * canonicals and the sitemap. Adding a page means adding one entry here plus a
  * case in `app/[locale]/[slug]/page.tsx` — nothing else.
  */
-export const PAGE_KEYS = ["home", "diving", "recovery", "about", "contact", "privacy"] as const;
+export const PAGE_KEYS = ["home", "diving", "baptism", "recovery", "about", "contact", "privacy"] as const;
 export type PageKey = (typeof PAGE_KEYS)[number];
 
 /** Pages that live under a slug. `home` is the locale root and has none. */
@@ -20,6 +20,7 @@ export type SubPageKey = Exclude<PageKey, "home">;
 export const SLUGS: Record<Locale, Record<SubPageKey, string>> = {
   fr: {
     diving: "plongee",
+    baptism: "bapteme-plongee-koh-samui",
     recovery: "recuperation-sous-marine",
     about: "le-plongeur",
     contact: "contact",
@@ -27,6 +28,7 @@ export const SLUGS: Record<Locale, Record<SubPageKey, string>> = {
   },
   en: {
     diving: "diving",
+    baptism: "discover-scuba-diving-koh-samui",
     recovery: "recovery",
     about: "about",
     contact: "contact",
@@ -61,5 +63,9 @@ export function alternatesFor(key: PageKey): Record<Locale, string> {
 }
 
 /** Main navigation, in display order. Recovery follows diving — diving leads. */
+/**
+ * Main navigation. `baptism` is deliberately absent: it is a search landing
+ * page reached from Google and from the diving page, not a fifth nav item.
+ */
 export const NAV_KEYS: readonly SubPageKey[] = ["diving", "recovery", "about", "contact"];
 export const FOOTER_LEGAL_KEYS: readonly SubPageKey[] = ["privacy", "contact"];
