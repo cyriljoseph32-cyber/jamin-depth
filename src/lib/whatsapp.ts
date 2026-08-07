@@ -1,4 +1,10 @@
 import { SITE } from "@/content/site";
+import { en } from "@/content/en";
+import type { Dictionary } from "@/content/en";
+
+/** The message copy that ends up inside WhatsApp. Defaults to English. */
+type WaCopy = Dictionary["wa"];
+const defaultWa: WaCopy = en.wa;
 
 /**
  * Pure helpers to build WhatsApp (wa.me) deep links and a mailto: fallback.
@@ -39,29 +45,29 @@ function line(label: string, value?: string): string | null {
  * Structured, human-readable recovery summary sent to the diver.
  * Order mirrors the on-page form so it reads naturally in the chat.
  */
-export function recoverySummary(fields: RecoveryFields): string {
+export function recoverySummary(fields: RecoveryFields, wa: WaCopy = defaultWa): string {
   const lines = [
-    `Hello ${SITE.name}, I need underwater recovery assistance in ${SITE.location}.`,
+    wa.recoveryIntro,
     "",
-    line("Name", fields.name),
-    line("Contact", fields.contact),
-    line("Object", fields.object),
-    line("Location", fields.location),
-    line("Lost on", fields.lostAt),
-    line("Estimated depth", fields.depth),
-    line("Conditions", fields.conditions),
+    line(wa.labels.name, fields.name),
+    line(wa.labels.contact, fields.contact),
+    line(wa.labels.object, fields.object),
+    line(wa.labels.location, fields.location),
+    line(wa.labels.lostAt, fields.lostAt),
+    line(wa.labels.depth, fields.depth),
+    line(wa.labels.conditions, fields.conditions),
   ].filter((l): l is string => l !== null);
   return lines.join("\n");
 }
 
 /** Brief-specified short pre-fill used on generic recovery CTAs. */
-export function recoveryPrefill(): string {
-  return `Hello ${SITE.name}, I need underwater recovery assistance in ${SITE.location}. Object: [object]. Location: [location]. Lost on: [date/time].`;
+export function recoveryPrefill(wa: WaCopy = defaultWa): string {
+  return wa.recoveryPrefill;
 }
 
 /** Diving enquiry pre-fill. */
-export function divingPrefill(): string {
-  return `Hello ${SITE.name}, I'd like to ask about diving in ${SITE.location}.`;
+export function divingPrefill(wa: WaCopy = defaultWa): string {
+  return wa.divingPrefill;
 }
 
 export interface ContactFields {
@@ -71,12 +77,12 @@ export interface ContactFields {
 }
 
 /** General contact message summary. */
-export function contactSummary(fields: ContactFields): string {
+export function contactSummary(fields: ContactFields, wa: WaCopy = defaultWa): string {
   const lines = [
-    `Hello ${SITE.name},`,
+    wa.contactIntro,
     "",
-    line("Name", fields.name),
-    line("Contact", fields.contact),
+    line(wa.labels.name, fields.name),
+    line(wa.labels.contact, fields.contact),
     "",
     fields.message.trim(),
   ].filter((l): l is string => l !== null);

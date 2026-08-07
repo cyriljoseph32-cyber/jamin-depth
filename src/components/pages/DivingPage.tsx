@@ -1,7 +1,5 @@
-import type { Metadata } from "next";
-import { t } from "@/content/i18n";
+import type { Locale, Dictionary } from "@/content/i18n";
 import { DIVE_CENTER } from "@/content/site";
-import { pageMetadata } from "@/lib/metadata";
 import { PageHeader } from "@/components/site/PageHeader";
 import { Section } from "@/components/ui/Section";
 import { Kicker } from "@/components/ui/Kicker";
@@ -11,15 +9,8 @@ import { ButtonLink } from "@/components/ui/Button";
 import { WhatsAppIcon, ArrowIcon } from "@/components/ui/Icons";
 import { buildWaLink, divingPrefill } from "@/lib/whatsapp";
 
-export const metadata: Metadata = pageMetadata({
-  title: t.meta.diving.title,
-  description: t.meta.diving.description,
-  path: "/diving",
-  keywords: [...t.meta.diving.keywords],
-});
-
-export default function DivingPage() {
-  const d = t.diving;
+export function DivingPage({ dict }: { dict: Dictionary; locale: Locale }) {
+  const d = dict.diving;
   return (
     <>
       <PageHeader kicker={d.heroKicker} title={d.heroTitle} lead={d.heroLead} />
@@ -32,9 +23,9 @@ export default function DivingPage() {
             <h2 className="mt-5 text-4xl sm:text-5xl">{d.experienceTitle}</h2>
             <p className="mt-5 text-pretty text-foam-dim">{d.experienceBody}</p>
             <div className="mt-8">
-              <ButtonLink href={buildWaLink(divingPrefill())} variant="primary" size="lg">
+              <ButtonLink href={buildWaLink(divingPrefill(dict.wa))} variant="primary" size="lg">
                 <WhatsAppIcon width={18} height={18} />
-                {t.nav.askDiving}
+                {dict.nav.askDiving}
               </ButtonLink>
             </div>
           </Reveal>
@@ -91,7 +82,9 @@ export default function DivingPage() {
                 {course.priceFrom ? (
                   <p className="mt-4">
                     <span className="inline-flex items-baseline gap-2 rounded-[var(--radius)] border border-signal/30 bg-signal/10 px-3 py-1.5 font-mono text-sm text-foam">
-                      <span className="text-[0.62rem] uppercase tracking-[0.16em] text-sand-dim">from</span>
+                      <span className="text-[0.62rem] uppercase tracking-[0.16em] text-sand-dim">
+                        {d.coursesPriceFrom}
+                      </span>
                       {course.priceFrom}
                     </span>
                   </p>
@@ -110,9 +103,9 @@ export default function DivingPage() {
               {d.coursesCtaLabel}
               <ArrowIcon width={16} height={16} />
             </ButtonLink>
-            <ButtonLink href={buildWaLink(divingPrefill())} variant="outline" size="lg">
+            <ButtonLink href={buildWaLink(divingPrefill(dict.wa))} variant="outline" size="lg">
               <WhatsAppIcon width={18} height={18} />
-              {t.nav.askDiving}
+              {dict.nav.askDiving}
             </ButtonLink>
           </div>
           <p className="mt-4 font-mono text-[0.62rem] uppercase tracking-[0.16em] text-sand-dim">
@@ -146,9 +139,9 @@ export default function DivingPage() {
         <Reveal>
           <p className="mt-8 max-w-3xl border-l-2 border-signal/60 pl-5 text-sm text-sand">{d.tripsNote}</p>
           <div className="mt-8">
-            <ButtonLink href={buildWaLink(divingPrefill())} variant="primary" size="lg">
+            <ButtonLink href={buildWaLink(divingPrefill(dict.wa))} variant="primary" size="lg">
               <WhatsAppIcon width={18} height={18} />
-              {t.nav.askDiving}
+              {dict.nav.askDiving}
             </ButtonLink>
           </div>
         </Reveal>
@@ -191,9 +184,9 @@ export default function DivingPage() {
             <h2 className="text-4xl sm:text-5xl">{d.ctaTitle}</h2>
             <p className="mt-4 text-foam-dim">{d.ctaBody}</p>
           </div>
-          <ButtonLink href={buildWaLink(divingPrefill())} variant="primary" size="lg">
+          <ButtonLink href={buildWaLink(divingPrefill(dict.wa))} variant="primary" size="lg">
             <WhatsAppIcon width={18} height={18} />
-            {t.nav.askDiving}
+            {dict.nav.askDiving}
           </ButtonLink>
         </div>
       </Section>

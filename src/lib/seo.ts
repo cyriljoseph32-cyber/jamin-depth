@@ -1,19 +1,20 @@
 import { SITE, siteUrl } from "@/content/site";
+import { getDictionary, defaultLocale, htmlLang, type Locale } from "@/content/i18n";
+import { pathFor } from "@/content/routes";
 
 /**
  * JSON-LD for a ProfessionalService.
  * Deliberately omits address, geo, opening hours, price and reviews —
  * none are verified, and the brief forbids inventing them.
  */
-export function professionalServiceJsonLd() {
+export function professionalServiceJsonLd(locale: Locale = defaultLocale) {
   return {
     "@context": "https://schema.org",
     "@type": "ProfessionalService",
     name: SITE.name,
-    description:
-      "Diving and underwater recovery in Koh Samui, Thailand. PADI courses with Discovery Divers and fun dives, plus professional recovery of lost objects from beach, boat or certain waterfall zones — direct, local and methodical.",
+    description: getDictionary(locale).meta.home.description,
     slogan: SITE.slogan,
-    url: siteUrl(),
+    url: `${siteUrl()}${pathFor("home", locale)}`,
     image: `${siteUrl()}/opengraph-image`,
     telephone: `+${SITE.phoneE164}`,
     areaServed: SITE.areaServed.map((name) => ({ "@type": "Place", name })),
@@ -35,12 +36,12 @@ export function professionalServiceJsonLd() {
   };
 }
 
-export function websiteJsonLd() {
+export function websiteJsonLd(locale: Locale = defaultLocale) {
   return {
     "@context": "https://schema.org",
     "@type": "WebSite",
     name: SITE.name,
-    url: siteUrl(),
-    inLanguage: "en",
+    url: `${siteUrl()}${pathFor("home", locale)}`,
+    inLanguage: htmlLang[locale],
   };
 }

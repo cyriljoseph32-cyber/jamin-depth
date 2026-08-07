@@ -1,14 +1,15 @@
 import Link from "next/link";
 import Image from "next/image";
-import { t } from "@/content/i18n";
+import type { Locale, Dictionary } from "@/content/i18n";
+import { pathFor } from "@/content/routes";
 import { ButtonLink } from "@/components/ui/Button";
 import { Kicker } from "@/components/ui/Kicker";
 import { SonarRings } from "@/components/visuals/SonarRings";
 import { WhatsAppIcon, ArrowIcon, ArrowDownIcon } from "@/components/ui/Icons";
 import { buildWaLink, divingPrefill } from "@/lib/whatsapp";
 
-export function Hero() {
-  const h = t.home;
+export function Hero({ dict, locale }: { dict: Dictionary; locale: Locale }) {
+  const h = dict.home;
   return (
     <section className="relative flex min-h-[calc(100svh-4rem)] items-center overflow-hidden">
       {/* Full-bleed photographic hero. Decorative — the headline carries the meaning. */}
@@ -46,20 +47,20 @@ export function Hero() {
           <p className="mt-7 max-w-xl text-pretty text-base text-foam-dim sm:text-lg">{h.heroLead}</p>
 
           <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:items-center">
-            <ButtonLink href="/diving" size="lg" variant="primary">
-              {t.nav.exploreDiving}
+            <ButtonLink href={pathFor("diving", locale)} size="lg" variant="primary">
+              {dict.nav.exploreDiving}
               <ArrowIcon width={16} height={16} />
             </ButtonLink>
-            <ButtonLink href={buildWaLink(divingPrefill())} size="lg" variant="outline">
+            <ButtonLink href={buildWaLink(divingPrefill(dict.wa))} size="lg" variant="outline">
               <WhatsAppIcon width={18} height={18} />
-              {t.nav.askDiving}
+              {dict.nav.askDiving}
             </ButtonLink>
           </div>
 
           {/* Recovery stays one tap from the hero */}
           <p className="mt-6">
             <Link
-              href="/recovery"
+              href={pathFor("recovery", locale)}
               className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-[0.14em] text-foam-dim underline underline-offset-4 transition-colors hover:text-signal"
             >
               {h.recoveryLink}

@@ -1,6 +1,4 @@
-import type { Metadata } from "next";
-import { t } from "@/content/i18n";
-import { pageMetadata } from "@/lib/metadata";
+import type { Locale, Dictionary } from "@/content/i18n";
 import { PageHeader } from "@/components/site/PageHeader";
 import { FinalCta } from "@/components/site/FinalCta";
 import { Section } from "@/components/ui/Section";
@@ -9,15 +7,8 @@ import { Reveal } from "@/components/ui/Reveal";
 import { RecoveryForm } from "@/components/forms/RecoveryForm";
 import { recoveryPrefill } from "@/lib/whatsapp";
 
-export const metadata: Metadata = pageMetadata({
-  title: t.meta.recovery.title,
-  description: t.meta.recovery.description,
-  path: "/recovery",
-  keywords: [...t.meta.recovery.keywords],
-});
-
-export default function RecoveryPage() {
-  const r = t.recovery;
+export function RecoveryPage({ dict }: { dict: Dictionary; locale: Locale }) {
+  const r = dict.recovery;
   return (
     <>
       <PageHeader kicker={r.heroKicker} title={r.heroTitle} lead={r.heroLead} />
@@ -76,17 +67,18 @@ export default function RecoveryPage() {
           </Reveal>
           <Reveal delay={80}>
             <div className="rounded-[var(--radius)] border border-foam/10 bg-abyss-2/40 p-6 sm:p-8">
-              <RecoveryForm />
+              <RecoveryForm dict={dict} />
             </div>
           </Reveal>
         </div>
       </Section>
 
       <FinalCta
-        kicker={t.home.finalKicker}
-        title={t.home.finalTitle}
-        body={t.home.finalBody}
-        waMessage={recoveryPrefill()}
+        dict={dict}
+        kicker={dict.home.finalKicker}
+        title={dict.home.finalTitle}
+        body={dict.home.finalBody}
+        waMessage={recoveryPrefill(dict.wa)}
       />
     </>
   );

@@ -70,6 +70,20 @@ export const en = {
     call: "Call",
     menu: "Menu",
     close: "Close",
+    /** Link labels for each page, keyed by the route keys in routes.ts. */
+    pages: {
+      home: "Home",
+      diving: "Diving",
+      recovery: "Recovery",
+      about: "About",
+      contact: "Contact",
+      privacy: "Privacy",
+    },
+    skipToContent: "Skip to content",
+    fabAria: "Request a recovery on WhatsApp",
+    languageLabel: "Language",
+    /** Names are written in their own language, as language names should be. */
+    languageNames: { fr: "Français", en: "English" },
   },
 
   home: {
@@ -79,7 +93,8 @@ export const en = {
     heroLead:
       "Personal PADI courses and fun dives out of Koh Samui — to the Gulf of Thailand's best sites like Sail Rock, honest and unhurried. Plus professional underwater recovery when something's gone over the side.",
     recoveryLink: "Lost something in the water? Underwater recovery",
-    badges: ["PADI courses", "Fun dives", "Koh Samui"],
+    /** "French spoken" is owner-confirmed — the diver speaks French fluently. */
+    badges: ["PADI courses", "Fun dives", "French spoken", "Koh Samui"],
     worldsKicker: "Two worlds, one diver",
     worldsTitle: "Diving when you're ready. Recovery when it matters.",
     recoveryCardTitle: "Underwater Recovery",
@@ -214,6 +229,7 @@ export const en = {
     coursesDisclaimer:
       "Courses are booked and run through Discovery Divers. Scuba equipment is included; prices are per person, subject to change and confirmed at booking.",
     coursesCtaLabel: "See courses & prices",
+    coursesPriceFrom: "from",
     certBadge: "Certification",
     noCertBadge: "No certification",
     /**
@@ -356,6 +372,83 @@ export const en = {
     spamError: "Submission blocked. If this is a mistake, please contact us on WhatsApp directly.",
   },
 
+  /** On-site assistant. Kept out of the component so it translates like the rest. */
+  chat: {
+    launcherLabel: "Ask",
+    open: "Open the assistant",
+    close: "Close the assistant",
+    conversation: "Conversation",
+    typing: "Assistant is typing",
+    inputPlaceholder: "Ask about recovery or diving…",
+    send: "Send message",
+    greeting:
+      "Hi — I'm the Jammin's Depths assistant. Lost something in the water around Koh Samui, or curious about diving? Ask me anything, and I'll point you the right way.",
+    suggestions: ["I lost something in the sea", "How does recovery work?", "Tell me about diving here"],
+    notConfigured:
+      "The assistant isn't configured yet. Reach us on WhatsApp and we'll help you directly.",
+    unreachable: "Sorry — I couldn't reach the assistant. Please try WhatsApp and we'll help right away.",
+    failed:
+      "Sorry — something went wrong. Please try again, or reach us on WhatsApp and we'll help right away.",
+    interrupted:
+      "\n\nSorry — I hit a snag. Please try again, or reach us on WhatsApp and we'll help right away.",
+  },
+
+  /**
+   * Text that ends up *inside* the WhatsApp message the visitor sends.
+   * Localised too — a French visitor must not send an English message.
+   */
+  wa: {
+    recoveryIntro: "Hello Jammin's Depths, I need underwater recovery assistance in Koh Samui, Thailand.",
+    recoveryPrefill:
+      "Hello Jammin's Depths, I need underwater recovery assistance in Koh Samui, Thailand. Object: [object]. Location: [location]. Lost on: [date/time].",
+    divingPrefill: "Hello Jammin's Depths, I'd like to ask about diving in Koh Samui, Thailand.",
+    contactIntro: "Hello Jammin's Depths,",
+    labels: {
+      name: "Name",
+      contact: "Contact",
+      object: "Object",
+      location: "Location",
+      lostAt: "Lost on",
+      depth: "Estimated depth",
+      conditions: "Conditions",
+    },
+  },
+
+  /** Moved out of the page component so it can be translated like everything else. */
+  privacy: {
+    heroKicker: "Privacy",
+    heroTitle: "Privacy, kept simple.",
+    heroLead:
+      "We collect as little as possible, and we don't track you around the web. Here's exactly what happens with the information you share.",
+    sections: [
+      {
+        title: "What we collect",
+        body: "Only what you type into the recovery or contact form — your name, a way to reach you, and the details of your request. There are no accounts, no logins and no hidden fields.",
+      },
+      {
+        title: "How it's used",
+        body: "The form builds a message and opens it in WhatsApp (or your email app) so you send it to us directly. Nothing is stored on this website and nothing is sent to a third-party server by the form itself. Once you message us, our conversation lives in WhatsApp or email under their own terms.",
+      },
+      {
+        title: "Tracking & cookies",
+        body: "No advertising trackers and no analytics cookies are set by default. Fonts are self-hosted, so your visit isn't shared with third parties just for loading the page.",
+      },
+      {
+        title: "AI assistant",
+        body: "The optional chat assistant sends your messages to our AI provider (Anthropic) purely to generate a reply — nothing more. The conversation is kept only in your browser for the current session and is cleared when you close the tab; it isn't saved on our servers. Please don't share sensitive personal details in the chat — for a real request, message us on WhatsApp.",
+      },
+      {
+        title: "Photos",
+        body: "If you pick a photo in the recovery form, it stays on your device — it's only used to help you confirm the right file before you attach it yourself in the chat.",
+      },
+    ],
+    questionsTitle: "Questions",
+    /** Split around the two inline links rendered by the page. */
+    questionsBefore: "Reach us any time on ",
+    questionsBetween: " or by phone at ",
+    questionsAfter: ".",
+  },
+
   notFound: {
     kicker: "Error 404",
     title: "This dive came up empty.",
@@ -370,4 +463,22 @@ export const en = {
   },
 } as const;
 
-export type Dictionary = typeof en;
+/**
+ * `en` is `as const`, so every string in it is a *literal* type. A second
+ * dictionary could never satisfy that. `Widen` relaxes the literals back to
+ * their primitives while preserving the exact shape — so `fr.ts` is checked
+ * key-for-key against English without being forced to repeat English strings.
+ */
+type Widen<T> = T extends string
+  ? string
+  : T extends number
+    ? number
+    : T extends boolean
+      ? boolean
+      : T extends readonly (infer U)[]
+        ? readonly Widen<U>[]
+        : T extends object
+          ? { [K in keyof T]: Widen<T[K]> }
+          : T;
+
+export type Dictionary = Widen<typeof en>;

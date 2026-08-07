@@ -1,5 +1,8 @@
 import type { InputHTMLAttributes, TextareaHTMLAttributes } from "react";
-import { t } from "@/content/i18n";
+import type { Dictionary } from "@/content/i18n";
+
+/** Just the slice of copy the fields need — keeps the prop surface small. */
+export type FormsCopy = Dictionary["forms"];
 
 const fieldBase =
   "w-full rounded-[var(--radius)] border bg-blueblack/60 px-4 py-3 text-foam placeholder:text-foam-dim/50 outline-none transition-colors focus:border-signal";
@@ -8,10 +11,12 @@ function Label({
   htmlFor,
   label,
   optional,
+  copy,
 }: {
   htmlFor: string;
   label: string;
   optional?: boolean;
+  copy: FormsCopy;
 }) {
   return (
     <span className="mb-2 flex items-baseline justify-between gap-2">
@@ -19,7 +24,7 @@ function Label({
         {label}
       </label>
       <span className="font-mono text-[0.6rem] uppercase tracking-[0.14em] text-sand-dim">
-        {optional ? t.forms.optional : t.forms.required}
+        {optional ? copy.optional : copy.required}
       </span>
     </span>
   );
@@ -30,11 +35,12 @@ export function TextField({
   label,
   optional,
   error,
+  copy,
   ...rest
-}: { id: string; label: string; optional?: boolean; error?: string } & InputHTMLAttributes<HTMLInputElement>) {
+}: { id: string; label: string; optional?: boolean; error?: string; copy: FormsCopy } & InputHTMLAttributes<HTMLInputElement>) {
   return (
     <div>
-      <Label htmlFor={id} label={label} optional={optional} />
+      <Label htmlFor={id} label={label} optional={optional} copy={copy} />
       <input
         id={id}
         name={id}
@@ -57,11 +63,12 @@ export function TextArea({
   label,
   optional,
   error,
+  copy,
   ...rest
-}: { id: string; label: string; optional?: boolean; error?: string } & TextareaHTMLAttributes<HTMLTextAreaElement>) {
+}: { id: string; label: string; optional?: boolean; error?: string; copy: FormsCopy } & TextareaHTMLAttributes<HTMLTextAreaElement>) {
   return (
     <div>
-      <Label htmlFor={id} label={label} optional={optional} />
+      <Label htmlFor={id} label={label} optional={optional} copy={copy} />
       <textarea
         id={id}
         name={id}

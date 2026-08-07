@@ -1,6 +1,4 @@
-import type { Metadata } from "next";
-import { t } from "@/content/i18n";
-import { pageMetadata } from "@/lib/metadata";
+import type { Locale, Dictionary } from "@/content/i18n";
 import { PageHeader } from "@/components/site/PageHeader";
 import { FinalCta } from "@/components/site/FinalCta";
 import { Section } from "@/components/ui/Section";
@@ -9,15 +7,8 @@ import { Reveal } from "@/components/ui/Reveal";
 import { MediaSlot } from "@/components/ui/MediaSlot";
 import { recoveryPrefill } from "@/lib/whatsapp";
 
-export const metadata: Metadata = pageMetadata({
-  title: t.meta.about.title,
-  description: t.meta.about.description,
-  path: "/about",
-  keywords: [...t.meta.about.keywords],
-});
-
-export default function AboutPage() {
-  const a = t.about;
+export function AboutPage({ dict }: { dict: Dictionary; locale: Locale }) {
+  const a = dict.about;
   return (
     <>
       <PageHeader kicker={a.heroKicker} title={a.heroTitle} lead={a.heroLead} />
@@ -68,10 +59,11 @@ export default function AboutPage() {
       </Section>
 
       <FinalCta
-        kicker={t.home.finalKicker}
-        title={t.home.finalTitle}
-        body={t.home.finalBody}
-        waMessage={recoveryPrefill()}
+        dict={dict}
+        kicker={dict.home.finalKicker}
+        title={dict.home.finalTitle}
+        body={dict.home.finalBody}
+        waMessage={recoveryPrefill(dict.wa)}
       />
     </>
   );

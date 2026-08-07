@@ -1,21 +1,37 @@
 import type { MetadataRoute } from "next";
 import { siteUrl } from "@/content/site";
+import { locales } from "@/content/i18n";
+import { PAGE_KEYS, pathFor, alternatesFor, type PageKey } from "@/content/routes";
+
+/**
+ * Bilingual sitemap: every page in every locale, each entry declaring its
+ * `alternates.languages` so Google pairs the translations instead of
+ * treating them as duplicates.
+ */
+const PRIORITY: Record<PageKey, number> = {
+  home: 1,
+  diving: 0.9,
+  recovery: 0.8,
+  contact: 0.7,
+  about: 0.6,
+  privacy: 0.2,
+};
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = siteUrl();
   const now = new Date();
-  const routes = [
-    { path: "/", priority: 1 },
-    { path: "/recovery", priority: 0.9 },
-    { path: "/diving", priority: 0.8 },
-    { path: "/about", priority: 0.6 },
-    { path: "/contact", priority: 0.7 },
-    { path: "/privacy", priority: 0.2 },
-  ];
-  return routes.map((r) => ({
-    url: `${base}${r.path === "/" ? "" : r.path}`,
-    lastModified: now,
-    changeFrequency: "monthly",
-    priority: r.priority,
-  }));
+
+  return locales.flatMap((locale) =>
+    PAGE_KEYS.map((key) => ({
+      url: `${base}${pathFor(key, locale)}`,
+      lastModified: now,
+      changeFrequency: "monthly" as const,
+      priority: PRIORITY[key],
+      alternates: {
+        languages: Object.fromEntries(
+          Object.entries(alternatesFor(key)).map(([l, path]) => [l, `${base}${path}`]),
+        ),
+      },
+    })),
+  );
 }

@@ -1,7 +1,6 @@
 import Link from "next/link";
-import type { Metadata } from "next";
-import { t } from "@/content/i18n";
-import { pageMetadata } from "@/lib/metadata";
+import type { Locale, Dictionary } from "@/content/i18n";
+import { pathFor } from "@/content/routes";
 import { Hero } from "@/components/site/Hero";
 import { FinalCta } from "@/components/site/FinalCta";
 import { Section } from "@/components/ui/Section";
@@ -12,18 +11,11 @@ import { ButtonLink } from "@/components/ui/Button";
 import { ArrowIcon } from "@/components/ui/Icons";
 import { recoveryPrefill } from "@/lib/whatsapp";
 
-export const metadata: Metadata = pageMetadata({
-  title: t.meta.home.title,
-  description: t.meta.home.description,
-  path: "/",
-  keywords: [...t.meta.home.keywords],
-});
-
-export default function HomePage() {
-  const h = t.home;
+export function HomePage({ dict, locale }: { dict: Dictionary; locale: Locale }) {
+  const h = dict.home;
   return (
     <>
-      <Hero />
+      <Hero dict={dict} locale={locale} />
 
       {/* Two worlds */}
       <Section id="worlds" className="hairline-top">
@@ -38,7 +30,7 @@ export default function HomePage() {
               title: h.divingCardTitle,
               body: h.divingCardBody,
               cta: h.divingCardCta,
-              href: "/diving",
+              href: pathFor("diving", locale),
               label: "Diving · Gulf of Thailand",
               src: "/media/diver.jpg",
               alt: "Scuba diver with an underwater camera on a reef in the Gulf of Thailand",
@@ -47,7 +39,7 @@ export default function HomePage() {
               title: h.recoveryCardTitle,
               body: h.recoveryCardBody,
               cta: h.recoveryCardCta,
-              href: "/recovery",
+              href: pathFor("recovery", locale),
               label: "Into the blue",
               src: "/media/barracuda.jpg",
               alt: "A large school of barracuda in the blue",
@@ -165,17 +157,18 @@ export default function HomePage() {
           ))}
         </div>
         <div className="mt-8">
-          <ButtonLink href="/recovery" variant="outline">
+          <ButtonLink href={pathFor("recovery", locale)} variant="outline">
             Start a recovery request <ArrowIcon width={16} height={16} />
           </ButtonLink>
         </div>
       </Section>
 
       <FinalCta
+        dict={dict}
         kicker={h.finalKicker}
         title={h.finalTitle}
         body={h.finalBody}
-        waMessage={recoveryPrefill()}
+        waMessage={recoveryPrefill(dict.wa)}
       />
     </>
   );

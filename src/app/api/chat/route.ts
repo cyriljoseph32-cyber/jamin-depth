@@ -1,5 +1,12 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { ASSISTANT, buildSystemPrompt, sanitizeMessages } from "@/lib/assistant";
+import { getDictionary, isLocale, defaultLocale, type Locale } from "@/content/i18n";
+
+/** Read the visitor's locale off the request body; fall back to the default. */
+function localeFrom(body: unknown): Locale {
+  const raw = (body as { locale?: unknown } | null)?.locale;
+  return typeof raw === "string" && isLocale(raw) ? raw : defaultLocale;
+}
 
 /**
  * POST /api/chat — streams a Claude reply for the on-site assistant.
@@ -15,22 +22,19 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 30;
 
 export async function POST(req: Request) {
-  const apiKey = process.env.ANTHROPIC_API_KEY?.trim();
-  if (!apiKey) {
-    return Response.json(
-      {
-        error:
-          "The assistant isn't configured yet. Reach us on WhatsApp and we'll help you directly.",
-      },
-      { status: 503 },
-    );
-  }
-
   let body: unknown;
   try {
     body = await req.json();
   } catch {
     return Response.json({ error: "Invalid request." }, { status: 400 });
+  }
+
+  const locale = localeFrom(body);
+  const dict = getDictionary(locale);
+
+  const apiKey = process.env.ANTHROPIC_API_KEY?.trim();
+  if (!apiKey) {
+    return Response.json({ error: dict.chat.notConfigured }, { status: 503 });
   }
 
   const messages = sanitizeMessages((body as { messages?: unknown } | null)?.messages);
@@ -47,7 +51,7 @@ export async function POST(req: Request) {
         const run = anthropic.messages.stream({
           model: ASSISTANT.model,
           max_tokens: ASSISTANT.maxOutputTokens,
-          system: buildSystemPrompt(),
+          system: buildSystemPrompt(locale),
           messages: messages.map((m) => ({ role: m.role, content: m.content })),
         });
 
@@ -62,9 +66,7 @@ export async function POST(req: Request) {
         console.error("assistant stream error:", err);
         try {
           controller.enqueue(
-            encoder.encode(
-              "\n\nSorry — I hit a snag. Please try again, or reach us on WhatsApp and we'll help right away.",
-            ),
+            encoder.encode(dict.chat.interrupted),
           );
         } catch {
           /* stream already closed */

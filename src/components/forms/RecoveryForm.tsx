@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, type FormEvent } from "react";
-import { t } from "@/content/i18n";
+import type { Dictionary } from "@/content/i18n";
 import {
   validateRecovery,
   hasErrors,
@@ -17,9 +17,10 @@ import { WhatsAppIcon } from "@/components/ui/Icons";
 
 type Field = keyof RecoveryInput | "depth" | "conditions";
 
-export function RecoveryForm() {
-  const L = t.forms.labels;
-  const P = t.forms.placeholders;
+export function RecoveryForm({ dict }: { dict: Dictionary }) {
+  const C = dict.forms;
+  const L = C.labels;
+  const P = C.placeholders;
 
   const [values, setValues] = useState<Record<Field, string>>({
     name: "",
@@ -47,7 +48,7 @@ export function RecoveryForm() {
 
     if (isLikelySpam(honeypot, Date.now() - mountedAt.current)) {
       setStatus("error");
-      setStatusMsg(t.forms.spamError);
+      setStatusMsg(C.spamError);
       return;
     }
 
@@ -62,15 +63,14 @@ export function RecoveryForm() {
     setErrors(found);
     if (hasErrors(found)) {
       setStatus("error");
-      setStatusMsg(t.forms.errorGeneric);
+      setStatusMsg(C.errorGeneric);
       return;
     }
 
-    const summary = recoverySummary({
-      ...input,
-      depth: values.depth,
-      conditions: values.conditions,
-    });
+    const summary = recoverySummary(
+      { ...input, depth: values.depth, conditions: values.conditions },
+      dict.wa,
+    );
     const href = buildWaLink(summary);
     setWaHref(href);
     setStatus("success");
@@ -85,15 +85,18 @@ export function RecoveryForm() {
 
   const emailHref = buildMailto(
     `Recovery request — ${values.object || "lost item"}`,
-    recoverySummary({
-      name: values.name,
-      contact: values.contact,
-      object: values.object,
-      location: values.location,
-      lostAt: values.lostAt,
-      depth: values.depth,
-      conditions: values.conditions,
-    }),
+    recoverySummary(
+      {
+        name: values.name,
+        contact: values.contact,
+        object: values.object,
+        location: values.location,
+        lostAt: values.lostAt,
+        depth: values.depth,
+        conditions: values.conditions,
+      },
+      dict.wa,
+    ),
   );
 
   return (
@@ -109,6 +112,7 @@ export function RecoveryForm() {
           value={values.name}
           error={errors.name}
           onChange={(e) => set("name", e.target.value)}
+          copy={C}
         />
         <TextField
           id="contact"
@@ -118,6 +122,7 @@ export function RecoveryForm() {
           value={values.contact}
           error={errors.contact}
           onChange={(e) => set("contact", e.target.value)}
+          copy={C}
         />
       </div>
 
@@ -128,6 +133,7 @@ export function RecoveryForm() {
         value={values.object}
         error={errors.object}
         onChange={(e) => set("object", e.target.value)}
+        copy={C}
       />
 
       <TextField
@@ -137,6 +143,7 @@ export function RecoveryForm() {
         value={values.location}
         error={errors.location}
         onChange={(e) => set("location", e.target.value)}
+        copy={C}
       />
 
       <div className="grid gap-5 sm:grid-cols-2">
@@ -147,6 +154,7 @@ export function RecoveryForm() {
           value={values.lostAt}
           error={errors.lostAt}
           onChange={(e) => set("lostAt", e.target.value)}
+          copy={C}
         />
         <TextField
           id="depth"
@@ -155,6 +163,7 @@ export function RecoveryForm() {
           optional
           value={values.depth}
           onChange={(e) => set("depth", e.target.value)}
+          copy={C}
         />
       </div>
 
@@ -166,6 +175,7 @@ export function RecoveryForm() {
         rows={3}
         value={values.conditions}
         onChange={(e) => set("conditions", e.target.value)}
+        copy={C}
       />
 
       <div>
@@ -174,7 +184,7 @@ export function RecoveryForm() {
             {L.photo}
           </label>
           <span className="font-mono text-[0.6rem] uppercase tracking-[0.14em] text-sand-dim">
-            {t.forms.optional}
+            {C.optional}
           </span>
         </span>
         <input
@@ -190,21 +200,21 @@ export function RecoveryForm() {
             {photoName}
           </p>
         ) : null}
-        <p className="mt-2 text-xs text-foam-dim">{t.forms.photoHelp}</p>
+        <p className="mt-2 text-xs text-foam-dim">{C.photoHelp}</p>
       </div>
 
-      <FormStatus status={status} waHref={waHref} message={statusMsg} />
+      <FormStatus status={status} waHref={waHref} message={statusMsg} copy={C} />
 
       <div className="flex flex-col gap-3 pt-1 sm:flex-row sm:items-center">
         <Button type="submit" size="lg" variant="primary">
           <WhatsAppIcon width={18} height={18} />
-          {t.forms.submitRecovery}
+          {C.submitRecovery}
         </Button>
         <a
           href={emailHref}
           className="font-mono text-xs uppercase tracking-[0.14em] text-foam-dim underline underline-offset-4 transition-colors hover:text-foam"
         >
-          {t.forms.emailFallback}
+          {C.emailFallback}
         </a>
       </div>
     </form>

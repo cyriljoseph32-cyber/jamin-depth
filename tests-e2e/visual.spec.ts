@@ -1,12 +1,15 @@
 import { test } from "@playwright/test";
 import fs from "node:fs";
 
+/** Both locales are captured — the French build is what most visitors see. */
 const pages = [
-  { path: "/", name: "home" },
-  { path: "/recovery", name: "recovery" },
-  { path: "/diving", name: "diving" },
-  { path: "/about", name: "about" },
-  { path: "/contact", name: "contact" },
+  { path: "/fr", name: "home-fr" },
+  { path: "/fr/plongee", name: "diving-fr" },
+  { path: "/fr/recuperation-sous-marine", name: "recovery-fr" },
+  { path: "/fr/le-plongeur", name: "about-fr" },
+  { path: "/fr/contact", name: "contact-fr" },
+  { path: "/en", name: "home-en" },
+  { path: "/en/diving", name: "diving-en" },
 ];
 
 test.describe("visual capture", () => {
