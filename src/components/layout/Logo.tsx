@@ -12,8 +12,10 @@ import { SITE } from "@/content/site";
  *
  * `lockup` is the complete artwork, used where there is room to read it.
  *
- * Both are recoloured into the site palette by `scripts/build-logo.mjs`; the
- * linework is the owner's original, untouched.
+ * Both are produced by `scripts/build-logo.mjs` from the owner's drawing. Its
+ * colours are untouched; only the paper is keyed out, and in the lockup's dark
+ * variant the lettering — which would otherwise vanish against the site — is
+ * lifted to foam.
  */
 export function Logo({
   variant = "badge",
@@ -27,8 +29,8 @@ export function Logo({
       <Image
         src="/brand/logo-lockup-dark.png"
         alt={SITE.name}
-        width={531}
-        height={748}
+        width={720}
+        height={1030}
         sizes="176px"
         className="h-auto w-44"
       />
@@ -38,12 +40,12 @@ export function Logo({
   return (
     <span className="flex items-center gap-2.5">
       <Image
-        src="/brand/logo-badge-dark.png"
+        src="/brand/logo-badge.png"
         /* The wordmark beside it already names the brand; without it the image
          * has to carry the accessible name for the link that wraps this. */
         alt={compact ? SITE.name : ""}
-        width={516}
-        height={516}
+        width={700}
+        height={700}
         sizes="40px"
         className="h-10 w-10 shrink-0"
         priority

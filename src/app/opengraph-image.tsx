@@ -12,7 +12,7 @@ export const contentType = "image/png";
  * module scope rather than per request — the file is part of the build.
  */
 const badge = `data:image/png;base64,${readFileSync(
-  join(process.cwd(), "public/brand/logo-badge-dark.png"),
+  join(process.cwd(), "public/brand/logo-badge.png"),
 ).toString("base64")}`;
 
 export default function OgImage() {
