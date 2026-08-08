@@ -60,7 +60,7 @@ export function RecoveryForm({ dict }: { dict: Dictionary }) {
       location: values.location,
       lostAt: values.lostAt,
     };
-    const found = validateRecovery(input);
+    const found = validateRecovery(input, C.validation);
     setErrors(found);
     if (hasErrors(found)) {
       setStatus("error");

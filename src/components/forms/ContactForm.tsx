@@ -42,7 +42,7 @@ export function ContactForm({ dict }: { dict: Dictionary }) {
       return;
     }
 
-    const found = validateContact(values);
+    const found = validateContact(values, C.validation);
     setErrors(found);
     if (hasErrors(found)) {
       setStatus("error");

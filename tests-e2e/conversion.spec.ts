@@ -91,3 +91,21 @@ test("analytics events fire without a provider present", async ({ page }) => {
   );
   expect(events).toContain("whatsapp_click_floating");
 });
+
+test("the French form answers in French, not English", async ({ page }) => {
+  await page.goto("/fr/recuperation-sous-marine");
+  // Clear the anti-spam time window (min 1.2s on-form).
+  await page.waitForTimeout(1400);
+
+  await page.getByRole("button", { name: /ouvrir whatsapp avec ma demande/i }).click();
+
+  const form = page.locator("form");
+  await expect(form.getByRole("alert").first()).toBeVisible();
+  // Target the error elements by id: "Qu'avez-vous perdu ?" is also the field's
+  // own label, so matching on text alone is ambiguous.
+  await expect(form.locator("#name-error")).toHaveText("Indiquez-nous votre nom.");
+  await expect(form.locator("#object-error")).toHaveText("Qu'avez-vous perdu ?");
+
+  // The English wording these replaced must not survive anywhere on the page.
+  await expect(page.getByText(/Please tell us your name|What did you lose\?/i)).toHaveCount(0);
+});

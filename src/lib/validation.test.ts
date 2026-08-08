@@ -8,6 +8,8 @@ import {
   validateContact,
   hasErrors,
 } from "./validation";
+import { en } from "@/content/en";
+import { fr } from "@/content/fr";
 
 describe("isBlank", () => {
   it("treats empty and whitespace as blank", () => {
@@ -95,5 +97,45 @@ describe("validateContact", () => {
       message: "I'd like to ask about diving next week.",
     });
     expect(hasErrors(errors)).toBe(false);
+  });
+});
+
+describe("localised messages", () => {
+  /**
+   * The messages used to be hardcoded English, so a French visitor was told in
+   * English what they had got wrong — on a French-first site, at the exact
+   * moment they were stuck. These assert the actual strings, not just that
+   * something truthy came back, so a hardcoded `return "…"` cannot come back
+   * unnoticed.
+   */
+  it("returns French messages when given the French dictionary", () => {
+    const errors = validateRecovery(
+      { name: "", contact: "", object: "", location: "", lostAt: "" },
+      fr.forms.validation,
+    );
+    expect(errors.name).toBe("Indiquez-nous votre nom.");
+    expect(errors.object).toBe("Qu'avez-vous perdu ?");
+    expect(errors.contact).toBe("Un téléphone, WhatsApp ou e-mail est nécessaire.");
+  });
+
+  it("localises the invalid-contact message too, not just the missing one", () => {
+    const errors = validateContact(
+      { name: "Alex", contact: "nope", message: "Bonjour, j'ai une question." },
+      fr.forms.validation,
+    );
+    expect(errors.contact).toBe(fr.forms.validation.contactInvalid);
+  });
+
+  it("still defaults to English when no dictionary is passed", () => {
+    const errors = validateContact({ name: "", contact: "", message: "" });
+    expect(errors.name).toBe(en.forms.validation.name);
+  });
+
+  it("keeps both dictionaries filled — an empty string would render as no error", () => {
+    for (const dict of [en, fr]) {
+      for (const [key, message] of Object.entries(dict.forms.validation)) {
+        expect(message.trim(), `${key} must not be blank`).not.toBe("");
+      }
+    }
   });
 });

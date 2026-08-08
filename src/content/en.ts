@@ -479,6 +479,17 @@ export const en = {
     errorTitle: "Something needs a look",
     errorGeneric: "Please check the highlighted fields and try again.",
     spamError: "Submission blocked. If this is a mistake, please contact us on WhatsApp directly.",
+    /** Per-field messages. Passed into the validators so they follow the locale. */
+    validation: {
+      name: "Please tell us your name.",
+      contactRequired: "A phone, WhatsApp or email is required.",
+      contactInvalid: "Enter a valid phone/WhatsApp or email.",
+      object: "What did you lose?",
+      location: "Where did it happen? Be as precise as you can.",
+      lostAt: "Roughly when did it happen?",
+      message: "Add a short message.",
+      messageShort: "A little more detail helps us help you.",
+    },
   },
 
   /** On-site assistant. Kept out of the component so it translates like the rest. */

@@ -460,6 +460,16 @@ export const fr: Dictionary = {
     errorGeneric: "Merci de vérifier les champs signalés et de réessayer.",
     spamError:
       "Envoi bloqué. S'il s'agit d'une erreur, contactez-nous directement sur WhatsApp.",
+    validation: {
+      name: "Indiquez-nous votre nom.",
+      contactRequired: "Un téléphone, WhatsApp ou e-mail est nécessaire.",
+      contactInvalid: "Saisissez un téléphone/WhatsApp ou un e-mail valide.",
+      object: "Qu'avez-vous perdu ?",
+      location: "Où cela s'est-il passé ? Soyez le plus précis possible.",
+      lostAt: "À peu près quand cela s'est-il passé ?",
+      message: "Ajoutez un court message.",
+      messageShort: "Un peu plus de détail nous aidera à vous aider.",
+    },
   },
 
   chat: {
