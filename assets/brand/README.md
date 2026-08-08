@@ -23,25 +23,45 @@ Le lettrage est isolé par trois tests combinés : deux bandes horizontales
 1085), un rayon autour du blason, et la couleur elle-même. Sans le rayon, les
 contours sombres du plongeur et de la vague seraient emportés avec les mots.
 
-## Palette
+## Palette — c'est le logo qui la donne
 
-Les couleurs de l'illustration sont celles du dessin — teal de la vague, or du
-monogramme, rouge/or/vert du compas, jaune du bloc. Les seuls jetons du site
-utilisés sont ceux du `@theme` de `src/app/globals.css` :
+Le site ne dicte pas ses couleurs au logo : **c'est l'inverse**. Un clustering
+des pixels saturés du dessin sort huit teintes nettes, qui couvrent exactement
+les rôles dont l'interface a besoin. Elles sont reportées telles quelles dans le
+bloc `@theme` de `src/app/globals.css`, qui fait foi pour tout le site.
 
-| Rôle | Jeton | Valeur |
+| Teinte du logo | Où elle est dans le dessin | Jeton |
 |---|---|---|
-| Lettrage sur fond sombre | `--color-foam` | `#f2f5f4` |
-| Version une couleur, sombre | `--color-abyss` | `#0a1119` |
-| Fond des icônes | `--color-blueblack` | `#05080d` |
+| `#061f2a` | le marine du lettrage | `--color-blueblack` / `--color-abyss` |
+| `#08323c` | teal profond | `--color-abyss-2` |
+| `#25676a` | la vague | `--color-petrol` |
+| `#ac8431` | l'or du compas et du bloc | `--color-signal-600` |
+| `#832e2b` | le rouge du compas | `--color-error` |
+| `#276032` | le vert du compas | `--color-deepgreen`, `--color-success` |
+| `#d4e1cd` | les rehauts clairs | `--color-foam` |
 
-### Point de vigilance — le jaune
+Deux ajustements, et seulement deux, pour la lisibilité :
 
-Le bloc du plongeur et une partie du compas sont dans un jaune-or proche de
-`--color-signal` (`#ffc300`), qui sur ce site ne signifie qu'une chose : « clique
-ici ». Le logo n'apparaît qu'en en-tête et en pied de page, loin des boutons, donc
-la collision reste théorique aujourd'hui. Elle deviendrait réelle si le logo était
-posé à côté d'un CTA — à éviter.
+- **L'accent** est l'or du logo remonté à `#d9a83f`. À sa valeur dessinée il
+  passe le AA (5,5:1) mais éteint nettement les boutons WhatsApp. L'or exact
+  reste dans le système, en `--color-signal-600`, au survol.
+- **Le rouge et le vert du compas** sont remontés eux aussi : tels que dessinés
+  ils sont à 2,2:1 et 2,5:1 sur le fond, donc illisibles en texte.
+
+Chaque paire réellement lue par un visiteur est vérifiée au contraste WCAG AA
+par `src/lib/palette.test.ts`, qui lit `globals.css` directement. Modifier une
+valeur sans vérifier fait échouer `npm test`.
+
+### Ce que ça règle
+
+L'or du logo **est** désormais l'accent du site. Avant, le jaune des CTA
+(`#ffc300`) et l'or du dessin étaient deux jaunes différents qui se
+concurrençaient dès qu'ils se croisaient. Il n'y en a plus qu'un.
+
+En contrepartie, le rouge et le vert du compas portent maintenant un sens
+fonctionnel — erreur et succès dans les formulaires. C'est le mapping naturel,
+mais il faut le savoir : le rouge de la marque voudra dire « quelque chose ne va
+pas » ailleurs dans l'interface.
 
 ## Quel fichier utiliser
 

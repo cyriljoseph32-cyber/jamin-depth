@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { ImageResponse } from "next/og";
 import { SITE } from "@/content/site";
+import { BRAND } from "@/content/brand";
 
 export const alt = `${SITE.name} — ${SITE.tagline}, ${SITE.location}`;
 export const size = { width: 1200, height: 630 };
@@ -27,8 +28,8 @@ export default function OgImage() {
           justifyContent: "space-between",
           padding: "72px",
           background:
-            "radial-gradient(1000px 500px at 30% -10%, #124c5a55, transparent), linear-gradient(160deg, #0a1119, #05080d)",
-          color: "#f2f5f4",
+            `radial-gradient(1000px 500px at 30% -10%, ${BRAND.petrol}55, transparent), linear-gradient(160deg, ${BRAND.abyss}, ${BRAND.blueblack})`,
+          color: BRAND.foam,
           fontFamily: "sans-serif",
         }}
       >
@@ -41,7 +42,7 @@ export default function OgImage() {
               fontSize: 22,
               letterSpacing: 8,
               textTransform: "uppercase",
-              color: "#c9bfa8",
+              color: BRAND.sand,
             }}
           >
             {`${SITE.tagline} · ${SITE.location}`}
@@ -49,7 +50,7 @@ export default function OgImage() {
         </div>
 
         <div style={{ display: "flex", flexDirection: "column" }}>
-          <div style={{ fontSize: 40, color: "#aeb8bd", marginBottom: 8 }}>{SITE.name}</div>
+          <div style={{ fontSize: 40, color: BRAND.foamDim, marginBottom: 8 }}>{SITE.name}</div>
           <div
             style={{
               fontSize: 92,
@@ -68,14 +69,14 @@ export default function OgImage() {
               fontWeight: 700,
               textTransform: "uppercase",
               letterSpacing: -2,
-              color: "#ffc300",
+              color: BRAND.signal,
             }}
           >
             We dive for it.
           </div>
         </div>
 
-        <div style={{ display: "flex", fontSize: 26, color: "#8f8974", letterSpacing: 2 }}>
+        <div style={{ display: "flex", fontSize: 26, color: BRAND.sandDim, letterSpacing: 2 }}>
           {`Underwater recovery · Diving · WhatsApp ${SITE.phoneInternationalDisplay}`}
         </div>
       </div>

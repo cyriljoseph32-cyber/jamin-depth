@@ -14,7 +14,7 @@
  *  1. The cream paper is keyed out to transparency, so the logo sits on any
  *     background instead of carrying a beige rectangle around with it.
  *  2. For the dark-background variant, the *lettering* — and nothing else — is
- *     lifted to foam. At #0b222d on #05080d the words are invisible; the wave,
+ *     lifted to foam. At #0b222d on #04121a the words are invisible; the wave,
  *     compass, monogram and diver are not, so they are left alone.
  *
  * Re-run after any change to the master. If the owner supplies a vector or a
@@ -31,9 +31,9 @@ const OUT = join(ROOT, "public/brand");
 
 /* Must stay identical to the `@theme` block in globals.css. */
 const TOKEN = {
-  blueblack: "#05080d",
-  abyss: "#0a1119",
-  foam: "#f2f5f4",
+  blueblack: "#04121a",
+  abyss: "#07202a",
+  foam: "#eff4f0",
 };
 
 const rgb = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));

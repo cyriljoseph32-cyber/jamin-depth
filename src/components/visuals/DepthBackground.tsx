@@ -23,7 +23,10 @@ export function DepthBackground() {
         className="absolute inset-0"
         style={{
           background:
-            "linear-gradient(180deg, rgba(5,8,13,0.66) 0%, rgba(5,8,13,0.80) 42%, rgba(3,5,10,0.93) 100%)",
+            "linear-gradient(180deg," +
+            " color-mix(in srgb, var(--color-blueblack) 66%, transparent) 0%," +
+            " color-mix(in srgb, var(--color-blueblack) 80%, transparent) 42%," +
+            " color-mix(in srgb, var(--color-blueblack) 93%, transparent) 100%)",
         }}
       />
 
@@ -40,7 +43,9 @@ export function DepthBackground() {
       <div
         className="absolute inset-0"
         style={{
-          background: "radial-gradient(120% 90% at 50% 42%, transparent 34%, rgba(3,5,10,0.6) 100%)",
+          background:
+            "radial-gradient(120% 90% at 50% 42%, transparent 34%," +
+            " color-mix(in srgb, var(--color-blueblack) 60%, transparent) 100%)",
         }}
       />
 

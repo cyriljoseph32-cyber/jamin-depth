@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Oswald, IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
 import "../globals.css";
 import { SITE, siteUrl } from "@/content/site";
+import { BRAND } from "@/content/brand";
 import {
   getDictionary,
   isLocale,
@@ -90,7 +91,7 @@ export async function generateMetadata({
 }
 
 export const viewport: Viewport = {
-  themeColor: "#05080d",
+  themeColor: BRAND.blueblack,
   colorScheme: "dark",
   width: "device-width",
   initialScale: 1,

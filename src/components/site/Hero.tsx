@@ -23,14 +23,8 @@ export function Hero({ dict, locale }: { dict: Dictionary; locale: Locale }) {
         sizes="100vw"
         className="object-cover object-[center_30%]"
       />
-      {/*
-        Scrim keeps the headline legible over the photo: bottom-up on narrow screens where the
-        crop sits behind the text, diagonal on wide ones so the diver stays visible at right.
-      */}
-      <div
-        aria-hidden
-        className="absolute inset-0 bg-[linear-gradient(to_top,rgba(5,8,13,0.9),rgba(5,8,13,0.35))] sm:bg-[linear-gradient(100deg,rgba(5,8,13,0.92)_30%,rgba(5,8,13,0.55)_65%,rgba(5,8,13,0.25)_100%)]"
-      />
+      {/* Scrim keeps the headline legible over the photo — see `.hero-scrim`. */}
+      <div aria-hidden className="hero-scrim absolute inset-0" />
 
       {/* faint sonar sweep, decorative */}
       <SonarRings

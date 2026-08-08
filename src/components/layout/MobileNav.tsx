@@ -44,8 +44,7 @@ export function MobileNav({ dict, locale }: { dict: Dictionary; locale: Locale }
       role="dialog"
       aria-modal="true"
       aria-label={dict.nav.menu}
-      className="fixed inset-0 z-[80] flex flex-col overflow-y-auto md:hidden"
-      style={{ backgroundColor: "#05080d" }}
+      className="fixed inset-0 z-[80] flex flex-col overflow-y-auto bg-blueblack md:hidden"
     >
       <div className="flex items-center justify-between px-5 py-4">
         <span className="mono-kicker">{SITE.name}</span>

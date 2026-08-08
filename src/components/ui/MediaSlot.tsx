@@ -45,7 +45,12 @@ export function MediaSlot({
           <div
             aria-hidden
             className="absolute inset-0"
-            style={{ background: "linear-gradient(to top, rgba(5,8,13,0.72), rgba(5,8,13,0) 48%)" }}
+            style={{
+              background:
+                "linear-gradient(to top," +
+                " color-mix(in srgb, var(--color-blueblack) 72%, transparent)," +
+                " transparent 48%)",
+            }}
           />
         </>
       ) : (
@@ -55,7 +60,8 @@ export function MediaSlot({
             className="absolute inset-0"
             style={{
               background:
-                "radial-gradient(80% 60% at 30% 20%, color-mix(in srgb, var(--color-petrol) 45%, transparent), transparent 60%), linear-gradient(160deg, #0c1520, #05080d)",
+                "radial-gradient(80% 60% at 30% 20%, color-mix(in srgb, var(--color-petrol) 45%, transparent), transparent 60%)," +
+                " linear-gradient(160deg, var(--color-abyss-2), var(--color-blueblack))",
             }}
           />
           <SonarRings className="absolute left-1/2 top-1/2 h-40 w-40 -translate-x-1/2 -translate-y-1/2 text-foam/15" />
