@@ -114,11 +114,23 @@ Un export PNG « sur fond transparent » depuis un aperçu ne convient pas : le
 damier gris et blanc y est peint dans les pixels, il ne correspond à aucun canal
 alpha. Un fichier de ce type a déjà été écarté pour cette raison.
 
-## Point à trancher — orthographe
+## Correction en attente — orthographe
 
-Le dessin porte **`DEPTH`** (singulier) alors que le site écrit partout
-**« Jammin's Depths »** (pluriel, défini dans `src/content/site.ts`). Les deux
-apparaissent aujourd'hui côte à côte dans le pied de page. Aucune des deux
-graphies n'a été modifiée : c'est une décision de marque, pas une correction
-technique. Une fois tranchée, un seul fichier est à toucher — soit le dessin,
-soit `SITE.name`.
+**La marque s'écrit « Jammin's Depths », au pluriel.** C'est tranché, et c'est
+déjà ce que porte `SITE.name` dans `src/content/site.ts`, donc tous les textes du
+site sont corrects.
+
+Le dessin, lui, porte encore **`DEPTH`** au singulier. Tant qu'un master corrigé
+n'est pas fourni, deux conséquences :
+
+- **Sur le site**, le pied de page utilise le **blason** et non le verrouillage
+  complet. Le blason ne contient aucun lettrage, la graphie fautive n'apparaît
+  donc nulle part. Le jour où le dessin est corrigé, il suffit de remettre
+  `variant="lockup"` dans `src/components/layout/Footer.tsx` — une ligne.
+- **En impression**, les quatre fichiers `logo-lockup-*.png` portent `DEPTH`.
+  Ils sont utilisables tels quels si vous l'assumez, mais ils ne correspondent
+  pas au nom de la marque.
+
+Marche à suivre : redéposer le dessin corrigé sous `logo-master.png` (et
+`logo-master-line.png` pour les versions une couleur), puis relancer
+`npm run brand:logo`. Rien d'autre n'est à modifier.
