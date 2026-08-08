@@ -16,6 +16,7 @@ export function professionalServiceJsonLd(locale: Locale = defaultLocale) {
     slogan: SITE.slogan,
     url: `${siteUrl()}${pathFor("home", locale)}`,
     image: `${siteUrl()}/opengraph-image`,
+    logo: `${siteUrl()}/brand/logo-square.png`,
     telephone: `+${SITE.phoneE164}`,
     areaServed: SITE.areaServed.map((name) => ({ "@type": "Place", name })),
     address: {

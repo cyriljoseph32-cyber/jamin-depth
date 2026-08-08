@@ -12,7 +12,7 @@ export function Footer({ dict, locale }: { dict: Dictionary; locale: Locale }) {
     <footer className="relative border-t border-foam/10 bg-blueblack">
       <div className="mx-auto grid w-full max-w-6xl gap-12 px-5 py-16 sm:px-8 md:grid-cols-[1.4fr_1fr_1fr]">
         <div>
-          <Logo />
+          <Logo variant="lockup" />
           <p className="mt-5 max-w-xs text-sm text-foam-dim">{dict.footer.blurb}</p>
           <p className="mt-5 font-mono text-[0.62rem] uppercase tracking-[0.18em] text-sand-dim">
             {SITE.location}

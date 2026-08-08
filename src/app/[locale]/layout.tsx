@@ -80,6 +80,8 @@ export async function generateMetadata({
       siteName: SITE.name,
       locale: ogLocale[locale],
       url: `${siteUrl()}${pathFor("home", locale)}`,
+      // Card artwork comes from `src/app/opengraph-image.tsx` via the file
+      // convention, which Next also reuses for Twitter.
     },
     twitter: { card: "summary_large_image" },
     robots: { index: true, follow: true },

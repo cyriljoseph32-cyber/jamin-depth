@@ -32,6 +32,7 @@ npm run dev      # http://localhost:3000
 | `npm run typecheck` | `tsc --noEmit`                           |
 | `npm run test`      | Vitest unit tests                        |
 | `npm run e2e`       | Playwright smoke + visual capture        |
+| `npm run brand:logo`| Re-generate the logo assets from the master art |
 
 ## How the forms work
 
@@ -45,8 +46,16 @@ by the site (see `/privacy`).
 
 ## Content & configuration
 
-All copy lives in `src/content/en.ts` (i18n-ready — add `fr.ts` / `th.ts` later).
-Verified brand facts (phone, socials, location) live in `src/content/site.ts`.
+Copy lives in `src/content/fr.ts` and `src/content/en.ts`; `en.ts` defines the
+`Dictionary` type both must satisfy. Verified brand facts (phone, socials,
+location) live in `src/content/site.ts`.
+
+### Brand assets
+
+The logo is the owner's original artwork, recoloured into the site palette —
+no line of it is redrawn. The master lives in `assets/brand/logo-master.png` and
+every delivered file is generated from it by `npm run brand:logo`.
+`assets/brand/README.md` says which file to use where, on the site and in print.
 
 ### Environment variables
 
@@ -78,3 +87,4 @@ Every item below is already wired as a clearly-labelled, drop-in slot — nothin
 - **About → Background block**: verified credentials/experience to confirm before publishing.
 - **Email address** in `src/content/site.ts` (`SITE.email`) — confirm or replace the placeholder.
 - Any **exact public location** if one should appear (currently only "Koh Samui, Thailand", no fake address).
+- **A print-resolution logo** — the master supplied is 547×1024, fine for screen but only ~4.4 cm wide at 300 dpi. See `assets/brand/README.md`.

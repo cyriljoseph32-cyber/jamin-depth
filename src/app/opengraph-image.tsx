@@ -1,9 +1,19 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { ImageResponse } from "next/og";
 import { SITE } from "@/content/site";
 
 export const alt = `${SITE.name} — ${SITE.tagline}, ${SITE.location}`;
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
+
+/**
+ * Satori cannot fetch relative URLs, so the badge is inlined. Read once at
+ * module scope rather than per request — the file is part of the build.
+ */
+const badge = `data:image/png;base64,${readFileSync(
+  join(process.cwd(), "public/brand/logo-badge-dark.png"),
+).toString("base64")}`;
 
 export default function OgImage() {
   return new ImageResponse(
@@ -22,15 +32,9 @@ export default function OgImage() {
           fontFamily: "sans-serif",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: "18px" }}>
-          <div
-            style={{
-              width: 22,
-              height: 22,
-              borderRadius: 999,
-              background: "#ffc300",
-            }}
-          />
+        <div style={{ display: "flex", alignItems: "center", gap: "22px" }}>
+          {/* Satori renders plain <img> only — next/image has no meaning here. */}
+          <img src={badge} alt="" width={92} height={92} />
           <div
             style={{
               display: "flex",
