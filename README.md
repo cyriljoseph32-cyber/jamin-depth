@@ -11,7 +11,7 @@ service. Cinematic dark-marine design, minimal JavaScript, zero backend, no secr
 - **Next.js 15** (App Router) · **React 19** · **TypeScript** (strict)
 - **Tailwind CSS v4** — CSS-first design tokens
 - Self-hosted fonts via `next/font`: Oswald (display), IBM Plex Sans (body), IBM Plex Mono (labels)
-- Original CSS/SVG visuals (depth gradient, caustics, film grain, sonar rings) — no stock/AI photos
+- Original CSS/SVG visuals — depth gradient, caustics, film grain, sonar rings
 - Vitest (unit) + Playwright (smoke + visual)
 
 ## Getting started
@@ -53,10 +53,21 @@ location) live in `src/content/site.ts`.
 
 ### Brand assets
 
-The logo is the owner's original artwork, recoloured into the site palette —
-no line of it is redrawn. The master lives in `assets/brand/logo-master.png` and
-every delivered file is generated from it by `npm run brand:logo`.
-`assets/brand/README.md` says which file to use where, on the site and in print.
+The logo is the owner's own drawing, and **the palette is derived from it** —
+not the other way round. Its eight distinct hues map onto the roles the interface
+needs, and they are what the `@theme` block in `src/app/globals.css` holds. The
+artwork itself is never recoloured: the build only keys out the paper, and lifts
+the lettering to foam for the dark variant, where it would otherwise vanish.
+
+The master lives in `assets/brand/logo-master.png`; every delivered file comes
+from it via `npm run brand:logo`. `assets/brand/README.md` says which file to use
+where, on screen and in print.
+
+**Changing a colour means running the tests.** `src/lib/palette.test.ts` reads
+`globals.css` directly and fails if any text pair drops below WCAG AA, or if the
+constants in `src/content/brand.ts` — the copy used by the manifest, the theme
+colour and the Satori-rendered share card, none of which can resolve a CSS
+variable — drift from the stylesheet.
 
 ### Environment variables
 
@@ -88,4 +99,4 @@ Every item below is already wired as a clearly-labelled, drop-in slot — nothin
 - **About → Background block**: verified credentials/experience to confirm before publishing.
 - **Email address** in `src/content/site.ts` (`SITE.email`) — confirm or replace the placeholder.
 - Any **exact public location** if one should appear (currently only "Koh Samui, Thailand", no fake address).
-- **A print-resolution logo** — the master supplied is 547×1024, fine for screen but only ~4.4 cm wide at 300 dpi. See `assets/brand/README.md`.
+- **A print-resolution logo** — the colour master is 752×1409, so about 6 cm wide at 300 dpi. Good to roughly A5; anything larger will pixelate. A vector or a ≥3000px export dropped in as the master fixes it. See `assets/brand/README.md`, which also records that the artwork still reads `DEPTH` while the brand is "Jammin's Depths".
