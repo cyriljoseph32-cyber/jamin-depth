@@ -1,4 +1,5 @@
 import type { Locale, Dictionary } from "@/content/i18n";
+import type { PageKey } from "@/content/routes";
 import { faqJsonLd } from "@/lib/seo";
 import { Section } from "@/components/ui/Section";
 import { Kicker } from "@/components/ui/Kicker";
@@ -14,10 +15,28 @@ import { Reveal } from "@/components/ui/Reveal";
  * Answers the owner still has to supply carry `confirmed: false`. Those render
  * a visible badge and are excluded from the FAQPage structured data (see
  * `faqJsonLd`) — placeholder text must never reach a search result.
+ *
+ * `content` swaps the question set (the recovery page has its own); `page`
+ * tells the structured data which URL it describes; `declare={false}` renders
+ * the accordion without any structured data. The home page uses that last one:
+ * it shows the diving questions because they convert there, but the diving and
+ * beginner pages are the ones that claim them.
  */
-export function Faq({ dict, locale }: { dict: Dictionary; locale: Locale }) {
-  const f = dict.faq;
-  const jsonLd = faqJsonLd(locale);
+export function Faq({
+  dict,
+  locale,
+  content,
+  page = "home",
+  declare = true,
+}: {
+  dict: Dictionary;
+  locale: Locale;
+  content?: Dictionary["faq"];
+  page?: PageKey;
+  declare?: boolean;
+}) {
+  const f = content ?? dict.faq;
+  const jsonLd = declare ? faqJsonLd(locale, page, f.items) : null;
   return (
     <Section id="faq" className="hairline-top">
       {/* Only confirmed answers reach structured data — see faqJsonLd. */}

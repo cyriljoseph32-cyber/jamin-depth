@@ -162,7 +162,12 @@ export function HomePage({ dict, locale }: { dict: Dictionary; locale: Locale })
 
       <WhyUs dict={dict} />
 
-      <Faq dict={dict} locale={locale} />
+      {/*
+        Shown, not declared: the diving questions belong to the diving and
+        beginner pages in structured data. Repeating the same FAQPage here
+        would leave Google with three claims on one set of answers.
+      */}
+      <Faq dict={dict} locale={locale} declare={false} />
 
       <FinalCta
         dict={dict}

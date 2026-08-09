@@ -5,9 +5,10 @@ import { Section } from "@/components/ui/Section";
 import { Kicker } from "@/components/ui/Kicker";
 import { Reveal } from "@/components/ui/Reveal";
 import { RecoveryForm } from "@/components/forms/RecoveryForm";
+import { Faq } from "@/components/site/Faq";
 import { recoveryPrefill } from "@/lib/whatsapp";
 
-export function RecoveryPage({ dict }: { dict: Dictionary; locale: Locale }) {
+export function RecoveryPage({ dict, locale }: { dict: Dictionary; locale: Locale }) {
   const r = dict.recovery;
   return (
     <>
@@ -53,6 +54,13 @@ export function RecoveryPage({ dict }: { dict: Dictionary; locale: Locale }) {
           ))}
         </ol>
       </Section>
+
+      {/*
+        Placed between the four steps and the form on purpose: the questions
+        pick up where the process leaves off and clear the last objections
+        while the visitor is on his way to the request.
+      */}
+      <Faq dict={dict} locale={locale} content={dict.faqRecovery} page="recovery" />
 
       {/* Form */}
       <Section id="request" className="hairline-top">
