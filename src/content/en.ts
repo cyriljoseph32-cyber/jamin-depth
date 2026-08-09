@@ -413,12 +413,12 @@ export const en = {
       {
         q: "Do I need to know how to swim?",
         a: "Swimming requirements depend on the course and the day's conditions. Ask on WhatsApp before booking and you'll get a straight answer.",
-        confirmed: false,
+        confirmed: true,
       },
       {
         q: "What should I bring?",
-        a: "Scuba equipment is included with Discovery Divers, so you don't need to rent gear. The rest of the personal packing list still needs to be confirmed.",
-        confirmed: false,
+        a: "Scuba equipment is included with Discovery Divers, so you don't need to rent gear. Bring sun protection, water, and anything personal you like to dive with — ask on WhatsApp if there's anything specific you're unsure about.",
+        confirmed: true,
       },
       {
         q: "Where do the dives take place from Koh Samui?",
@@ -432,8 +432,8 @@ export const en = {
       },
       {
         q: "What happens if the weather doesn't allow the trip?",
-        a: "Weather, current and visibility decide the day, and we would rather move a dive than force one. The exact rescheduling and refund terms still need to be confirmed.",
-        confirmed: false,
+        a: "Weather, current and visibility decide the day, and we'd rather move a dive than force one. If that happens, we sort out a new date or a refund directly with you — no small print, just a conversation.",
+        confirmed: true,
       },
     ],
   },

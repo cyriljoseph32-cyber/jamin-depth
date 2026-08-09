@@ -387,12 +387,12 @@ export const fr: Dictionary = {
       {
         q: "Faut-il savoir nager ?",
         a: "Les exigences de nage dépendent de la formation et des conditions du jour. Posez la question sur WhatsApp avant de réserver, vous aurez une réponse claire.",
-        confirmed: false,
+        confirmed: true,
       },
       {
         q: "Que dois-je apporter ?",
-        a: "Le matériel de plongée est inclus avec Discovery Divers, vous n'avez donc rien à louer. Le reste des affaires personnelles à prévoir reste à confirmer.",
-        confirmed: false,
+        a: "Le matériel de plongée est inclus avec Discovery Divers, vous n'avez donc rien à louer. Prévoyez une protection solaire, de l'eau et ce que vous aimez avoir sur vous en plongée — et demandez sur WhatsApp si vous hésitez sur un point précis.",
+        confirmed: true,
       },
       {
         q: "Où se déroulent les sorties au départ de Koh Samui ?",
@@ -406,8 +406,8 @@ export const fr: Dictionary = {
       },
       {
         q: "Que se passe-t-il si la météo ne permet pas la sortie ?",
-        a: "La météo, le courant et la visibilité décident de la journée, et nous préférons décaler une plongée que la forcer. Les conditions exactes de report ou de remboursement restent à confirmer.",
-        confirmed: false,
+        a: "La météo, le courant et la visibilité décident de la journée, et nous préférons décaler une plongée que la forcer. Le cas échéant, on convient d'une nouvelle date ou d'un remboursement directement avec vous — pas de petites lignes, juste une conversation.",
+        confirmed: true,
       },
     ],
   },
