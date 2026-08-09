@@ -3,6 +3,7 @@ import { coursesJsonLd } from "@/lib/seo";
 import { pathFor } from "@/content/routes";
 import { DIVE_CENTER } from "@/content/site";
 import { PageHeader } from "@/components/site/PageHeader";
+import { Faq } from "@/components/site/Faq";
 import { Section } from "@/components/ui/Section";
 import { Kicker } from "@/components/ui/Kicker";
 import { Reveal } from "@/components/ui/Reveal";
@@ -211,6 +212,8 @@ export function DivingPage({ dict, locale }: { dict: Dictionary; locale: Locale 
           </div>
         </Reveal>
       </Section>
+
+      <Faq dict={dict} locale={locale} page="diving" />
 
       {/* CTA */}
       <Section className="hairline-top">

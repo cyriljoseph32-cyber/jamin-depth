@@ -412,6 +412,40 @@ export const fr: Dictionary = {
     ],
   },
 
+  faqRecovery: {
+    kicker: "Avant de nous écrire",
+    title: "Questions sur la récupération.",
+    lead: "Ce qu'on nous demande avant d'envoyer une demande de récupération.",
+    toConfirm: "À confirmer par le propriétaire",
+    items: [
+      {
+        q: "Garantissez-vous de retrouver l'objet ?",
+        a: "Non — nous ne pouvons pas promettre de récupérer chaque objet. L'eau déplace les choses, la visibilité varie, et certains endroits ne sont ni sûrs ni accessibles. Nous vous dirons toujours honnêtement ce qui est réaliste avant de nous engager.",
+        confirmed: true,
+      },
+      {
+        q: "Quels objets pouvez-vous récupérer ?",
+        a: "Téléphones, bagues, clés, appareils photo, lunettes de soleil, outils et bien d'autres — tombés d'un bateau, perdus près d'une plage, glissés du doigt ou du poignet en nageant ou en snorkeling, ou perdus dans certaines zones de cascade accessibles.",
+        confirmed: true,
+      },
+      {
+        q: "Comment se déroule une demande ?",
+        a: "En quatre étapes : vous nous écrivez sur WhatsApp avec l'essentiel, nous rassemblons les détails — objet, endroit exact, heure, profondeur et conditions — puis nous évaluons la faisabilité, la sécurité et l'accès. Si c'est réaliste, on planifie et on plonge. Sinon, vous saurez pourquoi.",
+        confirmed: true,
+      },
+      {
+        q: "Faut-il nous contacter rapidement ?",
+        a: "Le plus vite possible. Plus tôt nous sommes prévenus, plus la piste est fraîche — les courants et le sable qui bouge jouent contre vous dès la seconde où l'objet part à l'eau.",
+        confirmed: true,
+      },
+      {
+        q: "Où intervenez-vous autour de Koh Samui ?",
+        a: "Depuis un bateau — en route, au mouillage ou à l'embarquement —, dans les petits fonds près d'une plage, au bout d'un ponton ou dans la zone de vagues, et dans certaines vasques de cascade accessibles. Toujours sous réserve de la sécurité, de l'accès et des conditions.",
+        confirmed: true,
+      },
+    ],
+  },
+
   about: {
     heroKicker: "Le plongeur",
     heroTitle: "Un plongeur local, en direct.",

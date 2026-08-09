@@ -98,7 +98,7 @@ export function BaptismPage({ dict, locale }: { dict: Dictionary; locale: Locale
 
       <WhyUs dict={dict} />
 
-      <Faq dict={dict} locale={locale} />
+      <Faq dict={dict} locale={locale} page="baptism" />
 
       <FinalCta
         dict={dict}

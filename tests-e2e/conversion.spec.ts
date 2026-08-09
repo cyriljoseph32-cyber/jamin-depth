@@ -19,27 +19,47 @@ test("every priced offer has its own WhatsApp CTA", async ({ page }) => {
   expect(decodeURIComponent(href ?? "")).toMatch(/Bonjour/);
 });
 
-test("FAQ marks unconfirmed answers and keeps them out of structured data", async ({ page }) => {
+/** The FAQPage block on a page, or undefined when the page declares none. */
+async function faqPageLd(page: import("@playwright/test").Page) {
+  const blocks = await page.locator('script[type="application/ld+json"]').allTextContents();
+  return blocks.map((b) => JSON.parse(b)).find((j) => j["@type"] === "FAQPage");
+}
+
+test("the home page shows the FAQ without claiming it in structured data", async ({ page }) => {
   await page.goto("/fr");
 
   const faq = page.locator("#faq");
   await expect(faq.getByRole("heading", { name: /Questions de débutants/i })).toBeVisible();
-
-  // Answers awaiting the owner carry a visible badge once the item is expanded.
   await faq.getByRole("group").filter({ hasText: /savoir nager/i }).first().locator("summary").click();
-  await expect(faq.getByText(/À confirmer par le propriétaire/i).first()).toBeVisible();
+  await expect(faq.getByText(/dépendent de la formation/i).first()).toBeVisible();
 
-  // Structured data must only contain confirmed answers.
-  const blocks = await page.locator('script[type="application/ld+json"]').allTextContents();
-  const faqLd = blocks.map((b) => JSON.parse(b)).find((j) => j["@type"] === "FAQPage");
-  expect(faqLd, "FAQPage JSON-LD should be present").toBeTruthy();
+  // The diving and beginner pages own these answers. Declaring them here too
+  // would leave the same FAQPage asserted on three URLs.
+  expect(await faqPageLd(page), "home should declare no FAQPage").toBeUndefined();
+});
 
-  const questions = faqLd.mainEntity.map((q: { name: string }) => q.name);
-  expect(questions).toContain("Puis-je plonger si je n'ai jamais plongé ?");
-  // Unconfirmed ones are excluded.
-  expect(questions).not.toContain("Faut-il savoir nager ?");
-  const answers = JSON.stringify(faqLd);
-  expect(answers).not.toMatch(/À confirmer/i);
+test("each FAQ page declares its own URL and only settled answers", async ({ page }) => {
+  for (const [path, heading] of [
+    ["/fr/plongee", /Questions de débutants/i],
+    ["/fr/recuperation-sous-marine", /Questions sur la récupération/i],
+  ] as const) {
+    await page.goto(path);
+    await expect(page.locator("#faq").getByRole("heading", { name: heading })).toBeVisible();
+
+    const faqLd = await faqPageLd(page);
+    expect(faqLd, `${path} should declare a FAQPage`).toBeTruthy();
+    // The fix this exists for: the entity has to say which page it describes.
+    expect(faqLd.mainEntityOfPage).toContain(path);
+
+    // Placeholder text must never reach a search result, whatever the page.
+    expect(JSON.stringify(faqLd)).not.toMatch(/À confirmer/i);
+
+    // Every declared question is also visible on the page — a FAQPage whose
+    // content is hidden is invalid markup, not just poor practice.
+    for (const { name } of faqLd.mainEntity) {
+      await expect(page.locator("#faq").getByText(name, { exact: true }).first()).toBeVisible();
+    }
+  }
 });
 
 test("beginner landing page resolves in both locales with real course data", async ({ page }) => {

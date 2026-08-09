@@ -438,6 +438,49 @@ export const en = {
     ],
   },
 
+  /**
+   * Recovery FAQ. Same shape as `faq`, so it goes through the same component
+   * and the same `faqJsonLd`.
+   *
+   * Every answer is a rewording of copy already on the recovery page —
+   * `honestNote`, `heroLead`, `cases` and the four `steps`. Nothing new is
+   * claimed here, which matters twice over: a FAQPage must reflect content
+   * visible on the page, and the brief forbids inventing terms.
+   */
+  faqRecovery: {
+    kicker: "Before you ask",
+    title: "Recovery questions.",
+    lead: "What people want to know before sending a recovery request.",
+    toConfirm: "To be confirmed by the owner",
+    items: [
+      {
+        q: "Can you guarantee you'll recover a lost item?",
+        a: "No — we can't promise to recover every object. Water moves things, visibility varies, and some spots aren't safe or accessible. We'll always tell you honestly what's realistic before we commit.",
+        confirmed: true,
+      },
+      {
+        q: "What kind of items can you recover?",
+        a: "Phones, rings, keys, cameras, sunglasses, tools and more — dropped from a boat, lost near a beach, slipped off in the water while swimming or snorkelling, or lost in certain accessible waterfall zones.",
+        confirmed: true,
+      },
+      {
+        q: "How does a recovery request work?",
+        a: "Four steps: message us on WhatsApp with the basics, we gather the details — object, exact spot, time, depth and conditions — then we weigh feasibility, safety and access, and if it's realistic we plan and dive. If it isn't, you'll know why.",
+        confirmed: true,
+      },
+      {
+        q: "How fast should I get in touch after losing something?",
+        a: "As soon as you can. The faster we hear, the fresher the trail — currents and shifting sand work against you from the moment it goes in.",
+        confirmed: true,
+      },
+      {
+        q: "Where around Koh Samui do you carry out recoveries?",
+        a: "From a boat — cruising, anchored or boarding — in the shallows near a beach, off a pier or in the surf line, and in certain accessible waterfall pools. Always subject to safety, access and conditions.",
+        confirmed: true,
+      },
+    ],
+  },
+
   about: {
     heroKicker: "About",
     heroTitle: "A local diver, doing it directly.",

@@ -10,8 +10,20 @@ export const SITE = {
   tagline: "Diving & Underwater Recovery",
   slogan: "You drop it. We dive for it.",
   location: "Koh Samui, Thailand",
-  /** Only a public area is claimed — no exact address or map pin (none verified). */
-  areaServed: ["Koh Samui", "Surat Thani", "Thailand"],
+  /**
+   * Only a public area is claimed — no exact address or map pin (none verified).
+   * The three dive sites are the ones the site already names as places trips
+   * actually run to; they widen the structured data without asserting anything
+   * that isn't on the Diving page already.
+   */
+  areaServed: [
+    "Koh Samui",
+    "Surat Thani",
+    "Thailand",
+    "Koh Tao",
+    "Sail Rock, Gulf of Thailand",
+    "Chumphon Pinnacle",
+  ],
   /** Human-readable phone in local format. */
   phoneDisplay: "063 375 3316",
   phoneInternationalDisplay: "+66 63 375 3316",
