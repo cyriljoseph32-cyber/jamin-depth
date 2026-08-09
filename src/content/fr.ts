@@ -102,6 +102,37 @@ export const fr: Dictionary = {
     languageNames: { fr: "Français", en: "English" },
   },
 
+  media: {
+    divers: {
+      label: "Palier de sécurité · Chumphon Pinnacle",
+      alt: "Quatre plongeurs au palier de sécurité, accrochés au bout de mouillage, la surface éclairée au-dessus d'eux, à Chumphon Pinnacle",
+    },
+    platax: {
+      label: "Banc de platax · Sail Rock",
+      alt: "Un banc de platax en pleine eau, dans le bleu, à Sail Rock",
+    },
+    turtle: {
+      label: "Tortue imbriquée · Tanote Bay",
+      alt: "Une tortue imbriquée posée contre le corail dur du récif, à Tanote Bay",
+    },
+    fusiliers: {
+      label: "Fusiliers · Sail Rock",
+      alt: "Un banc de fusiliers jaunes au-dessus du récif, à Sail Rock",
+    },
+    reef: {
+      label: "Vie du récif",
+      alt: "Nudibranche coloré sur le récif, dans le golfe de Thaïlande",
+    },
+    barracuda: {
+      label: "Vers le bleu",
+      alt: "Un grand banc de barracudas dans le bleu",
+    },
+    divingCard: {
+      label: "Plongée · Golfe de Thaïlande",
+      alt: "Plongeur avec un appareil photo sous-marin sur un récif du golfe de Thaïlande",
+    },
+  },
+
   home: {
     heroKicker: "Plongée · Récupération sous-marine · Koh Samui",
     heroTitle: "La plongée à Koh Samui, avec quelqu'un qui connaît ces eaux.",
@@ -136,10 +167,11 @@ export const fr: Dictionary = {
         body: "Basé à Koh Samui et dans ces eaux au quotidien. La connaissance du terrain fait la moitié du travail.",
       },
     ],
+    galleryCta: "Faire une demande de récupération",
     galleryKicker: "Prises sous l'eau",
     galleryTitle: "De vraies plongées, de vraies récupérations.",
     galleryNote:
-      "De vraies plongées dans le golfe de Thaïlande — Sail Rock, les îles Similan et ailleurs. Rien ici n'est une banque d'images ni une mise en scène.",
+      "De vraies plongées dans le golfe de Thaïlande — Sail Rock, Chumphon Pinnacle, Tanote Bay. Rien ici n'est une banque d'images ni une mise en scène.",
     finalKicker: "Quand vous voulez",
     finalTitle: "Vous l'avez perdu. On plonge le chercher.",
     finalBody:

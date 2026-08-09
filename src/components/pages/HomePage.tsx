@@ -15,6 +15,7 @@ import { recoveryPrefill } from "@/lib/whatsapp";
 
 export function HomePage({ dict, locale }: { dict: Dictionary; locale: Locale }) {
   const h = dict.home;
+  const m = dict.media;
   return (
     <>
       <Hero dict={dict} locale={locale} />
@@ -33,18 +34,16 @@ export function HomePage({ dict, locale }: { dict: Dictionary; locale: Locale })
               body: h.divingCardBody,
               cta: h.divingCardCta,
               href: pathFor("diving", locale),
-              label: "Diving · Gulf of Thailand",
+              ...m.divingCard,
               src: "/media/diver.jpg",
-              alt: "Scuba diver with an underwater camera on a reef in the Gulf of Thailand",
             },
             {
               title: h.recoveryCardTitle,
               body: h.recoveryCardBody,
               cta: h.recoveryCardCta,
               href: pathFor("recovery", locale),
-              label: "Into the blue",
+              ...m.barracuda,
               src: "/media/barracuda.jpg",
-              alt: "A large school of barracuda in the blue",
             },
           ].map((card, i) => (
             <Reveal key={card.href} delay={i * 80} as="article">
@@ -115,30 +114,26 @@ export function HomePage({ dict, locale }: { dict: Dictionary; locale: Locale })
         <div className="mt-10 grid grid-cols-2 gap-1.5 lg:h-[34rem] lg:grid-cols-[1.3fr_1fr_1fr] lg:grid-rows-2">
           {[
             {
-              label: "Reef life · Gulf of Thailand",
+              ...m.reef,
               src: "/media/reef-nudibranch.jpg",
-              alt: "Colourful nudibranch on the reef in the Gulf of Thailand",
               aspect: "aspect-[3/4]",
               place: "lg:col-start-1 lg:row-start-1 lg:row-span-2",
             },
             {
-              label: "Fusiliers · Sail Rock",
+              ...m.fusiliers,
               src: "/media/fusiliers.jpg",
-              alt: "A school of yellow fusiliers over the reef at Sail Rock",
               aspect: "aspect-[4/5]",
               place: "lg:col-start-2 lg:row-start-1",
             },
             {
-              label: "Similan Islands",
-              src: "/media/similan-surface.jpg",
-              alt: "The Similan Islands seen from the dive boat",
+              ...m.turtle,
+              src: "/media/turtle-tanote-bay.jpg",
               aspect: "aspect-[3/4]",
               place: "lg:col-start-3 lg:row-start-1",
             },
             {
-              label: "Barracuda · Sail Rock",
-              src: "/media/barracuda.jpg",
-              alt: "A school of barracuda in the blue at Sail Rock",
+              ...m.platax,
+              src: "/media/platax-sail-rock.jpg",
               aspect: "aspect-[4/5]",
               place: "lg:col-start-2 lg:col-span-2 lg:row-start-2",
             },
@@ -160,7 +155,7 @@ export function HomePage({ dict, locale }: { dict: Dictionary; locale: Locale })
         </div>
         <div className="mt-8">
           <ButtonLink href={pathFor("recovery", locale)} variant="outline">
-            Start a recovery request <ArrowIcon width={16} height={16} />
+            {h.galleryCta} <ArrowIcon width={16} height={16} />
           </ButtonLink>
         </div>
       </Section>

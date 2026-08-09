@@ -33,6 +33,7 @@ npm run dev      # http://localhost:3000
 | `npm run test`      | Vitest unit tests                        |
 | `npm run e2e`       | Playwright smoke + visual capture        |
 | `npm run brand:logo`| Re-generate the logo assets from the master art |
+| `npm run media:import`| Import owner photos into `public/media/` |
 
 ## How the forms work
 
@@ -83,7 +84,7 @@ Set `NEXT_PUBLIC_SITE_URL` to the final domain in the Vercel project settings on
 
 Every item below is already wired as a clearly-labelled, drop-in slot — nothing is faked:
 
-- **Authentic photos / clips** for the `MediaSlot`s (home cards & gallery, diving, About portrait) — sourced from [@granola51](https://www.instagram.com/granola51/) / [Facebook](https://web.facebook.com/Underwatersamuirecovery/).
+- **More authentic photos.** Three of the owner's own are now in place (Sail Rock, Chumphon Pinnacle, Tanote Bay); the remaining `MediaSlot`s still use placeholders. Import new ones with `npm run media:import <source> <name>` — it bakes in the EXIF rotation, which the image optimiser would otherwise drop.
 - **About → Background block**: verified credentials/experience to confirm before publishing.
 - **Email address** in `src/content/site.ts` (`SITE.email`) — confirm or replace the placeholder.
 - Any **exact public location** if one should appear (currently only "Koh Samui, Thailand", no fake address).

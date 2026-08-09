@@ -98,6 +98,44 @@ export const en = {
     languageNames: { fr: "Français", en: "English" },
   },
 
+  /**
+   * Photo captions and alt text. These used to sit hardcoded in the components,
+   * which meant the French pages captioned their photos in English.
+   *
+   * Dive-site names come from the owner — none of these files carries GPS, so a
+   * site is never inferred from the image.
+   */
+  media: {
+    divers: {
+      label: "Safety stop · Chumphon Pinnacle",
+      alt: "Four divers holding the mooring line at their safety stop, the surface bright above them, at Chumphon Pinnacle",
+    },
+    platax: {
+      label: "Batfish · Sail Rock",
+      alt: "A school of batfish hanging in open blue water at Sail Rock",
+    },
+    turtle: {
+      label: "Hawksbill turtle · Tanote Bay",
+      alt: "A hawksbill turtle resting against hard coral on the reef at Tanote Bay",
+    },
+    fusiliers: {
+      label: "Fusiliers · Sail Rock",
+      alt: "A school of yellow fusiliers over the reef at Sail Rock",
+    },
+    reef: {
+      label: "Reef life",
+      alt: "Colourful nudibranch on the reef in the Gulf of Thailand",
+    },
+    barracuda: {
+      label: "Into the blue",
+      alt: "A large school of barracuda in the blue",
+    },
+    divingCard: {
+      label: "Diving · Gulf of Thailand",
+      alt: "Scuba diver with an underwater camera on a reef in the Gulf of Thailand",
+    },
+  },
+
   home: {
     heroKicker: "Diving · Underwater Recovery · Koh Samui",
     heroTitle: "Dive the Gulf of Thailand with someone who knows the water.",
@@ -133,10 +171,11 @@ export const en = {
         body: "Based in Koh Samui and working these waters. Local knowledge is half the recovery.",
       },
     ],
+    galleryCta: "Start a recovery request",
     galleryKicker: "From the water",
     galleryTitle: "Real dives, real recoveries.",
     galleryNote:
-      "Real dives in the Gulf of Thailand — Sail Rock, the Similan Islands and beyond. Nothing here is stock or staged.",
+      "Real dives in the Gulf of Thailand — Sail Rock, Chumphon Pinnacle, Tanote Bay. Nothing here is stock or staged.",
     finalKicker: "Ready when you are",
     finalTitle: "You drop it. We dive for it.",
     finalBody:

@@ -12,7 +12,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "e2e": "playwright test",
-    "brand:logo": "node scripts/build-logo.mjs"
+    "brand:logo": "node scripts/build-logo.mjs",
+    "media:import": "node scripts/import-photo.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.68.0",

@@ -40,18 +40,16 @@ export function DivingPage({ dict, locale }: { dict: Dictionary; locale: Locale 
           <div className="grid grid-cols-2 gap-4">
             <Reveal>
               <MediaSlot
-                label="Fusiliers · Sail Rock"
-                src="/media/fusiliers.jpg"
-                alt="A school of yellow fusiliers over the reef at Sail Rock"
+                {...dict.media.divers}
+                src="/media/divers-chumphon-pinnacle.jpg"
                 ratio="3 / 4"
                 index="D-01"
               />
             </Reveal>
             <Reveal delay={90} className="pt-10">
               <MediaSlot
-                label="Reef life"
+                {...dict.media.reef}
                 src="/media/reef-nudibranch.jpg"
-                alt="Colourful nudibranch on the reef in the Gulf of Thailand"
                 ratio="3 / 4"
                 index="D-02"
               />
