@@ -1,4 +1,11 @@
 import { SITE, DIVE_CENTER } from "@/content/site";
+import { defaultLocale, type Locale } from "@/content/i18n";
+
+/** The assistant must answer in the language the visitor is browsing in. */
+const REPLY_LANGUAGE: Record<Locale, string> = {
+  fr: "Always reply in French (français), using natural, native French.",
+  en: "Always reply in English.",
+};
 
 /**
  * Server-side assistant configuration + prompt building.
@@ -51,13 +58,13 @@ export function sanitizeMessages(input: unknown): ChatMessage[] {
 }
 
 /** The brand-grounded system prompt. */
-export function buildSystemPrompt(): string {
+export function buildSystemPrompt(locale: Locale = defaultLocale): string {
   return `You are the assistant for ${SITE.name}, an underwater recovery and diving service in ${SITE.location}. Slogan: "${SITE.slogan}".
 
 VOICE
 - Direct, reassuring, concrete, calm and expert. Adventurous but never exaggerated.
 - Speak like a real local diver's helper, not a corporate chatbot. Short, plain answers (2–5 sentences). No markdown headings, no emojis.
-- Reply in the visitor's language (English by default; mirror French or another language if they use it).
+- ${REPLY_LANGUAGE[locale]} If the visitor clearly writes in a different language, mirror theirs instead.
 
 WHAT ${SITE.name.toUpperCase()} DOES
 1) Diving — accompanied, personal diving around Koh Samui with someone who knows the water; unhurried and respectful of the marine environment, plus PADI courses and fun dives (see below).

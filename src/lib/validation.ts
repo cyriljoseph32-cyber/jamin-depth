@@ -1,3 +1,6 @@
+import { en } from "@/content/en";
+import type { Dictionary } from "@/content/i18n";
+
 /**
  * Pure, framework-free form validation helpers.
  * Kept side-effect free so they are trivially unit-testable and reusable
@@ -5,6 +8,15 @@
  */
 
 export type Errors<T extends string> = Partial<Record<T, string>>;
+
+/**
+ * Messages are passed in rather than baked in, so a French visitor is told in
+ * French what is missing. English is the default, which keeps the signature
+ * backwards compatible — the same arrangement `src/lib/whatsapp.ts` uses for
+ * its `wa` copy.
+ */
+export type ValidationCopy = Dictionary["forms"]["validation"];
+const defaultValidation: ValidationCopy = en.forms.validation;
 
 export function isBlank(value: string | undefined | null): boolean {
   return !value || value.trim().length === 0;
@@ -42,14 +54,17 @@ export interface RecoveryInput {
   lostAt: string;
 }
 
-export function validateRecovery(input: RecoveryInput): Errors<keyof RecoveryInput> {
+export function validateRecovery(
+  input: RecoveryInput,
+  copy: ValidationCopy = defaultValidation,
+): Errors<keyof RecoveryInput> {
   const errors: Errors<keyof RecoveryInput> = {};
-  if (isBlank(input.name)) errors.name = "Please tell us your name.";
-  if (isBlank(input.contact)) errors.contact = "A phone, WhatsApp or email is required.";
-  else if (!isValidContact(input.contact)) errors.contact = "Enter a valid phone/WhatsApp or email.";
-  if (isBlank(input.object)) errors.object = "What did you lose?";
-  if (isBlank(input.location)) errors.location = "Where did it happen? Be as precise as you can.";
-  if (isBlank(input.lostAt)) errors.lostAt = "Roughly when did it happen?";
+  if (isBlank(input.name)) errors.name = copy.name;
+  if (isBlank(input.contact)) errors.contact = copy.contactRequired;
+  else if (!isValidContact(input.contact)) errors.contact = copy.contactInvalid;
+  if (isBlank(input.object)) errors.object = copy.object;
+  if (isBlank(input.location)) errors.location = copy.location;
+  if (isBlank(input.lostAt)) errors.lostAt = copy.lostAt;
   return errors;
 }
 
@@ -59,13 +74,16 @@ export interface ContactInput {
   message: string;
 }
 
-export function validateContact(input: ContactInput): Errors<keyof ContactInput> {
+export function validateContact(
+  input: ContactInput,
+  copy: ValidationCopy = defaultValidation,
+): Errors<keyof ContactInput> {
   const errors: Errors<keyof ContactInput> = {};
-  if (isBlank(input.name)) errors.name = "Please tell us your name.";
-  if (isBlank(input.contact)) errors.contact = "A phone, WhatsApp or email is required.";
-  else if (!isValidContact(input.contact)) errors.contact = "Enter a valid phone/WhatsApp or email.";
-  if (isBlank(input.message)) errors.message = "Add a short message.";
-  else if (!minLength(input.message, 10)) errors.message = "A little more detail helps us help you.";
+  if (isBlank(input.name)) errors.name = copy.name;
+  if (isBlank(input.contact)) errors.contact = copy.contactRequired;
+  else if (!isValidContact(input.contact)) errors.contact = copy.contactInvalid;
+  if (isBlank(input.message)) errors.message = copy.message;
+  else if (!minLength(input.message, 10)) errors.message = copy.messageShort;
   return errors;
 }
 

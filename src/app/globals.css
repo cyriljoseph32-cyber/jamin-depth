@@ -1,25 +1,56 @@
 @import "tailwindcss";
 
 /* ------------------------------------------------------------------ *
- * Jammin's Depths — design tokens
- * Cinematic dark-marine palette. One safety accent: dive yellow.
+ * Jammin's Depth — design tokens
+ *
+ * Every colour below is taken from the logo. The artwork already carries a
+ * complete system: clustering its saturated pixels returns eight distinct
+ * hues that map onto exactly the roles this site needs —
+ *
+ *   #061f2a  the navy of the lettering        → grounds
+ *   #08323c  deep teal                        → raised surfaces
+ *   #25676a  the wave                         → petrol
+ *   #3e9da3  the wave's light edge
+ *   #ac8431  the compass and tank gold        → accent
+ *   #832e2b  the compass red                  → error
+ *   #276032  the compass green                → success
+ *   #d4e1cd  the pale highlight               → foam
+ *
+ * Values are adjusted for legibility, never for taste: each pair a visitor
+ * actually reads is checked against WCAG AA on the page ground (#04121a).
+ * Ratios are noted where they are close enough to matter.
  * ------------------------------------------------------------------ */
 @theme {
-  --color-blueblack: #05080d;
-  --color-abyss: #0a1119;
-  --color-abyss-2: #0d1622;
-  --color-petrol: #124c5a;
-  --color-petrol-2: #0f3b46;
-  --color-deepgreen: #143b32;
-  --color-sand: #c9bfa8;
-  --color-sand-dim: #8f8974;
-  --color-foam: #f2f5f4;
-  --color-foam-dim: #aeb8bd;
+  /* Grounds — the logo's navy, stepped */
+  --color-blueblack: #04121a;
+  --color-abyss: #07202a; /* the lettering navy itself */
+  --color-abyss-2: #0a2b36;
 
-  /* Single accent — dive yellow */
-  --color-signal: #ffc300;
-  --color-signal-600: #e6ac00;
-  --color-ink: #05080d; /* dark text sits on the yellow for AA contrast */
+  /* Water */
+  --color-petrol: #25676a; /* the wave, unmodified */
+
+  /* Compass */
+  --color-deepgreen: #276032; /* the compass green, unmodified */
+
+  /* Warm neutrals, pulled from the gold's hue (41°) */
+  --color-sand: #cdb98f; /* 9.9:1 */
+  --color-sand-dim: #a89670; /* 6.6:1 on ground, 5.1:1 on a card */
+
+  --color-foam: #eff4f0; /* 17.1:1 */
+  --color-foam-dim: #a9bcbb; /* 9.6:1 */
+
+  /* Single accent — the logo's gold. Lifted from #ac8431 so a CTA still
+   * carries weight; the exact logo gold becomes the hover step. */
+  --color-signal: #d9a83f; /* 8.7:1 both as button fill and as small text */
+  --color-signal-600: #ac8431; /* the logo's gold, unmodified */
+  --color-ink: #04121a; /* dark text sits on the gold */
+
+  /* Semantic — the compass red and green, raised until they are readable. At
+   * their drawn values (2.2:1 and 2.5:1) neither is legible as text. Both are
+   * checked against the card surface too, the lighter ground they sit on in
+   * `FormStatus`. */
+  --color-success: #54a566; /* 6.3:1 on ground, 4.9:1 on a card */
+  --color-error: #e07a6b; /* 6.5:1 on ground, 5.1:1 on a card */
 
   --font-display: var(--font-oswald), "Arial Narrow", sans-serif;
   --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
@@ -86,6 +117,20 @@ h4 {
 /* ------------------------------------------------------------------ *
  * Utilities
  * ------------------------------------------------------------------ */
+/*
+ * Sentence-case heading escape hatch.
+ *
+ * The h1–h4 rule above is unlayered, so it beats Tailwind's layered
+ * `normal-case` utility no matter the specificity. FAQ questions are full
+ * sentences and are markedly harder to read in caps, so they opt out here —
+ * in the same unlayered context, where a class does win over an element.
+ */
+.heading-sentence {
+  text-transform: none;
+  line-height: 1.3;
+  letter-spacing: 0;
+}
+
 .mono-kicker {
   font-family: var(--font-mono);
   font-size: 0.72rem;
@@ -119,11 +164,36 @@ h4 {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
+/*
+ * Hero scrim — keeps the headline legible over the photo. Bottom-up on narrow
+ * screens, where the crop sits directly behind the text; diagonal on wide ones,
+ * so the diver stays visible at the right. Lives here rather than in arbitrary
+ * Tailwind values so it can read the palette like everything else.
+ */
+.hero-scrim {
+  background: linear-gradient(
+    to top,
+    color-mix(in srgb, var(--color-blueblack) 90%, transparent),
+    color-mix(in srgb, var(--color-blueblack) 35%, transparent)
+  );
+}
+
+@media (min-width: 40rem) {
+  .hero-scrim {
+    background: linear-gradient(
+      100deg,
+      color-mix(in srgb, var(--color-blueblack) 92%, transparent) 30%,
+      color-mix(in srgb, var(--color-blueblack) 55%, transparent) 65%,
+      color-mix(in srgb, var(--color-blueblack) 25%, transparent) 100%
+    );
+  }
+}
+
 /* Depth gradient background helper */
 .depth-bg {
   background:
     radial-gradient(120% 80% at 50% -10%, color-mix(in srgb, var(--color-petrol) 40%, transparent) 0%, transparent 55%),
-    linear-gradient(180deg, var(--color-abyss) 0%, var(--color-blueblack) 60%, #03050a 100%);
+    linear-gradient(180deg, var(--color-abyss) 0%, var(--color-blueblack) 60%, #020c12 100%);
 }
 
 /* ------------------------------------------------------------------ *

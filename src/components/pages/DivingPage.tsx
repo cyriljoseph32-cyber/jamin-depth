@@ -1,7 +1,7 @@
-import type { Metadata } from "next";
-import { t } from "@/content/i18n";
+import type { Locale, Dictionary } from "@/content/i18n";
+import { coursesJsonLd } from "@/lib/seo";
+import { pathFor } from "@/content/routes";
 import { DIVE_CENTER } from "@/content/site";
-import { pageMetadata } from "@/lib/metadata";
 import { PageHeader } from "@/components/site/PageHeader";
 import { Section } from "@/components/ui/Section";
 import { Kicker } from "@/components/ui/Kicker";
@@ -9,19 +9,18 @@ import { Reveal } from "@/components/ui/Reveal";
 import { MediaSlot } from "@/components/ui/MediaSlot";
 import { ButtonLink } from "@/components/ui/Button";
 import { WhatsAppIcon, ArrowIcon } from "@/components/ui/Icons";
-import { buildWaLink, divingPrefill } from "@/lib/whatsapp";
+import { buildWaLink, divingPrefill, coursePrefill, tripPrefill } from "@/lib/whatsapp";
+import { trackable } from "@/lib/analytics";
 
-export const metadata: Metadata = pageMetadata({
-  title: t.meta.diving.title,
-  description: t.meta.diving.description,
-  path: "/diving",
-  keywords: [...t.meta.diving.keywords],
-});
-
-export default function DivingPage() {
-  const d = t.diving;
+export function DivingPage({ dict, locale }: { dict: Dictionary; locale: Locale }) {
+  const d = dict.diving;
   return (
     <>
+      {/* Verified Discovery Divers rates — safe to publish as Offers. */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(coursesJsonLd(locale)) }}
+      />
       <PageHeader kicker={d.heroKicker} title={d.heroTitle} lead={d.heroLead} />
 
       {/* Experience + gallery */}
@@ -32,27 +31,25 @@ export default function DivingPage() {
             <h2 className="mt-5 text-4xl sm:text-5xl">{d.experienceTitle}</h2>
             <p className="mt-5 text-pretty text-foam-dim">{d.experienceBody}</p>
             <div className="mt-8">
-              <ButtonLink href={buildWaLink(divingPrefill())} variant="primary" size="lg">
+              <ButtonLink href={buildWaLink(divingPrefill(dict.wa))} variant="primary" size="lg">
                 <WhatsAppIcon width={18} height={18} />
-                {t.nav.askDiving}
+                {dict.nav.askDiving}
               </ButtonLink>
             </div>
           </Reveal>
           <div className="grid grid-cols-2 gap-4">
             <Reveal>
               <MediaSlot
-                label="Fusiliers · Sail Rock"
-                src="/media/fusiliers.jpg"
-                alt="A school of yellow fusiliers over the reef at Sail Rock"
+                {...dict.media.divers}
+                src="/media/divers-chumphon-pinnacle.jpg"
                 ratio="3 / 4"
                 index="D-01"
               />
             </Reveal>
             <Reveal delay={90} className="pt-10">
               <MediaSlot
-                label="Reef life"
+                {...dict.media.reef}
                 src="/media/reef-nudibranch.jpg"
-                alt="Colourful nudibranch on the reef in the Gulf of Thailand"
                 ratio="3 / 4"
                 index="D-02"
               />
@@ -87,11 +84,28 @@ export default function DivingPage() {
                 </div>
                 <h3 className="mt-3 text-2xl text-foam">{course.name}</h3>
                 <p className="mt-2 flex-1 text-sm text-foam-dim">{course.summary}</p>
+                {/* Filled chip — priced content is the data that matters most on this page. */}
                 {course.priceFrom ? (
-                  <p className="mt-4 font-mono text-sm text-foam">
-                    <span className="text-sand-dim">from</span> {course.priceFrom}
+                  <p className="mt-4">
+                    <span className="inline-flex items-baseline gap-2 rounded-[var(--radius)] border border-signal/30 bg-signal/10 px-3 py-1.5 font-mono text-sm text-foam">
+                      <span className="text-[0.62rem] uppercase tracking-[0.16em] text-sand-dim">
+                        {d.coursesPriceFrom}
+                      </span>
+                      {course.priceFrom}
+                    </span>
                   </p>
                 ) : null}
+                {/* Every priced card converts on its own — the visitor never has to scroll back up. */}
+                <a
+                  href={buildWaLink(coursePrefill(course.name, dict.wa))}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  {...trackable("whatsapp_click_offer", { kind: "course", offer: course.code })}
+                  className="mt-4 inline-flex items-center gap-2 font-mono text-[0.68rem] uppercase tracking-[0.14em] text-signal transition-colors hover:text-foam"
+                >
+                  <WhatsAppIcon width={15} height={15} />
+                  {d.courseCta}
+                </a>
               </div>
             </Reveal>
           ))}
@@ -106,9 +120,15 @@ export default function DivingPage() {
               {d.coursesCtaLabel}
               <ArrowIcon width={16} height={16} />
             </ButtonLink>
-            <ButtonLink href={buildWaLink(divingPrefill())} variant="outline" size="lg">
+            <ButtonLink href={buildWaLink(divingPrefill(dict.wa))} variant="outline" size="lg">
               <WhatsAppIcon width={18} height={18} />
-              {t.nav.askDiving}
+              {dict.nav.askDiving}
+            </ButtonLink>
+            {/* Internal link to the beginner landing page — keeps it out of the nav
+                while still giving it a crawlable path and real traffic. */}
+            <ButtonLink href={pathFor("baptism", locale)} variant="ghost" size="lg">
+              {dict.nav.pages.baptism}
+              <ArrowIcon width={16} height={16} />
             </ButtonLink>
           </div>
           <p className="mt-4 font-mono text-[0.62rem] uppercase tracking-[0.16em] text-sand-dim">
@@ -134,7 +154,19 @@ export default function DivingPage() {
                     {trip.detail}
                   </p>
                 </div>
-                <p className="mt-6 font-mono text-lg text-signal">{trip.price}</p>
+                <div className="mt-6">
+                  <p className="font-mono text-lg text-signal">{trip.price}</p>
+                  <a
+                    href={buildWaLink(tripPrefill(trip.name, dict.wa))}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    {...trackable("whatsapp_click_offer", { kind: "trip", offer: trip.name })}
+                    className="mt-3 inline-flex items-center gap-2 font-mono text-[0.66rem] uppercase tracking-[0.14em] text-foam-dim transition-colors hover:text-signal"
+                  >
+                    <WhatsAppIcon width={14} height={14} />
+                    {d.tripCta}
+                  </a>
+                </div>
               </div>
             </Reveal>
           ))}
@@ -142,9 +174,9 @@ export default function DivingPage() {
         <Reveal>
           <p className="mt-8 max-w-3xl border-l-2 border-signal/60 pl-5 text-sm text-sand">{d.tripsNote}</p>
           <div className="mt-8">
-            <ButtonLink href={buildWaLink(divingPrefill())} variant="primary" size="lg">
+            <ButtonLink href={buildWaLink(divingPrefill(dict.wa))} variant="primary" size="lg">
               <WhatsAppIcon width={18} height={18} />
-              {t.nav.askDiving}
+              {dict.nav.askDiving}
             </ButtonLink>
           </div>
         </Reveal>
@@ -187,9 +219,9 @@ export default function DivingPage() {
             <h2 className="text-4xl sm:text-5xl">{d.ctaTitle}</h2>
             <p className="mt-4 text-foam-dim">{d.ctaBody}</p>
           </div>
-          <ButtonLink href={buildWaLink(divingPrefill())} variant="primary" size="lg">
+          <ButtonLink href={buildWaLink(divingPrefill(dict.wa))} variant="primary" size="lg">
             <WhatsAppIcon width={18} height={18} />
-            {t.nav.askDiving}
+            {dict.nav.askDiving}
           </ButtonLink>
         </div>
       </Section>

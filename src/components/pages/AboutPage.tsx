@@ -1,6 +1,4 @@
-import type { Metadata } from "next";
-import { t } from "@/content/i18n";
-import { pageMetadata } from "@/lib/metadata";
+import type { Locale, Dictionary } from "@/content/i18n";
 import { PageHeader } from "@/components/site/PageHeader";
 import { FinalCta } from "@/components/site/FinalCta";
 import { Section } from "@/components/ui/Section";
@@ -9,15 +7,8 @@ import { Reveal } from "@/components/ui/Reveal";
 import { MediaSlot } from "@/components/ui/MediaSlot";
 import { recoveryPrefill } from "@/lib/whatsapp";
 
-export const metadata: Metadata = pageMetadata({
-  title: t.meta.about.title,
-  description: t.meta.about.description,
-  path: "/about",
-  keywords: [...t.meta.about.keywords],
-});
-
-export default function AboutPage() {
-  const a = t.about;
+export function AboutPage({ dict }: { dict: Dictionary; locale: Locale }) {
+  const a = dict.about;
   return (
     <>
       <PageHeader kicker={a.heroKicker} title={a.heroTitle} lead={a.heroLead} />
@@ -43,11 +34,14 @@ export default function AboutPage() {
               </ul>
             </Reveal>
 
-            {/* Owner-editable, verified-only credentials block. */}
+            {/*
+              Owner-editable, verified-only credentials block. This is the page's strongest
+              trust signal, so it gets a filled signal panel rather than a dashed placeholder.
+            */}
             <Reveal className="mt-12">
-              <div className="rounded-[var(--radius)] border border-dashed border-foam/20 bg-blueblack/40 p-6">
+              <div className="rounded-[var(--radius)] border border-signal bg-signal/[0.08] p-6">
                 <Kicker>{a.credentialsTitle}</Kicker>
-                <p className="mt-4 max-w-xl text-sm text-sand">{a.credentialsNote}</p>
+                <p className="mt-4 max-w-xl text-sm text-foam">{a.credentialsNote}</p>
               </div>
             </Reveal>
           </div>
@@ -65,10 +59,11 @@ export default function AboutPage() {
       </Section>
 
       <FinalCta
-        kicker={t.home.finalKicker}
-        title={t.home.finalTitle}
-        body={t.home.finalBody}
-        waMessage={recoveryPrefill()}
+        dict={dict}
+        kicker={dict.home.finalKicker}
+        title={dict.home.finalTitle}
+        body={dict.home.finalBody}
+        waMessage={recoveryPrefill(dict.wa)}
       />
     </>
   );

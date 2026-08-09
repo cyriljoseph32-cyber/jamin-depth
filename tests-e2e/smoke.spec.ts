@@ -2,8 +2,14 @@ import { test, expect } from "@playwright/test";
 
 const WA = "wa.me/66633753316";
 
+/**
+ * Content assertions run against the English locale so they can check exact
+ * copy. Locale routing itself (redirects, hreflang, the switcher and the French
+ * translation) is covered by `i18n.spec.ts`.
+ */
+
 test("home renders hero, slogan and WhatsApp FAB", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/en");
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Gulf of Thailand");
   // Slogan is preserved on the closing recovery band.
   await expect(page.getByText("You drop it. We dive for it.").first()).toBeVisible();
@@ -14,7 +20,8 @@ test("home renders hero, slogan and WhatsApp FAB", async ({ page }) => {
 });
 
 test("primary nav reaches every page", async ({ page }) => {
-  for (const path of ["/recovery", "/diving", "/about", "/contact", "/privacy"]) {
+  const paths = ["/en/recovery", "/en/diving", "/en/about", "/en/contact", "/en/privacy"];
+  for (const path of paths) {
     const res = await page.goto(path);
     expect(res?.status(), `status for ${path}`).toBeLessThan(400);
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
@@ -22,7 +29,7 @@ test("primary nav reaches every page", async ({ page }) => {
 });
 
 test("recovery form validates and builds a WhatsApp link", async ({ page }) => {
-  await page.goto("/recovery");
+  await page.goto("/en/recovery");
   // Prevent the real WhatsApp tab from opening during the test
   await page.evaluate(() => {
     window.open = () => null;
@@ -51,13 +58,13 @@ test("recovery form validates and builds a WhatsApp link", async ({ page }) => {
 });
 
 test("contact page exposes tel and wa links", async ({ page }) => {
-  await page.goto("/contact");
+  await page.goto("/en/contact");
   await expect(page.locator('main a[href^="tel:+66633753316"]').first()).toBeVisible();
   await expect(page.locator(`main a[href*="${WA}"]`).first()).toBeVisible();
 });
 
 test("assistant widget opens and degrades gracefully without a key", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/en");
   const launcher = page.getByRole("button", { name: /open the assistant/i });
   await expect(launcher).toBeVisible();
   await launcher.click();
@@ -73,7 +80,7 @@ test("assistant widget opens and degrades gracefully without a key", async ({ pa
 });
 
 test("diving page lists PADI courses and links to Discovery Divers", async ({ page }) => {
-  await page.goto("/diving");
+  await page.goto("/en/diving");
   await expect(page.getByRole("heading", { name: /PADI courses/i })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Open Water", exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { name: /Discover Scuba Diving/i })).toBeVisible();
@@ -90,7 +97,7 @@ test("diving page lists PADI courses and links to Discovery Divers", async ({ pa
 });
 
 test("404 page is branded", async ({ page }) => {
-  const res = await page.goto("/this-does-not-exist");
+  const res = await page.goto("/fr/cette-page-nexiste-pas");
   expect(res?.status()).toBe(404);
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("came up empty");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("rien donné");
 });

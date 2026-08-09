@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { SITE } from "@/content/site";
+import type { Locale, Dictionary } from "@/content/i18n";
 import { buildWaLink, recoveryPrefill } from "@/lib/whatsapp";
 import { ChatIcon, CloseIcon, SendIcon, WhatsAppIcon } from "@/components/ui/Icons";
 
@@ -13,16 +14,8 @@ interface Msg {
 
 const STORAGE_KEY = "jd_chat_v1";
 
-const GREETING =
-  "Hi — I'm the Jammin's Depths assistant. Lost something in the water around Koh Samui, or curious about diving? Ask me anything, and I'll point you the right way.";
-
-const SUGGESTIONS = [
-  "I dropped something in the sea",
-  "How does recovery work?",
-  "Tell me about diving here",
-];
-
-export function ChatWidget() {
+export function ChatWidget({ dict, locale }: { dict: Dictionary; locale: Locale }) {
+  const C = dict.chat;
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
@@ -87,12 +80,12 @@ export function ChatWidget() {
         const res = await fetch("/api/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ messages: history }),
+          body: JSON.stringify({ locale, messages: history }),
           signal: controller.signal,
         });
 
         if (!res.ok || !res.body) {
-          let msg = "Sorry — I couldn't reach the assistant. Please try WhatsApp and we'll help right away.";
+          let msg = C.unreachable;
           try {
             const data = (await res.json()) as { error?: string };
             if (data?.error) msg = data.error;
@@ -127,7 +120,7 @@ export function ChatWidget() {
           next[next.length - 1] = {
             role: "assistant",
             content:
-              "Sorry — something went wrong. Please try again, or reach us on WhatsApp and we'll help right away.",
+              C.failed,
           };
           return next;
         });
@@ -136,7 +129,7 @@ export function ChatWidget() {
         abortRef.current = null;
       }
     },
-    [messages, streaming],
+    [messages, streaming, locale, C.unreachable, C.failed],
   );
 
   function onSubmit(e: FormEvent) {
@@ -159,14 +152,16 @@ export function ChatWidget() {
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
         aria-controls="jd-chat-panel"
-        aria-label={open ? "Close the assistant" : "Open the assistant"}
-        className="fixed bottom-5 left-5 z-50 flex items-center gap-2 rounded-full border border-foam/15 bg-abyss-2/95 py-3 pl-3 pr-4 text-foam shadow-lg shadow-black/40 backdrop-blur transition-transform duration-200 hover:scale-[1.03] focus-visible:scale-[1.03]"
+        aria-label={open ? C.close : C.open}
+        className="fixed bottom-5 left-5 z-50 flex items-center gap-2 rounded-full border border-foam/15 bg-abyss-2/95 p-3 text-foam shadow-lg shadow-black/40 backdrop-blur transition-transform duration-200 hover:scale-[1.03] focus-visible:scale-[1.03] sm:py-3 sm:pl-3 sm:pr-4"
         style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
       >
         <span className="flex h-6 w-6 items-center justify-center text-signal">
           {open ? <CloseIcon width={20} height={20} /> : <ChatIcon width={20} height={20} />}
         </span>
-        <span className="font-mono text-xs font-semibold uppercase tracking-[0.12em]">Ask</span>
+        <span className="hidden font-mono text-xs font-semibold uppercase tracking-[0.12em] sm:inline">
+          {C.launcherLabel}
+        </span>
       </button>
 
       {open && (
@@ -188,7 +183,7 @@ export function ChatWidget() {
             <button
               type="button"
               onClick={() => setOpen(false)}
-              aria-label="Close the assistant"
+              aria-label={C.close}
               className="inline-flex h-8 w-8 items-center justify-center text-foam-dim transition-colors hover:text-foam"
             >
               <CloseIcon width={18} height={18} />
@@ -201,13 +196,13 @@ export function ChatWidget() {
             className="flex-1 space-y-3 overflow-y-auto px-4 py-4"
             role="log"
             aria-live="polite"
-            aria-label="Conversation"
+            aria-label={C.conversation}
           >
-            <Bubble role="assistant">{GREETING}</Bubble>
+            <Bubble role="assistant">{C.greeting}</Bubble>
 
             {messages.length === 0 && (
               <ul className="flex flex-wrap gap-2 pt-1">
-                {SUGGESTIONS.map((s) => (
+                {C.suggestions.map((s) => (
                   <li key={s}>
                     <button
                       type="button"
@@ -223,7 +218,7 @@ export function ChatWidget() {
 
             {messages.map((m, i) => (
               <Bubble key={i} role={m.role}>
-                {m.content || (streaming && i === messages.length - 1 ? <TypingDots /> : "")}
+                {m.content || (streaming && i === messages.length - 1 ? <TypingDots label={C.typing} /> : "")}
               </Bubble>
             ))}
           </div>
@@ -242,20 +237,20 @@ export function ChatWidget() {
                 onKeyDown={onKeyDown}
                 rows={1}
                 maxLength={2000}
-                placeholder="Ask about recovery or diving…"
+                placeholder={C.inputPlaceholder}
                 className="max-h-28 min-h-[2.75rem] flex-1 resize-none rounded-[var(--radius)] border border-foam/15 bg-blueblack/60 px-3 py-2.5 text-sm text-foam placeholder:text-foam-dim/50 outline-none transition-colors focus:border-signal"
               />
               <button
                 type="submit"
                 disabled={streaming || !input.trim()}
-                aria-label="Send message"
+                aria-label={C.send}
                 className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[var(--radius)] bg-signal text-ink transition-colors hover:bg-signal-600 disabled:opacity-40"
               >
                 <SendIcon width={18} height={18} />
               </button>
             </div>
             <a
-              href={buildWaLink(recoveryPrefill())}
+              href={buildWaLink(recoveryPrefill(dict.wa))}
               target="_blank"
               rel="noopener noreferrer"
               className="mt-2 inline-flex items-center gap-1.5 font-mono text-[0.62rem] uppercase tracking-[0.14em] text-foam-dim transition-colors hover:text-signal"
@@ -286,9 +281,9 @@ function Bubble({ role, children }: { role: Role; children: React.ReactNode }) {
   );
 }
 
-function TypingDots() {
+function TypingDots({ label }: { label: string }) {
   return (
-    <span className="inline-flex items-center gap-1" aria-label="Assistant is typing">
+    <span className="inline-flex items-center gap-1" aria-label={label}>
       <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-foam-dim" />
       <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-foam-dim [animation-delay:150ms]" />
       <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-foam-dim [animation-delay:300ms]" />

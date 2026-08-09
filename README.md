@@ -11,7 +11,7 @@ service. Cinematic dark-marine design, minimal JavaScript, zero backend, no secr
 - **Next.js 15** (App Router) · **React 19** · **TypeScript** (strict)
 - **Tailwind CSS v4** — CSS-first design tokens
 - Self-hosted fonts via `next/font`: Oswald (display), IBM Plex Sans (body), IBM Plex Mono (labels)
-- Original CSS/SVG visuals (depth gradient, caustics, film grain, sonar rings) — no stock/AI photos
+- Original CSS/SVG visuals — depth gradient, caustics, film grain, sonar rings
 - Vitest (unit) + Playwright (smoke + visual)
 
 ## Getting started
@@ -32,6 +32,8 @@ npm run dev      # http://localhost:3000
 | `npm run typecheck` | `tsc --noEmit`                           |
 | `npm run test`      | Vitest unit tests                        |
 | `npm run e2e`       | Playwright smoke + visual capture        |
+| `npm run brand:logo`| Re-generate the logo assets from the master art |
+| `npm run media:import`| Import owner photos into `public/media/` |
 
 ## How the forms work
 
@@ -45,8 +47,27 @@ by the site (see `/privacy`).
 
 ## Content & configuration
 
-All copy lives in `src/content/en.ts` (i18n-ready — add `fr.ts` / `th.ts` later).
-Verified brand facts (phone, socials, location) live in `src/content/site.ts`.
+Copy lives in `src/content/fr.ts` and `src/content/en.ts`; `en.ts` defines the
+`Dictionary` type both must satisfy. Verified brand facts (phone, socials,
+location) live in `src/content/site.ts`.
+
+### Brand assets
+
+The logo is the owner's own drawing, and **the palette is derived from it** —
+not the other way round. Its eight distinct hues map onto the roles the interface
+needs, and they are what the `@theme` block in `src/app/globals.css` holds. The
+artwork itself is never recoloured: the build only keys out the paper, and lifts
+the lettering to foam for the dark variant, where it would otherwise vanish.
+
+The master lives in `assets/brand/logo-master.png`; every delivered file comes
+from it via `npm run brand:logo`. `assets/brand/README.md` says which file to use
+where, on screen and in print.
+
+**Changing a colour means running the tests.** `src/lib/palette.test.ts` reads
+`globals.css` directly and fails if any text pair drops below WCAG AA, or if the
+constants in `src/content/brand.ts` — the copy used by the manifest, the theme
+colour and the Satori-rendered share card, none of which can resolve a CSS
+variable — drift from the stylesheet.
 
 ### Environment variables
 
@@ -74,7 +95,8 @@ Set `NEXT_PUBLIC_SITE_URL` to the final domain in the Vercel project settings on
 
 Every item below is already wired as a clearly-labelled, drop-in slot — nothing is faked:
 
-- **Authentic photos / clips** for the `MediaSlot`s (home cards & gallery, diving, About portrait) — sourced from [@granola51](https://www.instagram.com/granola51/) / [Facebook](https://web.facebook.com/Underwatersamuirecovery/).
+- **More authentic photos.** Three of the owner's own are now in place (Sail Rock, Chumphon Pinnacle, Tanote Bay); the remaining `MediaSlot`s still use placeholders. Import new ones with `npm run media:import <source> <name>` — it bakes in the EXIF rotation, which the image optimiser would otherwise drop.
 - **About → Background block**: verified credentials/experience to confirm before publishing.
 - **Email address** in `src/content/site.ts` (`SITE.email`) — confirm or replace the placeholder.
 - Any **exact public location** if one should appear (currently only "Koh Samui, Thailand", no fake address).
+- **A print-resolution logo** — the colour master is 752×1409, so about 6 cm wide at 300 dpi. Good to roughly A5; anything larger will pixelate. A vector or a ≥3000px export dropped in as the master fixes it. See `assets/brand/README.md`, which also records that the artwork still reads `DEPTH` while the brand is "Jammin's Depths".

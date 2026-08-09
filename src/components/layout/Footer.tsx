@@ -1,35 +1,45 @@
 import Link from "next/link";
-import { NAV, SITE, FOOTER_LEGAL, tel } from "@/content/site";
-import { t } from "@/content/i18n";
+import { SITE, tel } from "@/content/site";
+import type { Locale, Dictionary } from "@/content/i18n";
+import { NAV_KEYS, FOOTER_LEGAL_KEYS, pathFor } from "@/content/routes";
 import { buildWaLink, recoveryPrefill } from "@/lib/whatsapp";
 import { Logo } from "./Logo";
 import { WhatsAppIcon, InstagramIcon, FacebookIcon, PhoneIcon } from "@/components/ui/Icons";
 
-export function Footer() {
+export function Footer({ dict, locale }: { dict: Dictionary; locale: Locale }) {
   const year = new Date().getFullYear();
   return (
     <footer className="relative border-t border-foam/10 bg-blueblack">
       <div className="mx-auto grid w-full max-w-6xl gap-12 px-5 py-16 sm:px-8 md:grid-cols-[1.4fr_1fr_1fr]">
         <div>
+          {/* Badge rather than the full lockup: the artwork still reads DEPTH,
+              and the brand name is "Jammin's Depths". Switch back to
+              variant="lockup" once a corrected drawing lands. */}
           <Logo />
-          <p className="mt-5 max-w-xs text-sm text-foam-dim">{t.footer.blurb}</p>
+          <p className="mt-5 max-w-xs text-sm text-foam-dim">{dict.footer.blurb}</p>
           <p className="mt-5 font-mono text-[0.62rem] uppercase tracking-[0.18em] text-sand-dim">
             {SITE.location}
           </p>
         </div>
 
         <nav aria-label="Footer" className="text-sm">
-          <p className="mono-kicker mb-4">Explore</p>
+          <p className="mono-kicker mb-4">{dict.nav.pages.home}</p>
           <ul className="space-y-3">
             <li>
-              <Link href="/" className="text-foam-dim transition-colors hover:text-foam">
-                Home
+              <Link
+                href={pathFor("home", locale)}
+                className="text-foam-dim transition-colors hover:text-foam"
+              >
+                {dict.nav.pages.home}
               </Link>
             </li>
-            {NAV.map((item) => (
-              <li key={item.href}>
-                <Link href={item.href} className="text-foam-dim transition-colors hover:text-foam">
-                  {item.label}
+            {NAV_KEYS.map((key) => (
+              <li key={key}>
+                <Link
+                  href={pathFor(key, locale)}
+                  className="text-foam-dim transition-colors hover:text-foam"
+                >
+                  {dict.nav.pages[key]}
                 </Link>
               </li>
             ))}
@@ -41,7 +51,7 @@ export function Footer() {
           <ul className="space-y-3">
             <li>
               <a
-                href={buildWaLink(recoveryPrefill())}
+                href={buildWaLink(recoveryPrefill(dict.wa))}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 text-foam-dim transition-colors hover:text-signal"
@@ -81,12 +91,16 @@ export function Footer() {
       <div className="border-t border-foam/10">
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-5 py-6 text-xs text-sand-dim sm:flex-row sm:items-center sm:justify-between sm:px-8">
           <p>
-            © {year} {SITE.legalName}. {t.footer.rights}
+            © {year} {SITE.legalName}. {dict.footer.rights}
           </p>
           <nav aria-label="Legal" className="flex items-center gap-5 font-mono uppercase tracking-[0.14em]">
-            {FOOTER_LEGAL.map((item) => (
-              <Link key={item.href} href={item.href} className="transition-colors hover:text-foam">
-                {item.label}
+            {FOOTER_LEGAL_KEYS.map((key) => (
+              <Link
+                key={key}
+                href={pathFor(key, locale)}
+                className="transition-colors hover:text-foam"
+              >
+                {dict.nav.pages[key]}
               </Link>
             ))}
           </nav>

@@ -1,24 +1,33 @@
 import { en, type Dictionary } from "./en";
+import { fr } from "./fr";
 
 /**
- * i18n scaffold.
+ * i18n core.
  *
- * English ships today. French and Thai are prepared for: add `fr.ts` / `th.ts`
- * exporting the same `Dictionary` shape, register them in `dictionaries`, and
- * extend `locales`. To add localised URLs later, introduce an `app/[locale]`
- * segment and read the locale param instead of the hard-coded default.
+ * French is the default locale: the business targets francophone visitors in
+ * Koh Samui first, without excluding English speakers. Both locales are fully
+ * translated and independently indexable (`/fr/…`, `/en/…`).
+ *
+ * To add a locale: create `<code>.ts` exporting a `Dictionary`, register it in
+ * `dictionaries`, add it to `locales`, and add its slugs to `SLUGS` in
+ * routes.ts. Nothing in the components needs to change.
  */
-export const locales = ["en"] as const;
+export const locales = ["fr", "en"] as const;
 export type Locale = (typeof locales)[number];
-export const defaultLocale: Locale = "en";
+export const defaultLocale: Locale = "fr";
 
-const dictionaries: Record<Locale, Dictionary> = {
-  en,
-};
+const dictionaries: Record<Locale, Dictionary> = { fr, en };
 
 export function getDictionary(locale: Locale = defaultLocale): Dictionary {
   return dictionaries[locale];
 }
 
-/** Convenience for server components that only need the default locale today. */
-export const t = getDictionary(defaultLocale);
+export function isLocale(value: string): value is Locale {
+  return (locales as readonly string[]).includes(value);
+}
+
+/** BCP 47 tags for <html lang> and Open Graph. */
+export const htmlLang: Record<Locale, string> = { fr: "fr", en: "en" };
+export const ogLocale: Record<Locale, string> = { fr: "fr_FR", en: "en_US" };
+
+export type { Dictionary };

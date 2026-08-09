@@ -44,18 +44,6 @@ export const DIVE_CENTER = {
   pricingUrl: "https://discoverydivers.com/pricing",
 } as const;
 
-export const NAV: ReadonlyArray<{ href: string; label: string }> = [
-  { href: "/diving", label: "Diving" },
-  { href: "/recovery", label: "Recovery" },
-  { href: "/about", label: "About" },
-  { href: "/contact", label: "Contact" },
-];
-
-export const FOOTER_LEGAL: ReadonlyArray<{ href: string; label: string }> = [
-  { href: "/privacy", label: "Privacy" },
-  { href: "/contact", label: "Contact" },
-];
-
 /** Absolute site URL used for canonical links, sitemap and Open Graph. */
 export function siteUrl(): string {
   const fromEnv = process.env.NEXT_PUBLIC_SITE_URL?.trim();

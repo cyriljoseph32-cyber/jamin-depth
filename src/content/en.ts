@@ -21,6 +21,17 @@ export const en = {
         "lost item recovery Koh Samui",
       ],
     },
+    baptism: {
+      title: "Discover Scuba Diving in Koh Samui — your first dive",
+      description:
+        "Your first dive in Koh Samui: Discover Scuba Diving over one day, no experience and no certification needed, equipment included. Taught by a PADI instructor, in English or French.",
+      keywords: [
+        "discover scuba diving Koh Samui",
+        "first dive Koh Samui",
+        "try diving Koh Samui",
+        "beginner diving Koh Samui",
+      ],
+    },
     recovery: {
       title: "Underwater Recovery — Lost Item Recovery",
       description:
@@ -70,6 +81,59 @@ export const en = {
     call: "Call",
     menu: "Menu",
     close: "Close",
+    /** Link labels for each page, keyed by the route keys in routes.ts. */
+    pages: {
+      home: "Home",
+      diving: "Diving",
+      baptism: "Discover Scuba Diving",
+      recovery: "Recovery",
+      about: "About",
+      contact: "Contact",
+      privacy: "Privacy",
+    },
+    skipToContent: "Skip to content",
+    fabAria: "Request a recovery on WhatsApp",
+    languageLabel: "Language",
+    /** Names are written in their own language, as language names should be. */
+    languageNames: { fr: "Français", en: "English" },
+  },
+
+  /**
+   * Photo captions and alt text. These used to sit hardcoded in the components,
+   * which meant the French pages captioned their photos in English.
+   *
+   * Dive-site names come from the owner — none of these files carries GPS, so a
+   * site is never inferred from the image.
+   */
+  media: {
+    divers: {
+      label: "Safety stop · Chumphon Pinnacle",
+      alt: "Four divers holding the mooring line at their safety stop, the surface bright above them, at Chumphon Pinnacle",
+    },
+    platax: {
+      label: "Batfish · Sail Rock",
+      alt: "A school of batfish hanging in open blue water at Sail Rock",
+    },
+    turtle: {
+      label: "Hawksbill turtle · Tanote Bay",
+      alt: "A hawksbill turtle resting against hard coral on the reef at Tanote Bay",
+    },
+    fusiliers: {
+      label: "Fusiliers · Sail Rock",
+      alt: "A school of yellow fusiliers over the reef at Sail Rock",
+    },
+    reef: {
+      label: "Reef life",
+      alt: "Colourful nudibranch on the reef in the Gulf of Thailand",
+    },
+    barracuda: {
+      label: "Into the blue",
+      alt: "A large school of barracuda in the blue",
+    },
+    divingCard: {
+      label: "Diving · Gulf of Thailand",
+      alt: "Scuba diver with an underwater camera on a reef in the Gulf of Thailand",
+    },
   },
 
   home: {
@@ -79,7 +143,8 @@ export const en = {
     heroLead:
       "Personal PADI courses and fun dives out of Koh Samui — to the Gulf of Thailand's best sites like Sail Rock, honest and unhurried. Plus professional underwater recovery when something's gone over the side.",
     recoveryLink: "Lost something in the water? Underwater recovery",
-    badges: ["PADI courses", "Fun dives", "Koh Samui"],
+    /** "French spoken" is owner-confirmed — the diver speaks French fluently. */
+    badges: ["PADI courses", "Fun dives", "French spoken", "Koh Samui"],
     worldsKicker: "Two worlds, one diver",
     worldsTitle: "Diving when you're ready. Recovery when it matters.",
     recoveryCardTitle: "Underwater Recovery",
@@ -106,10 +171,11 @@ export const en = {
         body: "Based in Koh Samui and working these waters. Local knowledge is half the recovery.",
       },
     ],
+    galleryCta: "Start a recovery request",
     galleryKicker: "From the water",
     galleryTitle: "Real dives, real recoveries.",
     galleryNote:
-      "Real dives in the Gulf of Thailand — Sail Rock, the Similan Islands and beyond. Nothing here is stock or staged.",
+      "Real dives in the Gulf of Thailand — Sail Rock, Chumphon Pinnacle, Tanote Bay. Nothing here is stock or staged.",
     finalKicker: "Ready when you are",
     finalTitle: "You drop it. We dive for it.",
     finalBody:
@@ -214,6 +280,9 @@ export const en = {
     coursesDisclaimer:
       "Courses are booked and run through Discovery Divers. Scuba equipment is included; prices are per person, subject to change and confirmed at booking.",
     coursesCtaLabel: "See courses & prices",
+    courseCta: "Ask about this course",
+    tripCta: "Ask about this trip",
+    coursesPriceFrom: "from",
     certBadge: "Certification",
     noCertBadge: "No certification",
     /**
@@ -271,6 +340,101 @@ export const en = {
       { name: "Koh Tao", detail: "2 dives", price: "฿4,850" },
       { name: "Chumphon Pinnacle", detail: "Certified divers", price: "฿5,050" },
       { name: "Snorkelling", detail: "All sites", price: "฿2,450" },
+    ],
+  },
+
+  /**
+   * "Why dive with us" — every claim here is verifiable in the repo:
+   * the PADI instructor role and Discovery Divers partnership come from
+   * site.ts, French is owner-confirmed, and the direct-contact and
+   * respect-for-the-sea points restate existing about/diving copy.
+   * Do NOT add group sizes, transfers, boats or safety claims — unverified.
+   */
+  /**
+   * Discover Scuba landing page — the highest-volume beginner search.
+   * Everything factual on it is pulled from `diving.courses[0]`, the courses
+   * disclaimer, `why` and `faq`. The copy below adds framing only, never new
+   * facts: no inclusions, transfers, group sizes or swimming requirements.
+   */
+  baptism: {
+    heroKicker: "First dive · Koh Samui",
+    heroTitle: "Your first dive in Koh Samui.",
+    heroLead:
+      "Never breathed underwater before? Discover Scuba Diving is made exactly for that — one day, no experience, no certification, guided from start to finish.",
+    whatKicker: "What it is",
+    whatTitle: "One day, no prerequisites.",
+    includedTitle: "What's confirmed",
+    ctaKicker: "Ready to try",
+    ctaTitle: "Book your first dive.",
+    ctaBody: "Tell us your dates and how many of you there are — we'll take it from there.",
+    seeAllCourses: "See all PADI courses",
+  },
+
+  why: {
+    kicker: "Why dive with us",
+    title: "Four reasons, all checkable.",
+    lead: "No badges, no invented statistics — only what can actually be verified.",
+    items: [
+      {
+        title: "A PADI instructor",
+        body: "Your courses are taught by a PADI instructor at Discovery Divers Koh Samui, not by a rotating seasonal guide.",
+      },
+      {
+        title: "A PADI 5-Star centre",
+        body: "Courses and trips run with Discovery Divers — the island's longest-operating dive shop, 25+ years on this water.",
+      },
+      {
+        title: "French and English",
+        body: "Book, ask questions and dive in French or English. You're never guessing at a briefing in a language you half-follow.",
+      },
+      {
+        title: "Straight to the diver",
+        body: "One WhatsApp message reaches the person who will actually be in the water with you. No agency, no call centre.",
+      },
+    ],
+  },
+
+  /**
+   * FAQ. `confirmed: false` marks an answer the owner still has to supply —
+   * those render a visible [TO CONFIRM] badge and are deliberately EXCLUDED
+   * from the FAQPage structured data, so Google never sees a placeholder.
+   */
+  faq: {
+    kicker: "Before you book",
+    title: "Beginners' questions.",
+    lead: "The things people ask most before a first dive around Koh Samui.",
+    toConfirm: "To be confirmed by the owner",
+    items: [
+      {
+        q: "Can I dive if I have never dived before?",
+        a: "Yes. Discover Scuba Diving is exactly that — a guided first breath underwater over one day, with no experience and no certification needed. From ฿5,850, scuba equipment included.",
+        confirmed: true,
+      },
+      {
+        q: "Do I need to know how to swim?",
+        a: "Swimming requirements depend on the course and the day's conditions. Ask on WhatsApp before booking and you'll get a straight answer.",
+        confirmed: false,
+      },
+      {
+        q: "What should I bring?",
+        a: "Scuba equipment is included with Discovery Divers, so you don't need to rent gear. The rest of the personal packing list still needs to be confirmed.",
+        confirmed: false,
+      },
+      {
+        q: "Where do the dives take place from Koh Samui?",
+        a: "Trips run with Discovery Divers to the region's best water: the Sail Rock pinnacle, Koh Tao and Chumphon Pinnacle, plus snorkelling at all sites.",
+        confirmed: true,
+      },
+      {
+        q: "How do I book?",
+        a: "Message us on WhatsApp with your level, how many of you there are and your dates. Courses and trips are then booked and run through Discovery Divers.",
+        confirmed: true,
+      },
+      {
+        q: "What happens if the weather doesn't allow the trip?",
+        a: "Weather, current and visibility decide the day, and we would rather move a dive than force one. The exact rescheduling and refund terms still need to be confirmed.",
+        confirmed: false,
+      },
     ],
   },
 
@@ -354,6 +518,98 @@ export const en = {
     errorTitle: "Something needs a look",
     errorGeneric: "Please check the highlighted fields and try again.",
     spamError: "Submission blocked. If this is a mistake, please contact us on WhatsApp directly.",
+    /** Per-field messages. Passed into the validators so they follow the locale. */
+    validation: {
+      name: "Please tell us your name.",
+      contactRequired: "A phone, WhatsApp or email is required.",
+      contactInvalid: "Enter a valid phone/WhatsApp or email.",
+      object: "What did you lose?",
+      location: "Where did it happen? Be as precise as you can.",
+      lostAt: "Roughly when did it happen?",
+      message: "Add a short message.",
+      messageShort: "A little more detail helps us help you.",
+    },
+  },
+
+  /** On-site assistant. Kept out of the component so it translates like the rest. */
+  chat: {
+    launcherLabel: "Ask",
+    open: "Open the assistant",
+    close: "Close the assistant",
+    conversation: "Conversation",
+    typing: "Assistant is typing",
+    inputPlaceholder: "Ask about recovery or diving…",
+    send: "Send message",
+    greeting:
+      "Hi — I'm the Jammin's Depths assistant. Lost something in the water around Koh Samui, or curious about diving? Ask me anything, and I'll point you the right way.",
+    suggestions: ["I lost something in the sea", "How does recovery work?", "Tell me about diving here"],
+    notConfigured:
+      "The assistant isn't configured yet. Reach us on WhatsApp and we'll help you directly.",
+    unreachable: "Sorry — I couldn't reach the assistant. Please try WhatsApp and we'll help right away.",
+    failed:
+      "Sorry — something went wrong. Please try again, or reach us on WhatsApp and we'll help right away.",
+    interrupted:
+      "\n\nSorry — I hit a snag. Please try again, or reach us on WhatsApp and we'll help right away.",
+  },
+
+  /**
+   * Text that ends up *inside* the WhatsApp message the visitor sends.
+   * Localised too — a French visitor must not send an English message.
+   */
+  wa: {
+    recoveryIntro: "Hello Jammin's Depths, I need underwater recovery assistance in Koh Samui, Thailand.",
+    recoveryPrefill:
+      "Hello Jammin's Depths, I need underwater recovery assistance in Koh Samui, Thailand. Object: [object]. Location: [location]. Lost on: [date/time].",
+    divingPrefill: "Hello Jammin's Depths, I'd like to ask about diving in Koh Samui, Thailand.",
+    coursePrefill:
+      "Hello Jammin's Depths, I'd like information about the {course} course in Koh Samui. I am [beginner/certified], we are [X] people and we're available on [date].",
+    tripPrefill:
+      "Hello Jammin's Depths, I'd like information about the {trip} dive trip from Koh Samui. I am [beginner/certified], we are [X] people and we're available on [date].",
+    contactIntro: "Hello Jammin's Depths,",
+    labels: {
+      name: "Name",
+      contact: "Contact",
+      object: "Object",
+      location: "Location",
+      lostAt: "Lost on",
+      depth: "Estimated depth",
+      conditions: "Conditions",
+    },
+  },
+
+  /** Moved out of the page component so it can be translated like everything else. */
+  privacy: {
+    heroKicker: "Privacy",
+    heroTitle: "Privacy, kept simple.",
+    heroLead:
+      "We collect as little as possible, and we don't track you around the web. Here's exactly what happens with the information you share.",
+    sections: [
+      {
+        title: "What we collect",
+        body: "Only what you type into the recovery or contact form — your name, a way to reach you, and the details of your request. There are no accounts, no logins and no hidden fields.",
+      },
+      {
+        title: "How it's used",
+        body: "The form builds a message and opens it in WhatsApp (or your email app) so you send it to us directly. Nothing is stored on this website and nothing is sent to a third-party server by the form itself. Once you message us, our conversation lives in WhatsApp or email under their own terms.",
+      },
+      {
+        title: "Tracking & cookies",
+        body: "No advertising trackers and no analytics cookies are set by default. Fonts are self-hosted, so your visit isn't shared with third parties just for loading the page.",
+      },
+      {
+        title: "AI assistant",
+        body: "The optional chat assistant sends your messages to our AI provider (Anthropic) purely to generate a reply — nothing more. The conversation is kept only in your browser for the current session and is cleared when you close the tab; it isn't saved on our servers. Please don't share sensitive personal details in the chat — for a real request, message us on WhatsApp.",
+      },
+      {
+        title: "Photos",
+        body: "If you pick a photo in the recovery form, it stays on your device — it's only used to help you confirm the right file before you attach it yourself in the chat.",
+      },
+    ],
+    questionsTitle: "Questions",
+    /** Split around the two inline links rendered by the page. */
+    questionsBefore: "Reach us any time on ",
+    questionsBetween: " or by phone at ",
+    questionsAfter: ".",
   },
 
   notFound: {
@@ -370,4 +626,22 @@ export const en = {
   },
 } as const;
 
-export type Dictionary = typeof en;
+/**
+ * `en` is `as const`, so every string in it is a *literal* type. A second
+ * dictionary could never satisfy that. `Widen` relaxes the literals back to
+ * their primitives while preserving the exact shape — so `fr.ts` is checked
+ * key-for-key against English without being forced to repeat English strings.
+ */
+type Widen<T> = T extends string
+  ? string
+  : T extends number
+    ? number
+    : T extends boolean
+      ? boolean
+      : T extends readonly (infer U)[]
+        ? readonly Widen<U>[]
+        : T extends object
+          ? { [K in keyof T]: Widen<T[K]> }
+          : T;
+
+export type Dictionary = Widen<typeof en>;

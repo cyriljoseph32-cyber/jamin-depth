@@ -1,5 +1,5 @@
 import { SITE, tel } from "@/content/site";
-import { t } from "@/content/i18n";
+import type { Dictionary } from "@/content/i18n";
 import { ButtonLink } from "@/components/ui/Button";
 import { Kicker } from "@/components/ui/Kicker";
 import { Reveal } from "@/components/ui/Reveal";
@@ -9,11 +9,13 @@ import { buildWaLink } from "@/lib/whatsapp";
 
 /** Reusable end-of-page conversion block. */
 export function FinalCta({
+  dict,
   kicker,
   title,
   body,
   waMessage,
 }: {
+  dict: Dictionary;
   kicker: string;
   title: string;
   body: string;
@@ -33,7 +35,7 @@ export function FinalCta({
             <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <ButtonLink href={buildWaLink(waMessage)} size="lg" variant="primary">
                 <WhatsAppIcon width={18} height={18} />
-                {t.nav.requestRecovery}
+                {dict.nav.requestRecovery}
               </ButtonLink>
               <ButtonLink href={tel} size="lg" variant="outline">
                 <PhoneIcon width={16} height={16} />

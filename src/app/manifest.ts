@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { SITE } from "@/content/site";
+import { BRAND } from "@/content/brand";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
@@ -9,11 +10,11 @@ export default function manifest(): MetadataRoute.Manifest {
       "Underwater recovery and diving in Koh Samui, Thailand. You drop it. We dive for it.",
     start_url: "/",
     display: "standalone",
-    background_color: "#05080d",
-    theme_color: "#05080d",
+    background_color: BRAND.blueblack,
+    theme_color: BRAND.blueblack,
     icons: [
-      { src: "/icon.svg", sizes: "any", type: "image/svg+xml", purpose: "any" },
-      { src: "/icon.svg", sizes: "any", type: "image/svg+xml", purpose: "maskable" },
+      { src: "/icon.png", sizes: "512x512", type: "image/png", purpose: "any" },
+      { src: "/brand/icon-maskable.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
     ],
   };
 }

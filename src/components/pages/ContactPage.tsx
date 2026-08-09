@@ -1,7 +1,5 @@
-import type { Metadata } from "next";
 import { SITE, tel } from "@/content/site";
-import { t } from "@/content/i18n";
-import { pageMetadata } from "@/lib/metadata";
+import type { Locale, Dictionary } from "@/content/i18n";
 import { PageHeader } from "@/components/site/PageHeader";
 import { Section } from "@/components/ui/Section";
 import { Kicker } from "@/components/ui/Kicker";
@@ -10,15 +8,8 @@ import { ContactForm } from "@/components/forms/ContactForm";
 import { buildWaLink, recoveryPrefill } from "@/lib/whatsapp";
 import { WhatsAppIcon, PhoneIcon, InstagramIcon, FacebookIcon, ArrowIcon } from "@/components/ui/Icons";
 
-export const metadata: Metadata = pageMetadata({
-  title: t.meta.contact.title,
-  description: t.meta.contact.description,
-  path: "/contact",
-  keywords: [...t.meta.contact.keywords],
-});
-
-export default function ContactPage() {
-  const c = t.contact;
+export function ContactPage({ dict }: { dict: Dictionary; locale: Locale }) {
+  const c = dict.contact;
   return (
     <>
       <PageHeader kicker={c.heroKicker} title={c.heroTitle} lead={c.heroLead} />
@@ -31,7 +22,7 @@ export default function ContactPage() {
               <Kicker>{c.directTitle}</Kicker>
               <div className="mt-6 space-y-3">
                 <a
-                  href={buildWaLink(recoveryPrefill())}
+                  href={buildWaLink(recoveryPrefill(dict.wa))}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="group flex items-center justify-between gap-4 rounded-[var(--radius)] border border-signal/30 bg-signal/10 p-5 transition-colors hover:bg-signal/15"
@@ -119,7 +110,7 @@ export default function ContactPage() {
               <h2 className="mt-4 text-3xl sm:text-4xl">{c.formTitle}</h2>
               <p className="mt-3 text-sm text-foam-dim">{c.formLead}</p>
               <div className="mt-7">
-                <ContactForm />
+                <ContactForm dict={dict} />
               </div>
             </div>
           </Reveal>

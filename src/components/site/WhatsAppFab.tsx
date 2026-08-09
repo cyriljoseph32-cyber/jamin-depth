@@ -1,4 +1,6 @@
 import { buildWaLink, recoveryPrefill } from "@/lib/whatsapp";
+import type { Dictionary } from "@/content/i18n";
+import { trackable } from "@/lib/analytics";
 import { WhatsAppIcon } from "@/components/ui/Icons";
 
 /**
@@ -6,13 +8,14 @@ import { WhatsAppIcon } from "@/components/ui/Icons";
  * and never overlaps the main content (pages reserve bottom padding).
  * Works on desktop and mobile — a normal anchor to wa.me.
  */
-export function WhatsAppFab() {
+export function WhatsAppFab({ dict }: { dict: Dictionary }) {
   return (
     <a
-      href={buildWaLink(recoveryPrefill())}
+      href={buildWaLink(recoveryPrefill(dict.wa))}
       target="_blank"
       rel="noopener noreferrer"
-      aria-label="Request a recovery on WhatsApp"
+      aria-label={dict.nav.fabAria}
+      {...trackable("whatsapp_click_floating")}
       className="group fixed bottom-5 right-5 z-50 flex items-center gap-2 rounded-full bg-signal py-3 pl-3 pr-4 text-ink shadow-lg shadow-black/40 transition-transform duration-200 hover:scale-[1.03] focus-visible:scale-[1.03]"
       style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
     >

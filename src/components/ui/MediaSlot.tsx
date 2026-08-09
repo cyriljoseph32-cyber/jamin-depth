@@ -6,6 +6,10 @@ import { SonarRings } from "@/components/visuals/SonarRings";
  * to the slot's aspect ratio) under a subtle caption gradient. Without a `src`
  * it falls back to the premium labelled placeholder — so slots without a photo
  * yet still look intentional.
+ *
+ * Pass `ratio={null}` to drop the intrinsic aspect ratio and let the slot fill
+ * whatever box it is placed in — used by the home gallery mosaic, where the grid
+ * rows dictate the height instead.
  */
 export function MediaSlot({
   label,
@@ -16,7 +20,7 @@ export function MediaSlot({
   alt,
 }: {
   label: string;
-  ratio?: string;
+  ratio?: string | null;
   className?: string;
   index?: string;
   src?: string;
@@ -24,8 +28,10 @@ export function MediaSlot({
 }) {
   return (
     <figure
-      className={`group relative overflow-hidden rounded-[var(--radius)] border border-foam/10 bg-abyss-2 ${className}`}
-      style={{ aspectRatio: ratio }}
+      className={`group relative overflow-hidden rounded-[var(--radius)] border border-foam/10 bg-abyss-2 ${
+        ratio ? "" : "h-full w-full"
+      } ${className}`}
+      style={ratio ? { aspectRatio: ratio } : undefined}
     >
       {src ? (
         <>
@@ -39,7 +45,12 @@ export function MediaSlot({
           <div
             aria-hidden
             className="absolute inset-0"
-            style={{ background: "linear-gradient(to top, rgba(5,8,13,0.72), rgba(5,8,13,0) 48%)" }}
+            style={{
+              background:
+                "linear-gradient(to top," +
+                " color-mix(in srgb, var(--color-blueblack) 72%, transparent)," +
+                " transparent 48%)",
+            }}
           />
         </>
       ) : (
@@ -49,7 +60,8 @@ export function MediaSlot({
             className="absolute inset-0"
             style={{
               background:
-                "radial-gradient(80% 60% at 30% 20%, color-mix(in srgb, var(--color-petrol) 45%, transparent), transparent 60%), linear-gradient(160deg, #0c1520, #05080d)",
+                "radial-gradient(80% 60% at 30% 20%, color-mix(in srgb, var(--color-petrol) 45%, transparent), transparent 60%)," +
+                " linear-gradient(160deg, var(--color-abyss-2), var(--color-blueblack))",
             }}
           />
           <SonarRings className="absolute left-1/2 top-1/2 h-40 w-40 -translate-x-1/2 -translate-y-1/2 text-foam/15" />
