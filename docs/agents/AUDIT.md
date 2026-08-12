@@ -102,6 +102,30 @@ Réutilisée telle quelle, sans rien réécrire :
 constitueraient une base de connaissance bien meilleure que des gabarits — notamment pour les
 objections réelles et le vocabulaire des clients.
 
+### Pistes trouvées en ligne — à vérifier, **non opérantes**
+
+Le propriétaire a demandé de prendre ces informations sur `discoverydivers.com`. Le domaine est
+inaccessible depuis l'environnement de développement (403 au tunnel du proxy, confirmé deux fois,
+sur `WebFetch` comme sur `curl`). La recherche web a en revanche fait remonter les éléments
+ci-dessous.
+
+**Ils ne sont pas repris dans `config.ts`, et c'est délibéré :** ils proviennent de
+**revendeurs** (GetYourGuide, Viator, blogs de voyage), pas du centre. La politique d'annulation
+d'un revendeur est celle du revendeur — pas celle de Discovery Divers, et encore moins celle de
+Jammin's Depths. Les inscrire comme vérifiées les ferait citer à un client comme nos conditions.
+
+| Piste | Source | Ce qu'il faut confirmer |
+| --- | --- | --- |
+| « Annulation gratuite jusqu'à 24 h avant, réservation sans paiement immédiat » | GetYourGuide / Viator | Est-ce la politique du centre, ou seulement celle de la plateforme ? Et quelle est la nôtre ? |
+| « Divers assurés via le programme PADI Asia Pacific » | pages revendeurs | À confirmer auprès du centre, et préciser ce qui est couvert |
+| « Membre du réseau de caissons SSS » | pages revendeurs | Fait vérifiable, utile en cas d'incident — à confirmer |
+| « Savoir nager, déclarer toute condition médicale avant réservation » | pages revendeurs | Formulation exacte de l'exigence, et **qui décide** de l'aptitude |
+| Horaires d'ouverture du centre | 10 h–21 h *et* 11 h–18 h selon les pages | Deux valeurs contradictoires sur le même domaine — inutilisable en l'état |
+
+La page qui ferait autorité est `discoverydivers.com/faqs/`. Deux façons de débloquer :
+copiez-collez son contenu (je remplis `config.ts` en une passe), ou approuvez le message de
+questions que le rapport hebdomadaire prépare déjà pour le centre.
+
 ## Ce qu'il reste à faire, par ordre d'utilité
 
 1. **Renseigner les approbateurs** (question 4). Une ligne dans `config.ts`.
