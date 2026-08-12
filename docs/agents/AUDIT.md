@@ -53,7 +53,25 @@ d'évoluer) — ce sont les seuls chiffres qu'un agent peut citer :
 | Chumphon Pinnacle | ฿5,050 |
 | Snorkeling | ฿2,450 |
 
-**Non confirmés — chaque ligne bloque aujourd'hui une réponse :**
+**Confirmés depuis, par le propriétaire après revue du site** (accueil, FAQ, Dive Trips, Contact, sitemap) :
+
+| `POLICIES.…` | Valeur |
+| --- | --- |
+| `requiredDocuments` | Carte de certification (vérification en ligne possible si perdue), logbook si disponible, questionnaire médical complété — à apporter le premier jour |
+| `openingHours` | Centre 11 h–18 h tous les jours · WhatsApp répondu 8 h–20 h · ouvert 363 j/an |
+| `medicalProtocol` | **Partiel** : questionnaire médical à compléter, et droit de refuser la plongée à toute personne jugée inapte (alcool notamment). Ce que le texte dit explicitement ne pas couvrir : contre-indications précises et certificat médical PADI |
+| `staffLanguages` | `["français"]` — le badge « French spoken » est documenté comme confirmé par le propriétaire dans `src/content/en.ts`. L'anglais n'est pas revendiqué faute de confirmation explicite |
+| `CLOSED_DATES` | 1er janvier et 13 avril (Songkran) — vérifiés à chaque date demandée |
+
+Trois conséquences immédiates dans le code :
+
+- Les **heures calmes** passent de 21 h–8 h à **20 h–8 h**, alignées sur les heures WhatsApp confirmées : une relance qui arrive quand personne ne peut répondre à la réponse qu'elle provoque est pire qu'aucune relance.
+- Le **protocole médical partiel** accompagne désormais chaque escalade, en indiquant ce qu'il ne couvre pas. Un protocole partiel qui se présenterait comme complet serait lu comme complet.
+- Le **garde-fou des langues** ne bloque plus toute revendication : il vérifie *laquelle*. « Nous parlons français » passe ; « nous parlons hindi » ou « we speak Thai » est bloqué. Qu'une phrase soit vraie n'en rend pas une autre vraie, et un plongeur qui réserve en croyant être briefé dans sa langue a été trompé sur ce qui compte le plus sous l'eau.
+
+L'horaire d'ouverture est délibérément **rangé à part de `boatSchedule`** : 11 h est l'heure d'ouverture du centre, pas l'heure de départ du bateau. Les confondre ferait annoncer un départ à 11 h.
+
+**Non confirmés — chaque ligne bloque encore une réponse :**
 
 | `POLICIES.…` | Ce que ça débloque |
 | --- | --- |
@@ -63,11 +81,8 @@ d'évoluer) — ce sont les seuls chiffres qu'un agent peut citer :
 | `meetingPoint` | Le message pré-activité et la liste de la veille |
 | `pickupIncluded` | Répondre « transport inclus ? » |
 | `boatSchedule` | Annoncer une heure de départ |
-| `staffLanguages` | Écrire « nous parlons… » — bloqué tant que ce n'est pas confirmé |
 | `insurance` | Répondre sur la couverture |
 | `minorMinimumAge` | Répondre pour un enfant |
-| `medicalProtocol` | Tout cas santé part au propriétaire brut, sans protocole écrit |
-| `requiredDocuments` | Rappeler les documents et décharges |
 
 Spécialités PADI, groupes privés et récupération sous-marine restent sans tarif : devis au cas
 par cas, jamais chiffré par un agent.
@@ -90,6 +105,17 @@ localisés (`src/content/routes.ts`), assistant de chat en `src/app/api/chat/rou
 agents sont ajoutés à côté, dans `src/agents/`, et le site n'en importe rien.
 
 ### 7. Quelle base de connaissance réelle existe déjà ?
+
+**Branchée** : `src/agents/knowledge.ts` charge les 11 questions-réponses des blocs FAQ de
+`src/content/fr.ts` et `en.ts` — uniquement celles marquées `confirmed: true` — et l'agent
+Réception les cite **mot pour mot** quand elles répondent à la question posée. Rien n'est
+reformulé ni traduit : une réponse est la phrase du propriétaire, ou elle n'existe pas.
+
+Deux garde-fous : au moins deux mots-clés doivent correspondre, et la meilleure correspondance
+doit devancer la suivante — une égalité signifie que le message est ambigu, et un message ambigu
+part à un humain plutôt que de recevoir une réponse assurée à une question qui n'a pas été posée.
+Un test vérifie par ailleurs que **chaque** réponse FAQ passe le garde-fou de sortie : si une
+promesse se glisse un jour dans la FAQ du site, elle échoue ici avant d'atteindre un client.
 
 Réutilisée telle quelle, sans rien réécrire :
 
@@ -129,11 +155,13 @@ questions que le rapport hebdomadaire prépare déjà pour le centre.
 ## Ce qu'il reste à faire, par ordre d'utilité
 
 1. **Renseigner les approbateurs** (question 4). Une ligne dans `config.ts`.
-2. **Écrire le protocole médical** (`medicalProtocol`) et **la liste des documents**
-   (`requiredDocuments`). Ce sont les deux `TODO` qui touchent la sécurité.
-3. **Confirmer point de rendez-vous, horaires, transport** avec Discovery Divers. Débloque le
-   message pré-activité et la liste de la veille.
+2. **Compléter le protocole médical** : contre-indications précises et certificat médical PADI —
+   la seule partie sécurité encore ouverte.
+3. **Confirmer point de rendez-vous, horaires de départ, transport** avec Discovery Divers.
+   Débloque le message pré-activité et la liste de la veille.
 4. **Politique d'annulation, acompte, moyens de paiement.** Les questions les plus fréquentes.
-5. **Confirmer l'adresse e-mail** ou renoncer au canal.
-6. **Trancher WhatsApp App / Cloud API.** Condition de toute réponse automatique.
-7. **Fournir de vrais échanges clients** pour la base de connaissance.
+5. **Confirmer que l'équipe parle anglais** si c'est le cas — aujourd'hui seul le français est
+   revendiqué, et le garde-fou bloque le reste.
+6. **Âge minimum et assurance.**
+7. **Confirmer l'adresse e-mail** ou renoncer au canal.
+8. **Fournir de vrais échanges clients** pour enrichir la base de connaissance au-delà de la FAQ.

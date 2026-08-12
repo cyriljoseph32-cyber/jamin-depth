@@ -65,6 +65,8 @@ export {
   requireVerified,
   openGaps,
   approverFor,
+  CLOSED_DATES,
+  isClosed,
 } from "./config";
 export type { Verified, ChannelConfig, Approver } from "./config";
 
@@ -81,6 +83,9 @@ export {
   HARD_STOP_TOPICS,
 } from "./policy";
 export type { DraftViolation, ApprovalContext } from "./policy";
+
+export { knowledgeBase, findAnswer, normalise } from "./knowledge";
+export type { KnowledgeEntry, KnowledgeMatch } from "./knowledge";
 
 export { detectLanguage } from "./language";
 export type { LanguageVerdict } from "./language";

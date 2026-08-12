@@ -122,8 +122,10 @@ describe("scénario 3 — question médicale", () => {
     expect(escalation?.body).toMatch(/^\[P0\]/);
     expect(escalation?.body).toMatch(/medical|medication/);
 
-    // And the missing protocol is named as a gap, not improvised around.
-    expect(run.outcome?.gaps).toContain("policies.medicalProtocol");
+    // The confirmed (partial) protocol travels with the escalation, including
+    // what it does NOT cover — a partial protocol must not read as a complete one.
+    expect(escalation?.body).toMatch(/Questionnaire médical/);
+    expect(escalation?.body).toMatch(/NON COUVERT/);
   });
 });
 
@@ -197,7 +199,9 @@ describe("scénario 6 — la veille au soir et le bilan de la semaine", () => {
     expect(body).toContain("débutant");
     // The unconfirmed operational facts are surfaced, not silently skipped.
     expect(body).toMatch(/Point de rendez-vous : non confirmé/);
-    expect(brief.gaps).toContain("policies.requiredDocuments");
+    // Documents are confirmed now, so the brief lists them instead of flagging a hole.
+    expect(body).toMatch(/questionnaire médical complété/);
+    expect(brief.gaps).not.toContain("policies.requiredDocuments");
     expect(body).toMatch(/en attente de validation/);
   });
 

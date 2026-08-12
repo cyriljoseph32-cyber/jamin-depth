@@ -187,8 +187,15 @@ describe("auditDraft", () => {
     expect(auditDraft("C'est 3 200 bahts par personne.").map((v) => v.rule)).toContain("guard:price");
   });
 
-  it("refuses to claim a spoken language while that is unconfirmed", () => {
+  it("allows the one language that is confirmed, and refuses the others", () => {
+    // French is owner-confirmed (see POLICIES.staffLanguages). Nothing else is —
+    // and a diver who books believing they'll be briefed in their own language
+    // has been misled about the thing that matters most underwater.
+    expect(isDraftSafe("Nous parlons français, donc on peut tout expliquer tranquillement.")).toBe(true);
     expect(auditDraft("Nous parlons français et hindi à bord.").map((v) => v.rule)).toContain(
+      "guard:staff-languages",
+    );
+    expect(auditDraft("We speak Thai and German on the boat.").map((v) => v.rule)).toContain(
       "guard:staff-languages",
     );
   });

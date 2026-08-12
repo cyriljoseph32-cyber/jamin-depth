@@ -141,8 +141,12 @@ export const FOLLOW_UP = {
   maxPerLead: 2,
   firstAfterHours: 24,
   secondAfterHours: 72,
-  /** Local hours (Asia/Bangkok) during which nothing outbound is sent. */
-  quietHours: { from: 21, to: 8 },
+  /**
+   * Local hours (Asia/Bangkok) during which nothing outbound is sent.
+   * Matched to the confirmed WhatsApp hours (8h–20h): a nudge that arrives when
+   * nobody can answer the reply it provokes is worse than no nudge.
+   */
+  quietHours: { from: 20, to: 8 },
 } as const;
 
 /**
@@ -156,16 +160,55 @@ export const POLICIES = {
   paymentMethods: TODO as Verified<readonly string[]>,
   meetingPoint: TODO as Verified<string>,
   pickupIncluded: TODO as Verified<boolean>,
+  /**
+   * When the centre can be REACHED — confirmed from the site.
+   *
+   * Deliberately not `boatSchedule`. An opening hour is not a departure time:
+   * filing it there would have an agent tell a client the boat leaves at 11:00.
+   * Departure times stay unconfirmed until the partner gives them.
+   */
+  openingHours:
+    "Centre ouvert 11h–18h tous les jours ; WhatsApp répondu 8h–20h ; ouvert 363 jours/an (fermé le 1er janvier et le 13 avril, Songkran)." as Verified<string>,
   boatSchedule: TODO as Verified<string>,
-  /** Languages the humans actually speak. Never inferred from the site's locales. */
-  staffLanguages: TODO as Verified<readonly string[]>,
+  /**
+   * Languages the humans actually speak — never inferred from the site's locales.
+   * French only: the "French spoken" badge is documented as owner-confirmed in
+   * `src/content/en.ts`. English is used all over the site, but nobody has
+   * stated it as a spoken skill, so it is not claimed here.
+   */
+  staffLanguages: ["français"] as Verified<readonly string[]>,
   insurance: TODO as Verified<string>,
   minorMinimumAge: TODO as Verified<number>,
-  /** The written protocol to follow on a medical answer. Until set, everything medical is escalated. */
-  medicalProtocol: TODO as Verified<string>,
-  /** Documents to collect before an activity (medical statement, liability release, certification card…). */
-  requiredDocuments: TODO as Verified<readonly string[]>,
+  /**
+   * The protocol to follow when a diver discloses something medical.
+   *
+   * **Partial, on purpose.** The site states two things and no more: a medical
+   * questionnaire is completed, and the centre may refuse anyone judged unfit to
+   * dive (alcohol in particular). It says nothing about specific
+   * contraindications or the standard PADI medical certificate — so this text
+   * says that too, and travels with every escalation. A protocol that pretended
+   * to be complete would be read as one.
+   */
+  medicalProtocol:
+    "Questionnaire médical à compléter avant de plonger. Le centre peut refuser la plongée à toute personne jugée inapte (alcool notamment). NON COUVERT : contre-indications précises et certificat médical PADI — à confirmer avec le centre, et à trancher par un humain au cas par cas." as Verified<string>,
+  /** Documents to bring on day one. Confirmed from the site. */
+  requiredDocuments: [
+    "carte de certification (vérification en ligne possible si elle est perdue)",
+    "logbook si vous en avez un",
+    "questionnaire médical complété",
+  ] as Verified<readonly string[]>,
 } as const;
+
+/**
+ * Days the centre is closed, as `MM-DD`. Open 363 days a year — confirmed.
+ * Checked when a requested date is read, because accepting an enquiry for
+ * 1 January and discovering the closure later costs a client.
+ */
+export const CLOSED_DATES: readonly string[] = ["01-01", "04-13"];
+
+export function isClosed(isoDate: string): boolean {
+  return CLOSED_DATES.includes(isoDate.slice(5, 10));
+}
 
 export const OPS = {
   timezone: "Asia/Bangkok",

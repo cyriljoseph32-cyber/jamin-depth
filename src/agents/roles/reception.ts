@@ -1,5 +1,6 @@
 import type { Locale } from "@/content/i18n";
 import { POLICIES, isTodo, type Verified } from "../config";
+import { findAnswer } from "../knowledge";
 import { compose, render } from "../templates";
 import type {
   Agent,
@@ -201,6 +202,17 @@ export const receptionAgent: Agent = {
           })
         : null;
 
+    // The owner's own published FAQ, quoted verbatim when it fits the question.
+    // This is the cheapest honest answer available: no model, no paraphrase, and
+    // already reviewed by the person whose business it is.
+    const known = findAnswer(event.text, locale);
+    const knowledge = known
+      ? { ok: true as const, templateId: `knowledge:${known.entry.id}`, body: known.entry.answer }
+      : null;
+    if (known) {
+      notes.push(`Réponse reprise de la FAQ du site (${known.entry.id}) : « ${known.entry.question} »`);
+    }
+
     const unanswerable = unconfirmedPolicyQuestions(signals.policyQuestions);
     const handoff =
       unanswerable.length > 0
@@ -208,7 +220,12 @@ export const receptionAgent: Agent = {
         : null;
     for (const key of unanswerable) gaps.push(`policies.${key} demandé par le client et non confirmé`);
 
-    const message = compose([opener, ...(questions ? [questions] : []), ...(handoff ? [handoff] : [])]);
+    const message = compose([
+      opener,
+      ...(knowledge ? [knowledge] : []),
+      ...(questions ? [questions] : []),
+      ...(handoff ? [handoff] : []),
+    ]);
     if (message.missing.length > 0) {
       notes.push(`Blocs non rendus, champs manquants : ${message.missing.join(", ")}`);
     }

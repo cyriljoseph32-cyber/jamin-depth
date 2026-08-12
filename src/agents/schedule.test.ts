@@ -144,7 +144,10 @@ describe("runJob('weekly-report')", () => {
     const supplier = pending.find((p) => p.action.type === "supplier_message");
     expect(supplier).toBeDefined();
     expect(supplier?.reasons).toContain("rule:external-commitment");
-    expect(supplier?.action.draft?.body).toMatch(/medical condition/i);
+    // The list shrinks as config.ts fills in: documents and the medical
+    // procedure are confirmed now, cancellation is not.
+    expect(supplier?.action.draft?.body).toMatch(/cancellation/i);
+    expect(supplier?.action.draft?.body).not.toMatch(/medical condition/i);
   });
 });
 
