@@ -45,6 +45,26 @@ by the site (see `/privacy`).
 > A WhatsApp deep link can't carry a file, so the optional photo field previews the
 > image locally and the success step asks you to attach it directly in the chat.
 
+## The agent system
+
+`src/agents/` holds the multi-agent system that handles the work *after* the click:
+qualifying enquiries from WhatsApp/Instagram/Facebook, preparing a booking recap and the
+partner availability request, the next-day operations list, document reminders, content
+briefs, review drafts and the weekly report.
+
+It is a **pure TypeScript library** — no API route, no secret, no new dependency, and the
+site does not import it. Language, dates, party size, level and safety signals are detected
+by rules, so a normal message costs zero tokens; a model is used only to rephrase an
+already-grounded draft, and its output is re-checked.
+
+Two independent gates decide what may leave: an action-type matrix (money, seats, published
+words, anything irreversible) and a word-level guard that refuses any draft promising a seat,
+the weather, wildlife, a response time, a price outside the verified catalogue, or fitness to
+dive. Anything either gate objects to goes to a human validation queue.
+
+Start with [`docs/agents/README.md`](docs/agents/README.md); the Phase 0 audit and everything
+still unconfirmed are in [`docs/agents/AUDIT.md`](docs/agents/AUDIT.md).
+
 ## Content & configuration
 
 Copy lives in `src/content/fr.ts` and `src/content/en.ts`; `en.ts` defines the
