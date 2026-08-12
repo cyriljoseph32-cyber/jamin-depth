@@ -67,6 +67,8 @@ export {
   approverFor,
   CLOSED_DATES,
   isClosed,
+  staffSpeaks,
+  languageName,
 } from "./config";
 export type { Verified, ChannelConfig, Approver } from "./config";
 

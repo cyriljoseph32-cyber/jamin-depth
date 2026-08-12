@@ -60,14 +60,15 @@ d'évoluer) — ce sont les seuls chiffres qu'un agent peut citer :
 | `requiredDocuments` | Carte de certification (vérification en ligne possible si perdue), logbook si disponible, questionnaire médical complété — à apporter le premier jour |
 | `openingHours` | Centre 11 h–18 h tous les jours · WhatsApp répondu 8 h–20 h · ouvert 363 j/an |
 | `medicalProtocol` | **Partiel** : questionnaire médical à compléter, et droit de refuser la plongée à toute personne jugée inapte (alcool notamment). Ce que le texte dit explicitement ne pas couvrir : contre-indications précises et certificat médical PADI |
-| `staffLanguages` | `["français"]` — le badge « French spoken » est documenté comme confirmé par le propriétaire dans `src/content/en.ts`. L'anglais n'est pas revendiqué faute de confirmation explicite |
+| `staffLanguages` | **anglais, français, thaï, allemand, espagnol, italien, norvégien** — déclarées par le propriétaire |
 | `CLOSED_DATES` | 1er janvier et 13 avril (Songkran) — vérifiés à chaque date demandée |
 
 Trois conséquences immédiates dans le code :
 
 - Les **heures calmes** passent de 21 h–8 h à **20 h–8 h**, alignées sur les heures WhatsApp confirmées : une relance qui arrive quand personne ne peut répondre à la réponse qu'elle provoque est pire qu'aucune relance.
 - Le **protocole médical partiel** accompagne désormais chaque escalade, en indiquant ce qu'il ne couvre pas. Un protocole partiel qui se présenterait comme complet serait lu comme complet.
-- Le **garde-fou des langues** ne bloque plus toute revendication : il vérifie *laquelle*. « Nous parlons français » passe ; « nous parlons hindi » ou « we speak Thai » est bloqué. Qu'une phrase soit vraie n'en rend pas une autre vraie, et un plongeur qui réserve en croyant être briefé dans sa langue a été trompé sur ce qui compte le plus sous l'eau.
+- Le **garde-fou des langues** ne bloque plus toute revendication : il vérifie *laquelle*. Les sept langues déclarées passent ; « nous parlons hindi » ou « we speak Japanese » est bloqué. Qu'une phrase soit vraie n'en rend pas une autre vraie, et un plongeur qui réserve en croyant être briefé dans sa langue a été trompé sur ce qui compte le plus sous l'eau.
+- Un message dans une langue **parlée mais sans gabarit** (allemand, italien, thaï…) n'est plus traité comme un cul-de-sac. Le système ne répond toujours pas — il n'a de copie approuvée qu'en français et en anglais — mais l'escalade dit « cette langue est parlée dans l'équipe, répondez directement, c'est un avantage à jouer » au lieu de « personne ne la parle ». Sept langues sur un petit centre de plongée à Koh Samui, c'est un argument commercial ; le signaler comme une impasse le gaspillerait.
 
 L'horaire d'ouverture est délibérément **rangé à part de `boatSchedule`** : 11 h est l'heure d'ouverture du centre, pas l'heure de départ du bateau. Les confondre ferait annoncer un départ à 11 h.
 
@@ -160,8 +161,10 @@ questions que le rapport hebdomadaire prépare déjà pour le centre.
 3. **Confirmer point de rendez-vous, horaires de départ, transport** avec Discovery Divers.
    Débloque le message pré-activité et la liste de la veille.
 4. **Politique d'annulation, acompte, moyens de paiement.** Les questions les plus fréquentes.
-5. **Confirmer que l'équipe parle anglais** si c'est le cas — aujourd'hui seul le français est
-   revendiqué, et le garde-fou bloque le reste.
-6. **Âge minimum et assurance.**
-7. **Confirmer l'adresse e-mail** ou renoncer au canal.
-8. **Fournir de vrais échanges clients** pour enrichir la base de connaissance au-delà de la FAQ.
+5. **Âge minimum et assurance.**
+6. **Confirmer l'adresse e-mail** ou renoncer au canal.
+7. **Fournir de vrais échanges clients** pour enrichir la base de connaissance au-delà de la FAQ.
+8. *(optionnel)* **Copie approuvée en allemand, espagnol, italien, thaï, norvégien** si vous voulez
+   que le système réponde lui-même dans ces langues. Je ne ferai pas traduire les gabarits par un
+   modèle : ils portent des formulations de sécurité, et une nuance perdue sur « savoir nager » ou
+   sur un point médical ne se rattrape pas.

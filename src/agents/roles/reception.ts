@@ -1,5 +1,5 @@
 import type { Locale } from "@/content/i18n";
-import { POLICIES, isTodo, type Verified } from "../config";
+import { POLICIES, isTodo, languageName, staffSpeaks, type Verified } from "../config";
 import { findAnswer } from "../knowledge";
 import { compose, render } from "../templates";
 import type {
@@ -151,7 +151,19 @@ export const receptionAgent: Agent = {
           }),
         );
       }
-      gaps.push(`langue détectée: ${signals.foreignLanguage} — aucune compétence linguistique confirmée`);
+      // Two very different situations, and the briefing must say which one.
+      // Someone on the team may well speak this language — the system simply has
+      // no approved template beyond FR/EN. Telling the owner "nobody speaks
+      // this" when they do would send a winnable lead to a polite brush-off.
+      const spoken = staffSpeaks(signals.foreignLanguage);
+      const language = languageName(signals.foreignLanguage);
+
+      gaps.push(
+        spoken
+          ? `message en ${language} — parlé dans l'équipe, mais aucun gabarit approuvé dans cette langue`
+          : `message en ${language} — aucune compétence linguistique confirmée`,
+      );
+
       return {
         agent: "reception",
         eventId: event.id,
@@ -163,9 +175,15 @@ export const receptionAgent: Agent = {
         notes,
         escalation: {
           to: "owner",
-          reason: `Message en ${signals.foreignLanguage}`,
+          reason: `Message en ${language}${spoken ? " — langue parlée dans l'équipe" : ""}`,
           urgency: "P1",
-          briefing: `Un prospect écrit en ${signals.foreignLanguage} (${event.channel}). Le système ne répond pas dans une langue non confirmée. Message : « ${event.text.slice(0, 200)} »`,
+          briefing: [
+            `Un prospect écrit en ${language} (${event.channel}).`,
+            spoken
+              ? `Cette langue est parlée dans l'équipe : répondez-lui directement, c'est un avantage à jouer. Le système n'a pas de gabarit approuvé au-delà du français et de l'anglais, il n'a donc rien envoyé.`
+              : `Aucune compétence confirmée dans cette langue : le système n'a rien envoyé plutôt que de répondre approximativement.`,
+            `Message : « ${event.text.slice(0, 200)} »`,
+          ].join("\n"),
         },
       };
     }

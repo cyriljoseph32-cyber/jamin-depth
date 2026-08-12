@@ -316,6 +316,7 @@ const LANGUAGE_NAMES = new Map<string, string>([
   ["portugais", "portugais"], ["portuguese", "portugais"],
   ["arabe", "arabe"], ["arabic", "arabe"],
   ["coreen", "coreen"], ["korean", "coreen"],
+  ["norvegien", "norvegien"], ["norwegian", "norvegien"], ["norsk", "norvegien"],
 ]);
 
 /** Digits used as a price: `฿5,850`, `5850 THB`, `5 850 bahts`. */

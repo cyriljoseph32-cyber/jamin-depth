@@ -236,6 +236,41 @@ describe("scénario 6 — la veille au soir et le bilan de la semaine", () => {
   });
 });
 
+describe("scénario 7 — un prospect écrit en allemand", () => {
+  it("ne répond pas dans une langue sans gabarit, mais dit que l'équipe la parle", async () => {
+    const { bus, sent } = harness();
+    const run = await bus.handle(
+      event({
+        id: "s7a",
+        text: "Hallo, ich möchte tauchen. Wie viel kostet das für zwei Personen?",
+        from: { name: "Klaus", phone: "+49170000000" },
+      }),
+    );
+
+    expect(run.signals?.foreignLanguage).toBe("de");
+    // Nothing auto-sent, and nothing written in approximate German.
+    expect(run.executed.filter((a) => a.type === "send_message")).toEqual([]);
+
+    // The briefing turns a dead end into an advantage to play: German is spoken.
+    const escalation = sent.find((m) => m.templateId === "escalation");
+    expect(escalation?.body).toMatch(/allemand/);
+    expect(escalation?.body).toMatch(/parlée dans l'équipe/);
+    expect(run.outcome?.gaps.join(" ")).toMatch(/aucun gabarit approuvé/);
+  });
+
+  it("dit clairement quand personne ne parle la langue", async () => {
+    const { bus, sent } = harness();
+    const run = await bus.handle(
+      event({ id: "s7b", text: "नमस्ते, मुझे गोता लगाना है", from: { name: "Aarav" } }),
+    );
+
+    expect(run.signals?.foreignLanguage).toBe("hi");
+    const escalation = sent.find((m) => m.templateId === "escalation");
+    expect(escalation?.body).toMatch(/Aucune compétence confirmée/);
+    expect(run.outcome?.gaps.join(" ")).toMatch(/aucune compétence linguistique confirmée/);
+  });
+});
+
 describe("la file de validation", () => {
   it("ne s'auto-approuve jamais et garde la trace de la décision", async () => {
     const { bus } = harness();

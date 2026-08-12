@@ -171,12 +171,22 @@ export const POLICIES = {
     "Centre ouvert 11h–18h tous les jours ; WhatsApp répondu 8h–20h ; ouvert 363 jours/an (fermé le 1er janvier et le 13 avril, Songkran)." as Verified<string>,
   boatSchedule: TODO as Verified<string>,
   /**
-   * Languages the humans actually speak — never inferred from the site's locales.
-   * French only: the "French spoken" badge is documented as owner-confirmed in
-   * `src/content/en.ts`. English is used all over the site, but nobody has
-   * stated it as a spoken skill, so it is not claimed here.
+   * Languages the humans actually speak — stated by the owner.
+   *
+   * Two things this list does. It lets a draft say "nous parlons italien" and be
+   * true; and it changes what happens to a message in one of these languages:
+   * the system still has no template beyond FR/EN, so it hands off, but it hands
+   * off saying "someone here speaks this" instead of "nobody does".
    */
-  staffLanguages: ["français"] as Verified<readonly string[]>,
+  staffLanguages: [
+    "anglais",
+    "français",
+    "thaï",
+    "allemand",
+    "espagnol",
+    "italien",
+    "norvégien",
+  ] as Verified<readonly string[]>,
   insurance: TODO as Verified<string>,
   minorMinimumAge: TODO as Verified<number>,
   /**
@@ -208,6 +218,55 @@ export const CLOSED_DATES: readonly string[] = ["01-01", "04-13"];
 
 export function isClosed(isoDate: string): boolean {
   return CLOSED_DATES.includes(isoDate.slice(5, 10));
+}
+
+/**
+ * ISO code → the name used in `staffLanguages`, so a detected language can be
+ * checked against what the team actually speaks.
+ */
+const LANGUAGE_CODE_NAMES: Readonly<Record<string, string>> = {
+  fr: "français",
+  en: "anglais",
+  th: "thaï",
+  de: "allemand",
+  es: "espagnol",
+  it: "italien",
+  no: "norvégien",
+  nl: "néerlandais",
+  pt: "portugais",
+  ru: "russe",
+  hi: "hindi",
+  zh: "chinois",
+  ja: "japonais",
+  ko: "coréen",
+  ar: "arabe",
+};
+
+/** Accent-free comparison, so "thaï" matches "thai". */
+function flatten(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "");
+}
+
+/**
+ * Does someone on the team speak this language?
+ *
+ * `false` when `staffLanguages` is unconfirmed — the safe reading, and the same
+ * one the draft guard takes.
+ */
+export function staffSpeaks(code: string): boolean {
+  const confirmed = verified(POLICIES.staffLanguages);
+  if (confirmed === null) return false;
+  const name = LANGUAGE_CODE_NAMES[code.toLowerCase()];
+  if (!name) return false;
+  return confirmed.some((l) => flatten(l) === flatten(name));
+}
+
+/** Human-readable name for a detected code, for briefings. */
+export function languageName(code: string): string {
+  return LANGUAGE_CODE_NAMES[code.toLowerCase()] ?? code;
 }
 
 export const OPS = {
