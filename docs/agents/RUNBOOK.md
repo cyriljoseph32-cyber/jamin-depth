@@ -73,7 +73,7 @@ refuse tout message qui promettrait un délai de réponse.
 | `rule:payment` / `rule:refund` | Argent. Jamais automatique. |
 | `rule:safety-topic` | Signal santé/sécurité. Aucun avis n'a été donné. |
 | `rule:sensitive-topic` | Plainte, négociation, légal, mineur. |
-| `rule:foreign-language` | Message dans une langue non confirmée côté équipe. |
+| `rule:foreign-language` | Message hors français/anglais. L'escalade précise lequel des deux cas : langue **parlée** dans l'équipe (répondez directement, le système n'a pas de gabarit) ou **non parlée** (personne ne peut répondre). |
 | `rule:unverified-fact` | Le client demande quelque chose que la config ne sait pas. |
 | `rule:review-reply` / `rule:publication` | Parole publique. |
 | `rule:external-commitment` | Message à un fournisseur. |
@@ -82,8 +82,8 @@ refuse tout message qui promettrait un délai de réponse.
 ## Un `guard:` dans la liste
 
 Cela veut dire que le garde-fou a relu le texte et y a trouvé une promesse interdite : une place
-confirmée, la météo, une espèce, un délai, un tarif hors catalogue, un jugement d'aptitude, une
-langue parlée non confirmée.
+confirmée, la météo, une espèce, un délai, un tarif hors catalogue, un jugement d'aptitude, ou une
+langue revendiquée hors de celles que l'équipe parle.
 
 L'action n'est pas adoucie automatiquement — elle vous est soumise telle quelle, avec l'extrait
 fautif. **Corrigez le texte avant d'envoyer, ou rejetez.** Si un gabarit produit
@@ -98,7 +98,8 @@ Ce que le système a fait, et rien de plus :
 2. Préparé un accusé de réception **empathique et sans engagement** — il dit que le point est
    médical, qu'il est transmis, et que rien n'est réservé.
 3. Vous a alerté immédiatement, avec l'extrait du message.
-4. Signalé, s'il y a lieu, que `POLICIES.medicalProtocol` n'est pas défini.
+4. Joint le protocole médical configuré — **et ce qu'il ne couvre pas** (aujourd'hui :
+   contre-indications précises et certificat médical PADI).
 
 Ce qu'il n'a pas fait, et ne fera pas : donner un avis, rassurer sur une contre-indication,
 juger l'aptitude à plonger, ou laisser entendre qu'une place est retenue.
