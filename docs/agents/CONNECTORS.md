@@ -98,6 +98,9 @@ maximum par événement, et sa sortie repasse par le garde-fou.
 
 ## Ce qui ne dépend d'aucune connexion
 
-Les onze `POLICIES` non confirmées (voir [`AUDIT.md`](./AUDIT.md)) ne demandent aucun accès
-technique : seulement des réponses. Elles bloquent aujourd'hui plus de messages que l'absence
-d'API.
+Les `POLICIES` encore non confirmées (voir [`AUDIT.md`](./AUDIT.md) pour la liste à jour) ne
+demandent aucun accès technique : seulement des réponses. Cinq ont été comblées depuis l'audit
+initial — documents, horaires d'ouverture, jours de fermeture, langues parlées, protocole médical
+(partiel). Il reste l'annulation, l'acompte, les moyens de paiement, le point de rendez-vous, les
+horaires de départ, le transport, l'assurance et l'âge minimum — et elles bloquent toujours plus
+de messages que l'absence d'API.
