@@ -184,7 +184,12 @@ describe("scénario 6 — la veille au soir et le bilan de la semaine", () => {
       }),
     );
 
-    const brief = nextDayBrief({ date: "2026-03-12", now: NOW, leads: ports.crm.all(), pending: bus.queue.pending() });
+    const brief = nextDayBrief({
+      date: "2026-03-12",
+      now: NOW,
+      leads: await ports.crm.all(),
+      pending: await bus.queue.pending(),
+    });
     const body = brief.actions[0]?.draft?.body ?? "";
 
     expect(body).toContain("Marie");
@@ -211,8 +216,8 @@ describe("scénario 6 — la veille au soir et le bilan de la semaine", () => {
     const report = weeklyReport({
       now: NOW,
       weekStart: "2026-03-09",
-      leads: ports.crm.all(),
-      queue: bus.queue.all(),
+      leads: await ports.crm.all(),
+      queue: await bus.queue.all(),
       ports,
     });
     const body = report.actions[0]?.draft?.body ?? "";
@@ -232,17 +237,17 @@ describe("la file de validation", () => {
     const { bus } = harness();
     await bus.handle(event({ id: "s7", text: "Baptême le 14/03 pour 2 personnes" }));
 
-    const pending = bus.queue.pending();
+    const pending = await bus.queue.pending();
     expect(pending.length).toBeGreaterThan(0);
     // P0/P1 first, so a human triaging from the top sees the urgent items.
     expect(pending[0]?.priority).toBe("P1");
 
     const first = pending[0];
     if (!first) throw new Error("expected a pending item");
-    const decided = bus.queue.approve(first.id, "owner");
+    const decided = await bus.queue.approve(first.id, "owner");
     expect(decided?.status).toBe("approved");
     expect(decided?.decidedBy).toBe("owner");
     // Deciding twice is refused rather than silently accepted.
-    expect(bus.queue.approve(first.id, "owner")).toBeUndefined();
+    expect(await bus.queue.approve(first.id, "owner")).toBeUndefined();
   });
 });

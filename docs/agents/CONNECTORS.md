@@ -1,11 +1,12 @@
 # Checklist de connexion
 
-Aucun accès n'a été inventé. Chaque port de [`src/agents/adapters/`](../../src/agents/adapters)
-annonce `status: "missing"` et tourne sur un mock en mémoire ; le rapport hebdomadaire les liste
-tant qu'ils le sont.
+> **Le code est écrit pour Supabase, WhatsApp Cloud API et Telegram** — il ne reste que les
+> variables d'environnement à renseigner. La procédure pas à pas est dans
+> [`DEPLOY.md`](./DEPLOY.md) ; cette page explique ce que chaque connexion débloque et ce
+> qu'elle ne débloque pas.
 
-Cette page dit, pour chaque connexion : ce qu'il faut fournir, ce que ça débloque, et ce que ça
-**ne** débloque pas.
+Aucun accès n'a été inventé. Un port sans identifiants retombe sur son mock, annonce
+`status: "missing"`, et le rapport hebdomadaire le liste tant qu'il l'est.
 
 ---
 
@@ -18,10 +19,10 @@ Pas d'API. Le système ne peut ni lire ni envoyer. Les brouillons doivent être 
 depuis la file de validation. C'est déjà utile — la rédaction et la qualification sont le gros
 du travail — mais rien n'est automatique.
 
-**WhatsApp Cloud API** (Meta)
-À fournir : un compte Meta Business vérifié, un numéro dédié à l'API (⚠️ un numéro migré vers
-l'API ne fonctionne plus dans l'application), un `WHATSAPP_TOKEN`, un `PHONE_NUMBER_ID`, une URL
-de webhook et un `WEBHOOK_VERIFY_TOKEN`.
+**WhatsApp Cloud API** (Meta) — **implémenté**
+Webhook : `/api/agents/whatsapp`, signature `X-Hub-Signature-256` vérifiée en temps constant.
+Envoi : API Graph. Variables : `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`,
+`WHATSAPP_APP_SECRET`, `WHATSAPP_VERIFY_TOKEN`.
 
 Débloque : réception automatique des messages, envoi des réponses approuvées, et la possibilité
 de passer `CHANNELS.whatsapp.automation` de `draft_only` à `auto_reply`.
@@ -54,6 +55,11 @@ requise, comptez plusieurs jours).
 Débloque l'agent Réputation en réel. Rappel : une réponse à un avis **négatif** reste en file de
 validation quoi qu'il arrive, et le brouillon ne propose jamais de geste commercial.
 
+## 4 bis. Telegram — la validation — **implémenté**
+
+Webhook : `/api/agents/telegram`. Chaque action en attente arrive en carte avec deux boutons ;
+`TELEGRAM_ALLOWED_CHAT_IDS` décide qui peut valider. Voir [`DEPLOY.md`](./DEPLOY.md).
+
 ## 5. Agenda — Google Calendar
 
 À fournir : un compte de service ou OAuth, l'identifiant du calendrier des sorties.
@@ -61,15 +67,15 @@ validation quoi qu'il arrive, et le brouillon ne propose jamais de geste commerc
 Débloque l'écriture des événements — **après** validation humaine (`rule:calendar-write`), et la
 liste de la veille lue depuis le vrai calendrier plutôt que depuis le CRM.
 
-## 6. CRM / base de données — Supabase, Notion ou tableur
+## 6. Base de données — Supabase — **implémenté**
 
-À fournir : le choix de l'outil, puis les accès correspondants.
+Schéma : [`supabase/schema.sql`](../../supabase/schema.sql) (tables `leads`, `queue_items`,
+`audit_log`, `processed_events`). Accès par PostgREST et `fetch`, sans dépendance ajoutée.
+Variables : `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`.
 
-Débloque la persistance : aujourd'hui les prospects et la file de validation vivent en mémoire
-et disparaissent à l'arrêt du processus. C'est la connexion qui transforme la bibliothèque en
-système exploitable au quotidien.
-
-Le port `CrmPort` est déjà l'interface à implémenter ; aucun agent ne change.
+Débloque la persistance — c'est ce qui transforme la bibliothèque en système exploitable au
+quotidien. Sans elle, prospects et file de validation vivent en mémoire et disparaissent au
+redéploiement.
 
 ## 7. Modèle de langage — optionnel
 
@@ -81,12 +87,14 @@ maximum par événement, et sa sortie repasse par le garde-fou.
 
 ## Ordre recommandé
 
-1. **CRM / base** — sans persistance, tout le reste s'évapore au redémarrage.
+1. **Supabase** — sans persistance, tout le reste s'évapore au redémarrage.
 2. **WhatsApp Cloud API** — le canal qui porte le volume.
-3. **Meta API** — Instagram et Facebook.
-4. **Google Calendar** — planification.
-5. **Google Business Profile** — avis.
-6. **E-mail** — après confirmation de l'adresse.
+3. **Telegram** — sinon les actions s'accumulent en file sans que personne soit prévenu.
+4. **Vercel Cron** (`CRON_SECRET`) — relances, brief de la veille, rapport hebdo.
+5. **Meta API** — Instagram et Facebook (le webhook reste à écrire).
+6. **Google Calendar** — planification.
+7. **Google Business Profile** — avis.
+8. **E-mail** — après confirmation de l'adresse.
 
 ## Ce qui ne dépend d'aucune connexion
 

@@ -10,9 +10,9 @@ import { systemClock } from "./audit";
  * that auto-approves, and no "urgent" flag that bypasses the queue — urgency
  * changes the ORDER, never the requirement.
  *
- * In-memory today (the audit chose a pure library with no store). The interface
- * is what a Supabase or Notion-backed queue would implement later; nothing in
- * the agents changes when that happens.
+ * Asynchronous throughout, because the real implementation is a table in
+ * Supabase (`adapters/supabase.ts`) that has to survive a redeploy. The
+ * in-memory version below is for tests and for running with no credentials.
  */
 
 export type QueueStatus = "pending" | "approved" | "rejected" | "expired";
@@ -32,6 +32,8 @@ export interface QueuedItem {
   decidedBy?: string;
   decidedAt?: string;
   decisionNote?: string;
+  /** Set once the released action actually ran, so nothing is sent twice. */
+  executedAt?: string;
 }
 
 export interface EnqueueInput {
@@ -42,16 +44,27 @@ export interface EnqueueInput {
 }
 
 export interface ApprovalQueue {
-  enqueue(input: EnqueueInput): QueuedItem;
-  get(id: string): QueuedItem | undefined;
+  enqueue(input: EnqueueInput): Promise<QueuedItem>;
+  get(id: string): Promise<QueuedItem | undefined>;
   /** Pending items, most urgent first, oldest first within a priority. */
-  pending(approver?: ApproverRole): readonly QueuedItem[];
-  approve(id: string, by: string, note?: string): QueuedItem | undefined;
-  reject(id: string, by: string, note?: string): QueuedItem | undefined;
-  all(): readonly QueuedItem[];
+  pending(approver?: ApproverRole): Promise<readonly QueuedItem[]>;
+  approve(id: string, by: string, note?: string): Promise<QueuedItem | undefined>;
+  reject(id: string, by: string, note?: string): Promise<QueuedItem | undefined>;
+  /** Stamped after execution — the guard against a double send. */
+  markExecuted(id: string, at: string): Promise<QueuedItem | undefined>;
+  all(): Promise<readonly QueuedItem[]>;
 }
 
-const PRIORITY_ORDER: Record<Priority, number> = { P0: 0, P1: 1, P2: 2, P3: 3 };
+export const PRIORITY_ORDER: Record<Priority, number> = { P0: 0, P1: 1, P2: 2, P3: 3 };
+
+/** Shared ordering so every implementation presents the same queue. */
+export function byUrgency(a: QueuedItem, b: QueuedItem): number {
+  return (
+    PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority] ||
+    a.queuedAt.localeCompare(b.queuedAt) ||
+    a.id.localeCompare(b.id)
+  );
+}
 
 export function createApprovalQueue(clock: Clock = systemClock): ApprovalQueue {
   const items = new Map<string, QueuedItem>();
@@ -73,7 +86,7 @@ export function createApprovalQueue(clock: Clock = systemClock): ApprovalQueue {
   }
 
   return {
-    enqueue({ eventId, agent, action, priority }) {
+    async enqueue({ eventId, agent, action, priority }) {
       seq += 1;
       const item: QueuedItem = {
         id: `q-${seq}`,
@@ -90,34 +103,36 @@ export function createApprovalQueue(clock: Clock = systemClock): ApprovalQueue {
       items.set(item.id, item);
       return item;
     },
-    get(id) {
+    async get(id) {
       return items.get(id);
     },
-    pending(approver) {
+    async pending(approver) {
       return [...items.values()]
         .filter((i) => i.status === "pending" && (approver === undefined || i.approver === approver))
-        .sort(
-          (a, b) =>
-            PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority] ||
-            a.queuedAt.localeCompare(b.queuedAt) ||
-            a.id.localeCompare(b.id),
-        );
+        .sort(byUrgency);
     },
-    approve(id, by, note) {
+    async approve(id, by, note) {
       return decide(id, "approved", by, note);
     },
-    reject(id, by, note) {
+    async reject(id, by, note) {
       return decide(id, "rejected", by, note);
     },
-    all() {
+    async markExecuted(id, at) {
+      const item = items.get(id);
+      if (!item) return undefined;
+      const updated: QueuedItem = { ...item, executedAt: at };
+      items.set(id, updated);
+      return updated;
+    },
+    async all() {
       return [...items.values()];
     },
   };
 }
 
 /** One-screen digest of what is waiting, for the daily internal message. */
-export function formatPending(queue: ApprovalQueue): string {
-  const pending = queue.pending();
+export async function formatPending(queue: ApprovalQueue): Promise<string> {
+  const pending = await queue.pending();
   if (pending.length === 0) return "Rien en attente de validation.";
   return pending
     .map((i) => `${i.priority} · ${i.id} · ${i.action.type} — ${i.summary} [${i.reasons.join(", ")}]`)

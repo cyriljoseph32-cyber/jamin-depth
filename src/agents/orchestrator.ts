@@ -1,11 +1,12 @@
 import type { Locale } from "@/content/i18n";
-import { FOLLOW_UP, POLICIES, isTodo, type Verified } from "./config";
+import { POLICIES, isTodo, type Verified } from "./config";
 import { detectLanguage } from "./language";
 import { extract } from "./extract";
 import { auditDraft, detectSensitiveTopics, hasHardStop, requiresHumanApproval, type DraftViolation } from "./policy";
-import { createAuditLog, note, systemClock, type AuditLog, type Clock } from "./audit";
+import { createAuditLog, note, systemClock, type AuditEntry, type AuditLog, type Clock } from "./audit";
 import { createApprovalQueue, type ApprovalQueue, type QueuedItem } from "./queue";
-import { createMockPorts, contactKey, type LeadStage, type Ports } from "./adapters";
+import { createMockPorts, type Ports } from "./adapters";
+import { executeAction } from "./execute";
 import { receptionAgent } from "./roles/reception";
 import { bookingAgent } from "./roles/booking";
 import { safetyAgent } from "./roles/safety";
@@ -47,6 +48,14 @@ export interface OrchestratorDeps {
    * so a new specialised agent can be added without touching this file.
    */
   routes?: Partial<Record<EventKind, Agent>>;
+  /**
+   * Called once at the end of a run with that run's journal lines. The audit log
+   * itself stays synchronous and in memory — one batched write beats eight
+   * round trips, and a failed write must never lose the reply it describes.
+   */
+  persistAudit?: (entries: readonly AuditEntry[]) => Promise<void>;
+  /** Notified for every item put in the queue, and for every escalation. */
+  onQueued?: (item: QueuedItem) => Promise<void>;
 }
 
 export interface BlockedAction {
@@ -163,26 +172,13 @@ const ROUTES: Record<EventKind, Agent> = {
   unknown: receptionAgent,
 };
 
-/* ------------------------------------------------------------------ *
- * Execution
- * ------------------------------------------------------------------ */
-
-function stageFor(kind: EventKind, signals: LeadSignals | undefined): LeadStage {
-  if (signals && signals.sensitiveTopics.length > 0 && hasHardStop(signals.sensitiveTopics)) return "escalated";
-  if (kind === "booking") return "awaiting_partner";
-  if (signals?.activity !== undefined) return "qualified";
-  return "new";
-}
-
 /** Normalised text, for spotting the same message arriving twice. */
-function fingerprint(event: InboundEvent): string {
+export function fingerprint(event: InboundEvent): string {
   return `${event.threadId ?? event.from.phone ?? event.from.handle ?? event.channel}|${event.text
     .toLowerCase()
     .replace(/\s+/g, " ")
     .trim()}`;
 }
-
-const DUPLICATE_WINDOW_MS = 10 * 60 * 1000;
 
 export function createOrchestrator(deps: OrchestratorDeps = {}): Orchestrator {
   const clock = deps.clock ?? systemClock;
@@ -191,63 +187,23 @@ export function createOrchestrator(deps: OrchestratorDeps = {}): Orchestrator {
   const ports = deps.ports ?? createMockPorts(clock);
   const routes: Record<EventKind, Agent> = { ...ROUTES, ...deps.routes };
 
-  const seenIds = new Set<string>();
-  const seenFingerprints = new Map<string, number>();
-
-  async function execute(action: ProposedAction, event: InboundEvent, signals: LeadSignals | undefined, kind: EventKind): Promise<{ ok: boolean; reason?: string }> {
-    switch (action.type) {
-      case "send_message":
-      case "request_documents":
-      case "internal_report":
-      case "notify_staff": {
-        if (!action.draft) return { ok: true };
-        const result = await ports.messaging.send(action.draft);
-        return result.ok ? { ok: true } : { ok: false, reason: result.reason };
-      }
-
-      case "create_lead":
-      case "update_lead": {
-        ports.crm.upsert({
-          contact: event.from,
-          channel: event.channel,
-          locale: signals?.locale ?? "fr",
-          activity: signals?.activity,
-          dates: signals?.dates ?? [],
-          partySize: signals?.partySize,
-          certified: signals?.certified,
-          stage: stageFor(kind, signals),
-          sensitiveTopics: signals?.sensitiveTopics ?? [],
-        });
-        return { ok: true };
-      }
-
-      case "schedule_followup": {
-        // The cap lives here, not in the agent: an agent proposing a nudge is
-        // fine, sending a third one to the same person is not.
-        const key = contactKey(event.from, event.channel);
-        const lead = ports.crm.find(key);
-        if (lead && lead.followUps >= FOLLOW_UP.maxPerLead) {
-          return { ok: false, reason: `follow-up cap reached (${FOLLOW_UP.maxPerLead})` };
-        }
-        if (lead) ports.crm.countFollowUp(key);
-        return { ok: true };
-      }
-
-      case "draft_booking_recap":
-        return { ok: true };
-
-      default:
-        // Everything else is approval-gated and never reaches this branch.
-        return { ok: false, reason: `no executor for ${action.type}` };
-    }
-  }
-
   return {
     queue,
     log,
     ports,
 
     async handle(event) {
+      const before = log.entries().length;
+      const flush = async () => {
+        if (!deps.persistAudit) return;
+        try {
+          await deps.persistAudit(log.entries().slice(before));
+        } catch (err) {
+          // A journal that cannot be written must not swallow the work it describes.
+          console.error("audit persist failed:", err);
+        }
+      };
+
       const base: Omit<RunResult, "kind"> = {
         eventId: event.id,
         duplicate: false,
@@ -259,21 +215,14 @@ export function createOrchestrator(deps: OrchestratorDeps = {}): Orchestrator {
 
       note(log, event.id, "orchestrator", "received", `${event.channel} · ${event.text.slice(0, 120)}`);
 
-      // De-duplication: the same id, or the same text in the same thread within
-      // ten minutes. Channels retry webhooks, and people send twice when nervous.
-      const print = fingerprint(event);
-      const previous = seenFingerprints.get(print);
-      const receivedMs = new Date(event.receivedAt).getTime();
-      const isDuplicate =
-        seenIds.has(event.id) ||
-        (previous !== undefined && Math.abs(receivedMs - previous) <= DUPLICATE_WINDOW_MS);
-
-      if (isDuplicate) {
+      // De-duplication is a port, not a Set: Meta retries webhooks, and on
+      // Vercel every invocation is a fresh process.
+      const first = await ports.seen.claim(event.id, fingerprint(event), event.receivedAt);
+      if (!first) {
         note(log, event.id, "orchestrator", "duplicate", "Événement déjà traité — aucune action.");
+        await flush();
         return { ...base, duplicate: true, kind: "unknown" };
       }
-      seenIds.add(event.id);
-      seenFingerprints.set(print, receivedMs);
 
       const signals = readSignals(event);
       const kind = classify(event, signals);
@@ -305,10 +254,7 @@ export function createOrchestrator(deps: OrchestratorDeps = {}): Orchestrator {
 
       for (const action of outcome.actions) {
         // Gate 1: what kind of action is this?
-        const verdict = requiresHumanApproval(action, {
-          signals,
-          unverified: outcome.gaps,
-        });
+        const verdict = requiresHumanApproval(action, { signals, unverified: outcome.gaps });
 
         // Gate 2: what does the message actually say?
         const violations = action.draft ? auditDraft(action.draft.body) : [];
@@ -336,24 +282,27 @@ export function createOrchestrator(deps: OrchestratorDeps = {}): Orchestrator {
         };
 
         if (decided.approval?.required) {
-          const item = queue.enqueue({
+          const item = await queue.enqueue({
             eventId: event.id,
             agent: agent.name,
             action: decided,
             priority: outcome.priority,
           });
           result.queued.push(item);
-          note(
-            log,
-            event.id,
-            agent.name,
-            "queued",
-            `${item.id} · ${action.type} — ${item.reasons.join(", ")}`,
-          );
+          note(log, event.id, agent.name, "queued", `${item.id} · ${action.type} — ${item.reasons.join(", ")}`);
+          if (deps.onQueued) {
+            try {
+              await deps.onQueued(item);
+            } catch (err) {
+              // A notification that fails must not lose the queued item.
+              console.error("queue notification failed:", err);
+              note(log, event.id, agent.name, "skipped", `notification file échouée pour ${item.id}`);
+            }
+          }
           continue;
         }
 
-        const run = await execute(decided, event, signals, kind);
+        const run = await executeAction(decided, { ports, event, signals, kind, now: clock() });
         if (run.ok) {
           result.executed.push(decided);
           note(log, event.id, agent.name, "executed", `${action.type} — ${action.summary}`);
@@ -382,7 +331,83 @@ export function createOrchestrator(deps: OrchestratorDeps = {}): Orchestrator {
         });
       }
 
+      await flush();
       return result;
     },
+  };
+}
+
+/* ------------------------------------------------------------------ *
+ * Releasing an approved action
+ * ------------------------------------------------------------------ */
+
+export interface ReleaseDeps {
+  queue: ApprovalQueue;
+  ports: Ports;
+  log?: AuditLog;
+  clock?: Clock;
+  persistAudit?: (entries: readonly AuditEntry[]) => Promise<void>;
+}
+
+export interface ReleaseResult {
+  status: "sent" | "recorded" | "rejected" | "not_found" | "already_decided" | "blocked";
+  item?: QueuedItem;
+  detail?: string;
+}
+
+/**
+ * Approve or reject a queued action — the path the Telegram buttons take.
+ *
+ * `recorded` is the honest outcome for the actions this system must never
+ * perform itself (money, seats, publications, incident filings): the decision
+ * is journalled, and the human does the act in the relevant tool.
+ */
+export async function release(
+  id: string,
+  decision: "approve" | "reject",
+  by: string,
+  deps: ReleaseDeps,
+): Promise<ReleaseResult> {
+  const clock = deps.clock ?? systemClock;
+  const log = deps.log ?? createAuditLog(clock);
+  const before = log.entries().length;
+
+  const existing = await deps.queue.get(id);
+  if (!existing) return { status: "not_found" };
+  if (existing.status !== "pending") return { status: "already_decided", item: existing };
+
+  if (decision === "reject") {
+    const item = await deps.queue.reject(id, by);
+    note(log, existing.eventId, existing.agent, "released", `${id} rejeté par ${by}`);
+    if (deps.persistAudit) await deps.persistAudit(log.entries().slice(before));
+    return { status: "rejected", item };
+  }
+
+  const approved = await deps.queue.approve(id, by);
+  if (!approved) return { status: "already_decided", item: existing };
+
+  const run = await executeAction(approved.action, { ports: deps.ports, now: clock() });
+
+  if (run.ok) {
+    await deps.queue.markExecuted(id, clock());
+    note(log, existing.eventId, existing.agent, "executed", `${id} approuvé par ${by} — ${approved.action.type}`);
+    if (deps.persistAudit) await deps.persistAudit(log.entries().slice(before));
+    return { status: "sent", item: approved };
+  }
+
+  const humanPerformed = run.reason?.startsWith("human-performed") === true;
+  const step = humanPerformed ? "released" : "blocked";
+  note(
+    log,
+    existing.eventId,
+    existing.agent,
+    step,
+    `${id} approuvé par ${by} — ${run.reason ?? "non exécuté"}`,
+  );
+  if (deps.persistAudit) await deps.persistAudit(log.entries().slice(before));
+  return {
+    status: humanPerformed ? "recorded" : "blocked",
+    item: approved,
+    detail: run.reason,
   };
 }

@@ -32,8 +32,24 @@ export type {
   SensitiveTopic,
 } from "./types";
 
-export { createOrchestrator, classify, readSignals } from "./orchestrator";
-export type { Orchestrator, OrchestratorDeps, RunResult, BlockedAction } from "./orchestrator";
+export { createOrchestrator, classify, readSignals, release, fingerprint } from "./orchestrator";
+export type {
+  Orchestrator,
+  OrchestratorDeps,
+  RunResult,
+  BlockedAction,
+  ReleaseDeps,
+  ReleaseResult,
+} from "./orchestrator";
+
+export { executeAction, stageFor } from "./execute";
+export type { ExecuteContext, ExecuteResult } from "./execute";
+
+export { createRuntime, describeRuntime } from "./runtime";
+export type { Runtime } from "./runtime";
+
+export { runJob, isJob, jobs, dueFollowUps, tomorrowInBangkok, weekStartInBangkok } from "./schedule";
+export type { Job, JobDeps, JobResult } from "./schedule";
 
 export {
   OPS,
@@ -89,10 +105,45 @@ export {
   createMockCrm,
   createMockCalendar,
   createMockMessaging,
+  createMockSeenStore,
+  createRoutedMessaging,
   createPartnerMessageAvailability,
   contactKey,
+  mergeLead,
   missingPorts,
 } from "./adapters";
+export type { SeenStore, SendResult } from "./adapters";
+
+export {
+  createSupabaseCrm,
+  createSupabaseQueue,
+  createSupabaseSeenStore,
+  createSupabaseAuditSink,
+  supabaseFromEnv,
+} from "./adapters/supabase";
+export type { SupabaseConfig } from "./adapters/supabase";
+
+export {
+  createWhatsAppMessaging,
+  whatsappFromEnv,
+  verifySignature,
+  verificationChallenge,
+  eventsFromWebhook,
+} from "./adapters/whatsapp";
+export type { WhatsAppConfig } from "./adapters/whatsapp";
+
+export {
+  createTelegramMessaging,
+  telegramFromEnv,
+  sendApprovalCard,
+  formatCard,
+  callbackData,
+  parseCallbackData,
+  readCallback,
+  isAllowed,
+  verifyWebhookSecret,
+} from "./adapters/telegram";
+export type { TelegramConfig } from "./adapters/telegram";
 export type {
   AvailabilityAnswer,
   AvailabilityPort,
@@ -114,5 +165,5 @@ export type { PreArrivalInput } from "./roles/safety";
 export { contentAgent, CONTENT_PILLARS } from "./roles/content";
 export type { ContentPillar } from "./roles/content";
 export { reputationAgent } from "./roles/reputation";
-export { opsAgent, weeklyReport } from "./roles/ops";
+export { opsAgent, weeklyReport, partnerPolicyQuestions } from "./roles/ops";
 export type { WeeklyReportInput } from "./roles/ops";
