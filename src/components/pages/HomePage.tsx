@@ -35,7 +35,7 @@ export function HomePage({ dict, locale }: { dict: Dictionary; locale: Locale })
               cta: h.divingCardCta,
               href: pathFor("diving", locale),
               ...m.divingCard,
-              src: "/media/diver.jpg",
+              src: "/media/divers-group.jpg",
             },
             {
               title: h.recoveryCardTitle,

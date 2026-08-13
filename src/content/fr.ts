@@ -129,7 +129,7 @@ export const fr: Dictionary = {
     },
     divingCard: {
       label: "Plongée · Golfe de Thaïlande",
-      alt: "Plongeur avec un appareil photo sous-marin sur un récif du golfe de Thaïlande",
+      alt: "Trois plongeurs en pleine eau au-dessus d'un récif du golfe de Thaïlande, l'un faisant un signe de la main",
     },
   },
 

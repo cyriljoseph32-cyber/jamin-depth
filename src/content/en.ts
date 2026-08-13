@@ -132,7 +132,7 @@ export const en = {
     },
     divingCard: {
       label: "Diving · Gulf of Thailand",
-      alt: "Scuba diver with an underwater camera on a reef in the Gulf of Thailand",
+      alt: "Three scuba divers in midwater above a reef in the Gulf of Thailand, one giving a hand signal",
     },
   },
 
