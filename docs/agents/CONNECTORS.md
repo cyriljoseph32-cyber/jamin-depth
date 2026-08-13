@@ -40,8 +40,9 @@ Débloque : réception et réponse sur les deux canaux (aujourd'hui `draft_only`
 
 ## 3. E-mail — bloqué en amont
 
-`SITE.email` (`contact@jamminsdepths.com`) est un **placeholder**. Rien à connecter avant de
-confirmer ou remplacer cette adresse. Le canal est `enabled: false`, et le mock de messagerie
+`SITE.email` (`contact@jamminsdepths.com`) est un **placeholder**, et il est probablement faux
+d'un caractère : le domaine du site est `jammins-depths.com`, **avec un trait d'union**. Rien à
+connecter avant de confirmer l'adresse réelle. Le canal est `enabled: false`, et le mock de messagerie
 refuse tout envoi dessus — c'est volontaire.
 
 Une fois l'adresse confirmée : IMAP/SMTP ou l'API du fournisseur. Débloque le canal e-mail et le
