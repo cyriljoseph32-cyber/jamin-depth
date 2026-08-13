@@ -9,6 +9,7 @@ import { Reveal } from "@/components/ui/Reveal";
 import { MediaSlot } from "@/components/ui/MediaSlot";
 import { WhyUs } from "@/components/site/WhyUs";
 import { Faq } from "@/components/site/Faq";
+import { Testimonials } from "@/components/site/Testimonials";
 import { ButtonLink } from "@/components/ui/Button";
 import { ArrowIcon } from "@/components/ui/Icons";
 import { recoveryPrefill } from "@/lib/whatsapp";
@@ -94,6 +95,9 @@ export function HomePage({ dict, locale }: { dict: Dictionary; locale: Locale })
           ))}
         </div>
       </Section>
+
+      {/* In their words — renders nothing until a diver has given permission. */}
+      <Testimonials dict={dict} locale={locale} />
 
       {/* Gallery */}
       <Section className="hairline-top">

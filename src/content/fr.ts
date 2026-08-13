@@ -373,6 +373,15 @@ export const fr: Dictionary = {
     ],
   },
 
+  /**
+   * Habillage seulement. Les citations vivent dans `testimonials.ts`,
+   * volontairement hors du dictionnaire — voir le commentaire là-bas.
+   */
+  testimonials: {
+    kicker: "Ce qu'ils en disent",
+    title: "Les mots des plongeurs, après coup.",
+  },
+
   faq: {
     kicker: "Avant de réserver",
     title: "Questions de débutants.",

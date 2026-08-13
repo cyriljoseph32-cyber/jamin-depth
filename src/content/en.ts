@@ -395,6 +395,33 @@ export const en = {
   },
 
   /**
+   * Real messages from real divers, quoted verbatim from WhatsApp.
+   *
+   * Two rules govern this block, and both are enforced in code, not by memory:
+   *
+   * 1. `consent: false` means NOT PUBLISHED. The component renders only entries
+   *    with `consent: true`, and the whole section disappears when none has it.
+   *    These are private messages: the sender wrote them to the diver, not to
+   *    the internet. Flip the flag once you have actually asked the person —
+   *    a WhatsApp "ok pour que je le mette sur le site ?" is enough, and it
+   *    takes one line each.
+   * 2. First names only, and never an address, a date of birth or a phone
+   *    number. A testimonial needs a voice, not an identity.
+   *
+   * `quote` is the sender's own wording, kept as they typed it — including the
+   * loose punctuation. Tidying a testimonial into marketing prose is how it
+   * stops sounding real.
+   */
+  /**
+   * Surrounding copy only. The quotes themselves live in `testimonials.ts`,
+   * deliberately outside the dictionary — see the comment there.
+   */
+  testimonials: {
+    kicker: "In their words",
+    title: "What divers wrote afterwards.",
+  },
+
+  /**
    * FAQ. `confirmed: false` marks an answer the owner still has to supply —
    * those render a visible [TO CONFIRM] badge and are deliberately EXCLUDED
    * from the FAQPage structured data, so Google never sees a placeholder.
