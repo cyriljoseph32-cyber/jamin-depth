@@ -1,32 +1,46 @@
-# Mode d'emploi — la file de validation
+# Mode d'emploi quotidien
 
-Le système prépare, vous décidez. Cette page décrit ce que vous voyez et ce qu'on attend de vous.
+Le système prépare, vous décidez — depuis Telegram, au pouce.
 
-## Lire la file
+## Ce qui arrive sur votre téléphone
+
+Chaque action en attente devient une carte :
+
+```
+🟠 P1
+send_message — Récap client FR — place non garantie
+
+Pourquoi vous : rule:channel-draft-only, rule:unverified-availability
+Objectif de réponse : 60 min
+
+Message (FR → Marie)
+———
+Voici le récapitulatif de votre demande, Marie :
+Activité : Baptême (Discover Scuba Diving)
+…
+———
+        [ ✅ Approuver ]   [ ✖️ Rejeter ]
+```
+
+Le brouillon est affiché **en entier** : approuver ce qu'on n'a pas lu n'est pas approuver.
+
+Approuver un message l'envoie. Approuver une action d'argent, de place, de publication ou de
+déclaration **enregistre la décision** — l'acte se fait dans l'outil concerné, et la carte le
+rappelle à chaque fois.
+
+Les escalades (santé en P0, avis négatif) arrivent par le même canal, sans attendre de validation.
+
+## Ce que le système fait seul, sans vous demander
+
+Enregistrer le prospect, tenir le journal, vous alerter. Ces trois-là ne sont jamais mis en
+attente : faire valider une alerte de sécurité reviendrait à retarder l'alerte elle-même.
+
+## En cas de besoin, en direct
 
 ```ts
-bus.queue.pending();     // tout ce qui attend, P0 d'abord, puis le plus ancien
-bus.queue.pending("owner");
-formatPending(bus.queue); // une ligne par action, lisible
-```
-
-Une ligne se lit ainsi :
-
-```
-P1 · q-4 · send_message — Récap client FR — place non garantie [rule:channel-draft-only]
-▲     ▲      ▲             ▲                                     ▲
-│     │      │             │                                     └ pourquoi ça vous est soumis
-│     │      │             └ ce que ça fait, en une ligne
-│     │      └ le type d'action
-│     └ l'identifiant à approuver
-└ l'urgence
-```
-
-## Décider
-
-```ts
-bus.queue.approve("q-4", "votre-nom");
-bus.queue.reject("q-4", "votre-nom", "on est complet ce jour-là");
+bus.queue.pending();           // tout ce qui attend, P0 d'abord
+formatPending(bus.queue);      // une ligne par action
+release(id, "approve", "vous", { queue, ports });
 ```
 
 Trois règles :
@@ -59,7 +73,7 @@ refuse tout message qui promettrait un délai de réponse.
 | `rule:payment` / `rule:refund` | Argent. Jamais automatique. |
 | `rule:safety-topic` | Signal santé/sécurité. Aucun avis n'a été donné. |
 | `rule:sensitive-topic` | Plainte, négociation, légal, mineur. |
-| `rule:foreign-language` | Message dans une langue non confirmée côté équipe. |
+| `rule:foreign-language` | Message hors français/anglais. L'escalade précise lequel des deux cas : langue **parlée** dans l'équipe (répondez directement, le système n'a pas de gabarit) ou **non parlée** (personne ne peut répondre). |
 | `rule:unverified-fact` | Le client demande quelque chose que la config ne sait pas. |
 | `rule:review-reply` / `rule:publication` | Parole publique. |
 | `rule:external-commitment` | Message à un fournisseur. |
@@ -68,8 +82,8 @@ refuse tout message qui promettrait un délai de réponse.
 ## Un `guard:` dans la liste
 
 Cela veut dire que le garde-fou a relu le texte et y a trouvé une promesse interdite : une place
-confirmée, la météo, une espèce, un délai, un tarif hors catalogue, un jugement d'aptitude, une
-langue parlée non confirmée.
+confirmée, la météo, une espèce, un délai, un tarif hors catalogue, un jugement d'aptitude, ou une
+langue revendiquée hors de celles que l'équipe parle.
 
 L'action n'est pas adoucie automatiquement — elle vous est soumise telle quelle, avec l'extrait
 fautif. **Corrigez le texte avant d'envoyer, ou rejetez.** Si un gabarit produit
@@ -84,31 +98,30 @@ Ce que le système a fait, et rien de plus :
 2. Préparé un accusé de réception **empathique et sans engagement** — il dit que le point est
    médical, qu'il est transmis, et que rien n'est réservé.
 3. Vous a alerté immédiatement, avec l'extrait du message.
-4. Signalé, s'il y a lieu, que `POLICIES.medicalProtocol` n'est pas défini.
+4. Joint le protocole médical configuré — **et ce qu'il ne couvre pas** (aujourd'hui :
+   contre-indications précises et certificat médical PADI).
 
 Ce qu'il n'a pas fait, et ne fera pas : donner un avis, rassurer sur une contre-indication,
 juger l'aptitude à plonger, ou laisser entendre qu'une place est retenue.
 
-## La veille au soir
+## La veille au soir — automatique, 19 h
 
-```ts
-nextDayBrief({ date: "2026-03-12", now, leads: ports.crm.all(), pending: bus.queue.pending() });
-```
+Le brief arrive seul dans Telegram (`daily-brief`, voir [`DEPLOY.md`](./DEPLOY.md)).
 
 Vous obtenez : les clients attendus, leur niveau, leur langue, les alertes, les documents à
 vérifier, ce qui reste à valider — et **explicitement** ce qui n'est pas confirmé (point de
 rendez-vous, horaires, transport). Ces lignes-là sont le cœur du brief : mieux vaut les voir à
 19 h que sur le ponton à 7 h 30.
 
-## Chaque semaine
-
-```ts
-weeklyReport({ now, weekStart, leads: ports.crm.all(), queue: bus.queue.all(), ports });
-```
+## Chaque semaine — automatique, lundi 8 h
 
 Prospects par canal, étapes, actions en attente, dossiers sensibles, connexions manquantes, et la
 liste des informations non confirmées qui coûtent des réponses. Cette dernière liste ne
 disparaîtra qu'en remplissant `config.ts` — c'est voulu.
+
+Le rapport est accompagné d'**un message prêt à envoyer à Discovery Divers**, contenant
+exactement les questions dont les réponses manquent. Il arrive en carte Telegram : relisez,
+approuvez, transférez. La liste rétrécit à mesure que vous remplissez `config.ts`.
 
 ## Quand quelque chose vous surprend
 

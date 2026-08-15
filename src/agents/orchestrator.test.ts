@@ -86,7 +86,7 @@ describe("orchestrator", () => {
   it("records the lead without asking anyone", async () => {
     const { bus, ports } = harness();
     await bus.handle(event("Bonjour, on aimerait plonger, on est 2 certifiés"));
-    const leads = ports.crm.all();
+    const leads = await ports.crm.all();
     expect(leads).toHaveLength(1);
     expect(leads[0]).toMatchObject({ partySize: 2, certified: true, channel: "whatsapp" });
   });

@@ -1,6 +1,6 @@
 import type { Locale } from "@/content/i18n";
 import { DIVE_CENTER } from "@/content/site";
-import { AVAILABILITY, POLICIES, isTodo, requireVerified, verified } from "../config";
+import { AVAILABILITY, POLICIES, isClosed, isTodo, requireVerified, verified } from "../config";
 import { render } from "../templates";
 import type { Lead } from "../adapters";
 import type { QueuedItem } from "../queue";
@@ -75,6 +75,19 @@ function recapLines(signals: LeadSignals, event: InboundEvent, gaps: string[]): 
       ? { fr: formatDate(firstDate, "fr"), en: formatDate(firstDate, "en") }
       : UNCONFIRMED,
   });
+
+  // A closed day must be caught now, not discovered by the client on the pier.
+  const closedDates = signals.dates.filter((d) => isClosed(d));
+  if (closedDates.length > 0) {
+    gaps.push(`date demandée un jour de fermeture : ${closedDates.join(", ")}`);
+    lines.push({
+      label: { fr: "⚠️ Fermeture", en: "⚠️ Closed" },
+      value: {
+        fr: `Le centre est fermé ce jour-là (${closedDates.join(", ")}) — à requalifier avec le client.`,
+        en: `The centre is closed that day (${closedDates.join(", ")}) — needs re-checking with the client.`,
+      },
+    });
+  }
   if (signals.dates.length > 1) {
     const others = signals.dates.slice(1);
     lines.push({

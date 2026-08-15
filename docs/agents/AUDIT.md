@@ -53,7 +53,26 @@ d'évoluer) — ce sont les seuls chiffres qu'un agent peut citer :
 | Chumphon Pinnacle | ฿5,050 |
 | Snorkeling | ฿2,450 |
 
-**Non confirmés — chaque ligne bloque aujourd'hui une réponse :**
+**Confirmés depuis, par le propriétaire après revue du site** (accueil, FAQ, Dive Trips, Contact, sitemap) :
+
+| `POLICIES.…` | Valeur |
+| --- | --- |
+| `requiredDocuments` | Carte de certification (vérification en ligne possible si perdue), logbook si disponible, questionnaire médical complété — à apporter le premier jour |
+| `openingHours` | Centre 11 h–18 h tous les jours · WhatsApp répondu 8 h–20 h · ouvert 363 j/an |
+| `medicalProtocol` | **Partiel** : questionnaire médical à compléter, et droit de refuser la plongée à toute personne jugée inapte (alcool notamment). Ce que le texte dit explicitement ne pas couvrir : contre-indications précises et certificat médical PADI |
+| `staffLanguages` | **anglais, français, thaï, allemand, espagnol, italien, norvégien** — déclarées par le propriétaire |
+| `CLOSED_DATES` | 1er janvier et 13 avril (Songkran) — vérifiés à chaque date demandée |
+
+Trois conséquences immédiates dans le code :
+
+- Les **heures calmes** passent de 21 h–8 h à **20 h–8 h**, alignées sur les heures WhatsApp confirmées : une relance qui arrive quand personne ne peut répondre à la réponse qu'elle provoque est pire qu'aucune relance.
+- Le **protocole médical partiel** accompagne désormais chaque escalade, en indiquant ce qu'il ne couvre pas. Un protocole partiel qui se présenterait comme complet serait lu comme complet.
+- Le **garde-fou des langues** ne bloque plus toute revendication : il vérifie *laquelle*. Les sept langues déclarées passent ; « nous parlons hindi » ou « we speak Japanese » est bloqué. Qu'une phrase soit vraie n'en rend pas une autre vraie, et un plongeur qui réserve en croyant être briefé dans sa langue a été trompé sur ce qui compte le plus sous l'eau.
+- Un message dans une langue **parlée mais sans gabarit** (allemand, italien, thaï…) n'est plus traité comme un cul-de-sac. Le système ne répond toujours pas — il n'a de copie approuvée qu'en français et en anglais — mais l'escalade dit « cette langue est parlée dans l'équipe, répondez directement, c'est un avantage à jouer » au lieu de « personne ne la parle ». Sept langues sur un petit centre de plongée à Koh Samui, c'est un argument commercial ; le signaler comme une impasse le gaspillerait.
+
+L'horaire d'ouverture est délibérément **rangé à part de `boatSchedule`** : 11 h est l'heure d'ouverture du centre, pas l'heure de départ du bateau. Les confondre ferait annoncer un départ à 11 h.
+
+**Non confirmés — chaque ligne bloque encore une réponse :**
 
 | `POLICIES.…` | Ce que ça débloque |
 | --- | --- |
@@ -63,11 +82,8 @@ d'évoluer) — ce sont les seuls chiffres qu'un agent peut citer :
 | `meetingPoint` | Le message pré-activité et la liste de la veille |
 | `pickupIncluded` | Répondre « transport inclus ? » |
 | `boatSchedule` | Annoncer une heure de départ |
-| `staffLanguages` | Écrire « nous parlons… » — bloqué tant que ce n'est pas confirmé |
 | `insurance` | Répondre sur la couverture |
 | `minorMinimumAge` | Répondre pour un enfant |
-| `medicalProtocol` | Tout cas santé part au propriétaire brut, sans protocole écrit |
-| `requiredDocuments` | Rappeler les documents et décharges |
 
 Spécialités PADI, groupes privés et récupération sous-marine restent sans tarif : devis au cas
 par cas, jamais chiffré par un agent.
@@ -91,6 +107,17 @@ agents sont ajoutés à côté, dans `src/agents/`, et le site n'en importe rien
 
 ### 7. Quelle base de connaissance réelle existe déjà ?
 
+**Branchée** : `src/agents/knowledge.ts` charge les 11 questions-réponses des blocs FAQ de
+`src/content/fr.ts` et `en.ts` — uniquement celles marquées `confirmed: true` — et l'agent
+Réception les cite **mot pour mot** quand elles répondent à la question posée. Rien n'est
+reformulé ni traduit : une réponse est la phrase du propriétaire, ou elle n'existe pas.
+
+Deux garde-fous : au moins deux mots-clés doivent correspondre, et la meilleure correspondance
+doit devancer la suivante — une égalité signifie que le message est ambigu, et un message ambigu
+part à un humain plutôt que de recevoir une réponse assurée à une question qui n'a pas été posée.
+Un test vérifie par ailleurs que **chaque** réponse FAQ passe le garde-fou de sortie : si une
+promesse se glisse un jour dans la FAQ du site, elle échoue ici avant d'atteindre un client.
+
 Réutilisée telle quelle, sans rien réécrire :
 
 - `src/content/site.ts` — téléphone, réseaux, zone, partenaire. Seuls faits de contact autorisés.
@@ -102,14 +129,42 @@ Réutilisée telle quelle, sans rien réécrire :
 constitueraient une base de connaissance bien meilleure que des gabarits — notamment pour les
 objections réelles et le vocabulaire des clients.
 
+### Pistes trouvées en ligne — à vérifier, **non opérantes**
+
+Le propriétaire a demandé de prendre ces informations sur `discoverydivers.com`. Le domaine est
+inaccessible depuis l'environnement de développement (403 au tunnel du proxy, confirmé deux fois,
+sur `WebFetch` comme sur `curl`). La recherche web a en revanche fait remonter les éléments
+ci-dessous.
+
+**Ils ne sont pas repris dans `config.ts`, et c'est délibéré :** ils proviennent de
+**revendeurs** (GetYourGuide, Viator, blogs de voyage), pas du centre. La politique d'annulation
+d'un revendeur est celle du revendeur — pas celle de Discovery Divers, et encore moins celle de
+Jammin's Depths. Les inscrire comme vérifiées les ferait citer à un client comme nos conditions.
+
+| Piste | Source | Ce qu'il faut confirmer |
+| --- | --- | --- |
+| « Annulation gratuite jusqu'à 24 h avant, réservation sans paiement immédiat » | GetYourGuide / Viator | Est-ce la politique du centre, ou seulement celle de la plateforme ? Et quelle est la nôtre ? |
+| « Divers assurés via le programme PADI Asia Pacific » | pages revendeurs | À confirmer auprès du centre, et préciser ce qui est couvert |
+| « Membre du réseau de caissons SSS » | pages revendeurs | Fait vérifiable, utile en cas d'incident — à confirmer |
+| « Savoir nager, déclarer toute condition médicale avant réservation » | pages revendeurs | Formulation exacte de l'exigence, et **qui décide** de l'aptitude |
+| Horaires d'ouverture du centre | 10 h–21 h *et* 11 h–18 h selon les pages | Deux valeurs contradictoires sur le même domaine — inutilisable en l'état |
+
+La page qui ferait autorité est `discoverydivers.com/faqs/`. Deux façons de débloquer :
+copiez-collez son contenu (je remplis `config.ts` en une passe), ou approuvez le message de
+questions que le rapport hebdomadaire prépare déjà pour le centre.
+
 ## Ce qu'il reste à faire, par ordre d'utilité
 
 1. **Renseigner les approbateurs** (question 4). Une ligne dans `config.ts`.
-2. **Écrire le protocole médical** (`medicalProtocol`) et **la liste des documents**
-   (`requiredDocuments`). Ce sont les deux `TODO` qui touchent la sécurité.
-3. **Confirmer point de rendez-vous, horaires, transport** avec Discovery Divers. Débloque le
-   message pré-activité et la liste de la veille.
+2. **Compléter le protocole médical** : contre-indications précises et certificat médical PADI —
+   la seule partie sécurité encore ouverte.
+3. **Confirmer point de rendez-vous, horaires de départ, transport** avec Discovery Divers.
+   Débloque le message pré-activité et la liste de la veille.
 4. **Politique d'annulation, acompte, moyens de paiement.** Les questions les plus fréquentes.
-5. **Confirmer l'adresse e-mail** ou renoncer au canal.
-6. **Trancher WhatsApp App / Cloud API.** Condition de toute réponse automatique.
-7. **Fournir de vrais échanges clients** pour la base de connaissance.
+5. **Âge minimum et assurance.**
+6. **Confirmer l'adresse e-mail** ou renoncer au canal.
+7. **Fournir de vrais échanges clients** pour enrichir la base de connaissance au-delà de la FAQ.
+8. *(optionnel)* **Copie approuvée en allemand, espagnol, italien, thaï, norvégien** si vous voulez
+   que le système réponde lui-même dans ces langues. Je ne ferai pas traduire les gabarits par un
+   modèle : ils portent des formulations de sécurité, et une nuance perdue sur « savoir nager » ou
+   sur un point médical ne se rattrape pas.

@@ -4,9 +4,14 @@ Automatisation du travail qui suit le clic : qualifier une demande, préparer un
 relancer, rappeler les documents, consigner, rendre compte. Construit pour un centre de
 plongée à Koh Samui, pas pour « une entreprise ».
 
-Le code vit dans [`src/agents/`](../../src/agents). C'est une **bibliothèque TypeScript pure** :
-aucune route API, aucun secret, aucune dépendance ajoutée. Le site reste déployable tel quel et
-ne l'importe pas.
+Le code vit dans [`src/agents/`](../../src/agents), et tourne pour de vrai : les messages
+WhatsApp entrent par webhook, l'état est dans Supabase, et chaque action à valider arrive sur
+Telegram avec deux boutons. Trois tâches planifiées font le reste (relances, brief de la veille,
+rapport hebdo). Aucune dépendance npm ajoutée ; le site public est inchangé et n'importe rien
+de tout ça.
+
+**Pour mettre en service : [`DEPLOY.md`](./DEPLOY.md)** — dix variables à coller dans Vercel et
+un fichier SQL à exécuter.
 
 ## Ce que le système ne fera jamais seul
 
@@ -33,7 +38,8 @@ l'alerte elle-même.
 ## Le chemin d'un message
 
 ```
-InboundEvent (WhatsApp · Instagram · Facebook · formulaire · chat · interne)
+WhatsApp Cloud API ──▶ /api/agents/whatsapp (signature HMAC vérifiée)
+Instagram · Facebook · formulaire · chat · interne ──▶ (mêmes ports, webhook à écrire)
         │
         ▼
   language.ts + extract.ts + policy.ts        ← règles seules, zéro token
@@ -54,13 +60,22 @@ InboundEvent (WhatsApp · Instagram · Facebook · formulaire · chat · interne
      1. matrice par type d'action      (policy.ts → requiresHumanApproval)
      2. relecture des mots du message  (policy.ts → auditDraft)
         │
-        ├── l'un des deux objecte → queue.ts (file de validation humaine)
-        └── les deux passent       → adapters/ (mocks aujourd'hui)
+        ├── l'un des deux objecte → file de validation → carte Telegram (2 boutons)
+        │                                                        │
+        │                                              Approuver ▼
+        └── les deux passent ──────────────────────────▶ execute.ts ──▶ envoi WhatsApp
         │
         ▼
   audit.ts   journal : received → classified → routed → proposed →
-             queued | blocked | executed | escalated
+             queued | blocked | executed | escalated        (persisté dans Supabase)
+
+  Vercel Cron : relances (horaire) · brief J+1 (19 h) · rapport hebdo (lundi 8 h)
 ```
+
+Un point de conception qui vaut d'être dit : **une action approuvée emprunte exactement le même
+chemin** qu'une action jamais soumise (`execute.ts`). Deux chemins finiraient par diverger, et
+celui qui aurait dérivé serait celui qui porte un message approuvé à un client. Le garde-fou est
+d'ailleurs **rejoué à l'envoi** : un brouillon peut avoir attendu des heures dans la file.
 
 Un agent ne fait que **proposer**. Seul l'orchestrateur décide de ce qui sort, et il ne peut
 pas être configuré pour contourner les deux garde-fous à la fois.
@@ -131,8 +146,14 @@ weeklyReport({ now, weekStart, leads, queue, ports });
 | `queue.ts` | File de validation humaine. Aucune auto-approbation, aucun délai qui libère. |
 | `audit.ts` | Journal lisible. |
 | `llm.ts` | Le seul endroit où un modèle agit, sous budget. |
-| `adapters/` | Ports (messagerie, CRM, agenda, disponibilités) + mocks honnêtes. |
+| `execute.ts` | Le seul endroit où une action devient un effet réel. |
+| `runtime.ts` | Le seul endroit où les variables d'environnement sont lues. |
+| `schedule.ts` | Le travail à heure fixe : relances, brief, rapport. |
+| `adapters/` | Ports + implémentations : `supabase.ts`, `whatsapp.ts`, `telegram.ts`, et les mocks. |
 | `roles/` | Les six agents spécialisés. |
+
+Côté application : `src/app/api/agents/{whatsapp,telegram,cron/[job]}/route.ts` — trois routes,
+toutes authentifiées (signature Meta, secret Telegram + liste des comptes autorisés, `CRON_SECRET`).
 
 ## Une note technique qui a des conséquences métier
 

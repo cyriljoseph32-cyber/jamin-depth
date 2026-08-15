@@ -7,7 +7,7 @@ import type {
   Risk,
   SensitiveTopic,
 } from "./types";
-import { AVAILABILITY, CHANNELS, POLICIES, approverFor, isTodo } from "./config";
+import { AVAILABILITY, CHANNELS, POLICIES, approverFor, verified } from "./config";
 import { quotablePrices } from "./catalog";
 import { words } from "./regex";
 
@@ -284,6 +284,41 @@ const GUARD_RULES: readonly GuardRule[] = [
   },
 ];
 
+/** Accent-free, lowercase, trimmed of filler, for comparing language names. */
+function normaliseLanguage(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\b(a|au|aux|le|la|les|du|de|des|couramment|fluent|also|aussi|in|en)\b/g, "")
+    .replace(/[^a-z]/g, "")
+    .trim();
+}
+
+/**
+ * Language names the guard recognises, normalised → canonical.
+ * Not exhaustive by design: it covers the languages a Koh Samui dive centre is
+ * actually asked about, and an unrecognised word is simply not treated as a
+ * language claim.
+ */
+const LANGUAGE_NAMES = new Map<string, string>([
+  ["francais", "francais"], ["french", "francais"],
+  ["anglais", "anglais"], ["english", "anglais"],
+  ["thai", "thai"], ["thailandais", "thai"],
+  ["allemand", "allemand"], ["german", "allemand"], ["deutsch", "allemand"],
+  ["espagnol", "espagnol"], ["spanish", "espagnol"],
+  ["italien", "italien"], ["italian", "italien"],
+  ["russe", "russe"], ["russian", "russe"],
+  ["hindi", "hindi"],
+  ["chinois", "chinois"], ["chinese", "chinois"], ["mandarin", "chinois"],
+  ["japonais", "japonais"], ["japanese", "japonais"],
+  ["neerlandais", "neerlandais"], ["dutch", "neerlandais"],
+  ["portugais", "portugais"], ["portuguese", "portugais"],
+  ["arabe", "arabe"], ["arabic", "arabe"],
+  ["coreen", "coreen"], ["korean", "coreen"],
+  ["norvegien", "norvegien"], ["norwegian", "norvegien"], ["norsk", "norvegien"],
+]);
+
 /** Digits used as a price: `฿5,850`, `5850 THB`, `5 850 bahts`. */
 function pricesIn(text: string): number[] {
   const found: number[] = [];
@@ -321,16 +356,44 @@ export function auditDraft(body: string): DraftViolation[] {
     }
   }
 
-  // Claiming a spoken language while `staffLanguages` is unconfirmed.
-  if (isTodo(POLICIES.staffLanguages)) {
-    const claim =
-      /\b(nous\s+parlons|on\s+parle|notre\s+[ée]quipe\s+parle|we\s+speak|our\s+team\s+speaks)\b/i.exec(body);
-    if (claim) {
+  /**
+   * Claiming a spoken language.
+   *
+   * With `staffLanguages` unconfirmed, any such claim is refused. With it
+   * confirmed, the claim is checked against the list — because "nous parlons
+   * français" being true does not make "we speak Thai" true, and a diver who
+   * books believing they will be briefed in their own language has been misled
+   * about the thing that matters most underwater.
+   */
+  const claim = /\b(nous\s+parlons|on\s+parle|notre\s+[ée]quipe\s+parle|we\s+speak|our\s+team\s+speaks)\b([^.!?]*)/i.exec(
+    body,
+  );
+  if (claim) {
+    const confirmed = verified(POLICIES.staffLanguages);
+    if (confirmed === null) {
       violations.push({
         rule: "guard:staff-languages",
         excerpt: claim[0],
         message: "Les langues parlées par l'équipe ne sont pas confirmées (POLICIES.staffLanguages).",
       });
+    } else {
+      // Match named languages only. Splitting the following prose on commas and
+      // treating each fragment as a language name flags "donc on peut tout
+      // expliquer tranquillement" — a guard that cries wolf gets switched off.
+      const allowed = confirmed.map((l) => normaliseLanguage(l));
+      const following = normaliseLanguage(claim[2] ?? "");
+      const unclaimable = [...LANGUAGE_NAMES.entries()]
+        .filter(([name]) => following.includes(name))
+        .map(([, canonical]) => canonical)
+        .filter((canonical) => !allowed.some((a) => canonical.includes(a) || a.includes(canonical)));
+
+      if (unclaimable.length > 0) {
+        violations.push({
+          rule: "guard:staff-languages",
+          excerpt: claim[0] + (claim[2] ?? ""),
+          message: `Langue revendiquée hors de la liste confirmée (${confirmed.join(", ")}) : ${unclaimable.join(", ")}.`,
+        });
+      }
     }
   }
 

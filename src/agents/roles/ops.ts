@@ -68,6 +68,79 @@ export const opsAgent: Agent = {
   },
 };
 
+/**
+ * The eleven unconfirmed policies, turned into one message to the partner.
+ *
+ * The owner asked for these to be taken from `discoverydivers.com`. They cannot
+ * be: the site is unreachable from this environment, and search snippets
+ * disagree with each other about something as basic as opening hours. More
+ * importantly, a marketing page states the PARTNER's arrangements, and copying
+ * them would put an unsourced sentence about medical fitness in front of a
+ * diver — exactly what this system exists to prevent.
+ *
+ * So the gap becomes a question list instead of a guess. In English, because
+ * that is the language the partner is dealt with in.
+ */
+const PARTNER_QUESTIONS: readonly { key: string; question: string }[] = [
+  { key: "cancellation", question: "What is the cancellation and rescheduling policy, and up to when is it free?" },
+  { key: "deposit", question: "Is a deposit required to hold a place, and how much?" },
+  { key: "paymentMethods", question: "Which payment methods do you accept (cash, card, transfer, PromptPay)?" },
+  { key: "meetingPoint", question: "What is the exact meeting point, and at what time should guests be there?" },
+  { key: "pickupIncluded", question: "Is hotel pick-up included, and for which areas of Koh Samui?" },
+  { key: "boatSchedule", question: "What are the usual departure and return times for each trip?" },
+  {
+    key: "requiredDocuments",
+    question:
+      "Which documents must a guest bring or complete before diving (medical statement, liability release, certification card, logbook)?",
+  },
+  { key: "minorMinimumAge", question: "What is the minimum age for Discover Scuba Diving and for certified dives?" },
+  { key: "insurance", question: "Is dive insurance included, and what does it cover?" },
+  {
+    key: "staffLanguages",
+    question: "Which languages can your guides and instructors actually brief in?",
+  },
+  {
+    key: "medicalProtocol",
+    question:
+      "When a guest discloses a medical condition, medication or pregnancy, what is the procedure, and who decides whether they may dive?",
+  },
+];
+
+/**
+ * A ready-to-send request for the policies that are still `TODO`.
+ * Only asks about what is genuinely missing, so it shrinks as `config.ts` fills in.
+ */
+export function partnerPolicyQuestions(): ProposedAction | null {
+  const missing = new Set(openGaps().map((g) => g.replace(/^policies\./, "")));
+  const asks = PARTNER_QUESTIONS.filter((q) => missing.has(q.key));
+  if (asks.length === 0) return null;
+
+  const action = actionFactory("partner-policy-questions");
+  const body = [
+    `Hello,`,
+    ``,
+    `A few operational details we want to get exactly right before answering guests — we would rather say "I will check" than guess:`,
+    ``,
+    ...asks.map((q, i) => `${i + 1}. ${q.question}`),
+    ``,
+    `Thank you,`,
+    `Jammin's Depths`,
+  ].join("\n");
+
+  return action({
+    type: "supplier_message",
+    summary: `Questions à ${DIVE_CENTER.shortName} — ${asks.length} point(s) non confirmé(s)`,
+    draft: {
+      channel: "internal",
+      to: { name: DIVE_CENTER.name },
+      locale: "en",
+      body,
+      templateId: "ops.partner_policy_questions",
+    },
+    payload: { keys: asks.map((q) => q.key) },
+  });
+}
+
 export interface WeeklyReportInput {
   /** ISO instant the report is produced. */
   now: string;
@@ -122,6 +195,8 @@ export function weeklyReport(input: WeeklyReportInput): AgentOutcome {
       "",
       "Informations non confirmées qui bloquent des réponses (à combler dans src/agents/config.ts) :",
       ...configGaps.map((g) => `- ${g}`),
+      "",
+      `Un message prêt à envoyer à ${DIVE_CENTER.shortName} accompagne ce rapport.`,
     );
   }
 
@@ -149,6 +224,10 @@ export function weeklyReport(input: WeeklyReportInput): AgentOutcome {
       payload: { weekStart: input.weekStart, leads: week.length, pending: pending.length },
     }),
   ];
+
+  // The gap list is only useful if it comes with the message that closes it.
+  const questions = partnerPolicyQuestions();
+  if (questions) actions.push(questions);
 
   return {
     agent: "ops",

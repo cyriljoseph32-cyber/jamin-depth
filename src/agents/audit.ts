@@ -1,5 +1,7 @@
 import type { AgentName, AuditEntry } from "./types";
 
+export type { AuditEntry };
+
 /**
  * The audit journal.
  *

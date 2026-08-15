@@ -6,11 +6,14 @@ import { systemClock } from "../audit";
 /**
  * Outbound ports, with in-memory implementations.
  *
- * The audit found no connected system of record: bookings live with the partner
- * dive centre, reached by message. So every port here is a real interface with a
- * mock behind it, and each one reports its own `status`. Nothing pretends to be
- * connected, and no credential is invented — see docs/agents/CONNECTORS.md for
- * what each connection unlocks.
+ * Every port is asynchronous, including the in-memory ones. That is not
+ * ceremony: the real implementations talk to Supabase, Meta and Telegram over
+ * the network, and a synchronous interface would have forced the async boundary
+ * to leak into the agents later. The mocks stay for tests and for running with
+ * no credentials at all.
+ *
+ * Each port reports its own `status`, so `missingPorts()` can tell the owner
+ * what is still unwired instead of pretending everything is connected.
  */
 
 export type PortStatus = "connected" | "missing";
@@ -28,6 +31,8 @@ export interface SendResult {
   ok: boolean;
   /** Why a send was refused — never a thrown error, so a batch keeps going. */
   reason?: string;
+  /** Provider id of the sent message, when there is one. */
+  externalId?: string;
 }
 
 export interface MessagingPort extends Port {
@@ -55,6 +60,25 @@ export function createMockMessaging(): MessagingPort & { readonly sent: readonly
   };
 }
 
+/**
+ * Route each channel to the port that can serve it, falling back for the rest.
+ * WhatsApp goes to Meta, internal traffic goes to Telegram, and anything
+ * unwired lands in the fallback so it is recorded rather than lost.
+ */
+export function createRoutedMessaging(
+  routes: Partial<Record<Channel, MessagingPort>>,
+  fallback: MessagingPort,
+): MessagingPort {
+  const wired = Object.values(routes).filter((p): p is MessagingPort => p !== undefined);
+  return {
+    name: `messaging:routed(${wired.map((p) => p.name).join(",") || "none"})`,
+    status: wired.some((p) => p.status === "connected") ? "connected" : "missing",
+    async send(draft) {
+      return (routes[draft.channel] ?? fallback).send(draft);
+    },
+  };
+}
+
 /* ------------------------------------------------------------------ *
  * CRM / lead store
  * ------------------------------------------------------------------ */
@@ -76,6 +100,8 @@ export interface Lead {
   sensitiveTopics: SensitiveTopic[];
   /** Follow-ups already sent — capped by `FOLLOW_UP.maxPerLead`. */
   followUps: number;
+  /** When the last follow-up went out, so the schedule can space them. */
+  lastFollowUpAt?: string;
   createdAt: string;
   updatedAt: string;
   notes: string[];
@@ -103,12 +129,28 @@ export function contactKey(contact: Contact, channel: Channel): string {
 }
 
 export interface CrmPort extends Port {
-  upsert(input: LeadUpsert): Lead;
-  find(key: string): Lead | undefined;
-  addNote(key: string, note: string): Lead | undefined;
-  setStage(key: string, stage: LeadStage): Lead | undefined;
-  countFollowUp(key: string): Lead | undefined;
-  all(): readonly Lead[];
+  upsert(input: LeadUpsert): Promise<Lead>;
+  find(key: string): Promise<Lead | undefined>;
+  addNote(key: string, note: string): Promise<Lead | undefined>;
+  setStage(key: string, stage: LeadStage): Promise<Lead | undefined>;
+  countFollowUp(key: string, at: string): Promise<Lead | undefined>;
+  all(): Promise<readonly Lead[]>;
+}
+
+/** Merge new facts over old ones without ever overwriting a known value with `undefined`. */
+export function mergeLead(existing: Lead, input: LeadUpsert, now: string): Lead {
+  return {
+    ...existing,
+    contact: { ...existing.contact, ...input.contact },
+    activity: input.activity ?? existing.activity,
+    dates: input.dates.length > 0 ? input.dates : existing.dates,
+    partySize: input.partySize ?? existing.partySize,
+    certified: input.certified ?? existing.certified,
+    stage: input.stage,
+    sensitiveTopics: [...new Set([...existing.sensitiveTopics, ...input.sensitiveTopics])],
+    locale: input.locale,
+    updatedAt: now,
+  };
 }
 
 export function createMockCrm(clock: Clock = systemClock): CrmPort {
@@ -118,24 +160,12 @@ export function createMockCrm(clock: Clock = systemClock): CrmPort {
   return {
     name: "crm:mock",
     status: "missing",
-    upsert(input) {
+    async upsert(input) {
       const key = contactKey(input.contact, input.channel);
       const existing = byKey.get(key);
       const now = clock();
       if (existing) {
-        const merged: Lead = {
-          ...existing,
-          // Newer facts win, but a known value is never overwritten with undefined.
-          contact: { ...existing.contact, ...input.contact },
-          activity: input.activity ?? existing.activity,
-          dates: input.dates.length > 0 ? input.dates : existing.dates,
-          partySize: input.partySize ?? existing.partySize,
-          certified: input.certified ?? existing.certified,
-          stage: input.stage,
-          sensitiveTopics: [...new Set([...existing.sensitiveTopics, ...input.sensitiveTopics])],
-          locale: input.locale,
-          updatedAt: now,
-        };
+        const merged = mergeLead(existing, input, now);
         byKey.set(key, merged);
         return merged;
       }
@@ -152,32 +182,69 @@ export function createMockCrm(clock: Clock = systemClock): CrmPort {
       byKey.set(key, lead);
       return lead;
     },
-    find(key) {
+    async find(key) {
       return byKey.get(key);
     },
-    addNote(key, note) {
+    async addNote(key, note) {
       const lead = byKey.get(key);
       if (!lead) return undefined;
       const updated: Lead = { ...lead, notes: [...lead.notes, note], updatedAt: clock() };
       byKey.set(key, updated);
       return updated;
     },
-    setStage(key, stage) {
+    async setStage(key, stage) {
       const lead = byKey.get(key);
       if (!lead) return undefined;
       const updated: Lead = { ...lead, stage, updatedAt: clock() };
       byKey.set(key, updated);
       return updated;
     },
-    countFollowUp(key) {
+    async countFollowUp(key, at) {
       const lead = byKey.get(key);
       if (!lead) return undefined;
-      const updated: Lead = { ...lead, followUps: lead.followUps + 1, updatedAt: clock() };
+      const updated: Lead = { ...lead, followUps: lead.followUps + 1, lastFollowUpAt: at, updatedAt: clock() };
       byKey.set(key, updated);
       return updated;
     },
-    all() {
+    async all() {
       return [...byKey.values()];
+    },
+  };
+}
+
+/* ------------------------------------------------------------------ *
+ * De-duplication
+ * ------------------------------------------------------------------ */
+
+/**
+ * Records which events have been handled.
+ *
+ * This has to be a port, not a `Set`. Meta re-delivers webhooks, and on Vercel
+ * every invocation is a fresh process — so an in-memory guard is empty exactly
+ * when it matters. `claim()` is the whole interface: it returns `true` the first
+ * time and `false` on a repeat, atomically.
+ */
+export interface SeenStore extends Port {
+  claim(eventId: string, fingerprint: string, receivedAt: string): Promise<boolean>;
+}
+
+/** Same-text-in-same-thread window. Nervous people send twice. */
+export const DUPLICATE_WINDOW_MS = 10 * 60 * 1000;
+
+export function createMockSeenStore(): SeenStore {
+  const ids = new Set<string>();
+  const prints = new Map<string, number>();
+  return {
+    name: "seen:mock",
+    status: "missing",
+    async claim(eventId, fingerprint, receivedAt) {
+      if (ids.has(eventId)) return false;
+      const at = new Date(receivedAt).getTime();
+      const previous = prints.get(fingerprint);
+      if (previous !== undefined && Math.abs(at - previous) <= DUPLICATE_WINDOW_MS) return false;
+      ids.add(eventId);
+      prints.set(fingerprint, at);
+      return true;
     },
   };
 }
@@ -277,6 +344,7 @@ export interface Ports {
   crm: CrmPort;
   availability: AvailabilityPort;
   calendar: CalendarPort;
+  seen: SeenStore;
 }
 
 export function createMockPorts(clock: Clock = systemClock): Ports {
@@ -285,6 +353,7 @@ export function createMockPorts(clock: Clock = systemClock): Ports {
     crm: createMockCrm(clock),
     availability: createPartnerMessageAvailability(),
     calendar: createMockCalendar(clock),
+    seen: createMockSeenStore(),
   };
 }
 

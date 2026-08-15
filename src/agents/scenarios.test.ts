@@ -122,8 +122,10 @@ describe("scénario 3 — question médicale", () => {
     expect(escalation?.body).toMatch(/^\[P0\]/);
     expect(escalation?.body).toMatch(/medical|medication/);
 
-    // And the missing protocol is named as a gap, not improvised around.
-    expect(run.outcome?.gaps).toContain("policies.medicalProtocol");
+    // The confirmed (partial) protocol travels with the escalation, including
+    // what it does NOT cover — a partial protocol must not read as a complete one.
+    expect(escalation?.body).toMatch(/Questionnaire médical/);
+    expect(escalation?.body).toMatch(/NON COUVERT/);
   });
 });
 
@@ -184,7 +186,12 @@ describe("scénario 6 — la veille au soir et le bilan de la semaine", () => {
       }),
     );
 
-    const brief = nextDayBrief({ date: "2026-03-12", now: NOW, leads: ports.crm.all(), pending: bus.queue.pending() });
+    const brief = nextDayBrief({
+      date: "2026-03-12",
+      now: NOW,
+      leads: await ports.crm.all(),
+      pending: await bus.queue.pending(),
+    });
     const body = brief.actions[0]?.draft?.body ?? "";
 
     expect(body).toContain("Marie");
@@ -192,7 +199,9 @@ describe("scénario 6 — la veille au soir et le bilan de la semaine", () => {
     expect(body).toContain("débutant");
     // The unconfirmed operational facts are surfaced, not silently skipped.
     expect(body).toMatch(/Point de rendez-vous : non confirmé/);
-    expect(brief.gaps).toContain("policies.requiredDocuments");
+    // Documents are confirmed now, so the brief lists them instead of flagging a hole.
+    expect(body).toMatch(/questionnaire médical complété/);
+    expect(brief.gaps).not.toContain("policies.requiredDocuments");
     expect(body).toMatch(/en attente de validation/);
   });
 
@@ -211,8 +220,8 @@ describe("scénario 6 — la veille au soir et le bilan de la semaine", () => {
     const report = weeklyReport({
       now: NOW,
       weekStart: "2026-03-09",
-      leads: ports.crm.all(),
-      queue: bus.queue.all(),
+      leads: await ports.crm.all(),
+      queue: await bus.queue.all(),
       ports,
     });
     const body = report.actions[0]?.draft?.body ?? "";
@@ -227,22 +236,57 @@ describe("scénario 6 — la veille au soir et le bilan de la semaine", () => {
   });
 });
 
+describe("scénario 7 — un prospect écrit en allemand", () => {
+  it("ne répond pas dans une langue sans gabarit, mais dit que l'équipe la parle", async () => {
+    const { bus, sent } = harness();
+    const run = await bus.handle(
+      event({
+        id: "s7a",
+        text: "Hallo, ich möchte tauchen. Wie viel kostet das für zwei Personen?",
+        from: { name: "Klaus", phone: "+49170000000" },
+      }),
+    );
+
+    expect(run.signals?.foreignLanguage).toBe("de");
+    // Nothing auto-sent, and nothing written in approximate German.
+    expect(run.executed.filter((a) => a.type === "send_message")).toEqual([]);
+
+    // The briefing turns a dead end into an advantage to play: German is spoken.
+    const escalation = sent.find((m) => m.templateId === "escalation");
+    expect(escalation?.body).toMatch(/allemand/);
+    expect(escalation?.body).toMatch(/parlée dans l'équipe/);
+    expect(run.outcome?.gaps.join(" ")).toMatch(/aucun gabarit approuvé/);
+  });
+
+  it("dit clairement quand personne ne parle la langue", async () => {
+    const { bus, sent } = harness();
+    const run = await bus.handle(
+      event({ id: "s7b", text: "नमस्ते, मुझे गोता लगाना है", from: { name: "Aarav" } }),
+    );
+
+    expect(run.signals?.foreignLanguage).toBe("hi");
+    const escalation = sent.find((m) => m.templateId === "escalation");
+    expect(escalation?.body).toMatch(/Aucune compétence confirmée/);
+    expect(run.outcome?.gaps.join(" ")).toMatch(/aucune compétence linguistique confirmée/);
+  });
+});
+
 describe("la file de validation", () => {
   it("ne s'auto-approuve jamais et garde la trace de la décision", async () => {
     const { bus } = harness();
     await bus.handle(event({ id: "s7", text: "Baptême le 14/03 pour 2 personnes" }));
 
-    const pending = bus.queue.pending();
+    const pending = await bus.queue.pending();
     expect(pending.length).toBeGreaterThan(0);
     // P0/P1 first, so a human triaging from the top sees the urgent items.
     expect(pending[0]?.priority).toBe("P1");
 
     const first = pending[0];
     if (!first) throw new Error("expected a pending item");
-    const decided = bus.queue.approve(first.id, "owner");
+    const decided = await bus.queue.approve(first.id, "owner");
     expect(decided?.status).toBe("approved");
     expect(decided?.decidedBy).toBe("owner");
     // Deciding twice is refused rather than silently accepted.
-    expect(bus.queue.approve(first.id, "owner")).toBeUndefined();
+    expect(await bus.queue.approve(first.id, "owner")).toBeUndefined();
   });
 });

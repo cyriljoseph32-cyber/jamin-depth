@@ -129,7 +129,7 @@ export const fr: Dictionary = {
     },
     divingCard: {
       label: "Plongée · Golfe de Thaïlande",
-      alt: "Plongeur avec un appareil photo sous-marin sur un récif du golfe de Thaïlande",
+      alt: "Trois plongeurs en pleine eau au-dessus d'un récif du golfe de Thaïlande, l'un faisant un signe de la main",
     },
   },
 
@@ -371,6 +371,15 @@ export const fr: Dictionary = {
         body: "Un message WhatsApp atteint la personne qui sera réellement dans l'eau avec vous. Pas d'agence, pas de standard.",
       },
     ],
+  },
+
+  /**
+   * Habillage seulement. Les citations vivent dans `testimonials.ts`,
+   * volontairement hors du dictionnaire — voir le commentaire là-bas.
+   */
+  testimonials: {
+    kicker: "Ce qu'ils en disent",
+    title: "Les mots des plongeurs, après coup.",
   },
 
   faq: {

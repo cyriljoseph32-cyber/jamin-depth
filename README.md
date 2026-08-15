@@ -4,7 +4,12 @@
 _You drop it. We dive for it._
 
 A premium, mobile-first marketing site for a Koh Samui underwater-recovery and diving
-service. Cinematic dark-marine design, minimal JavaScript, zero backend, no secrets.
+service. Cinematic dark-marine design, minimal JavaScript, and no secrets in the pages
+themselves — the public site is still fully static and client-side.
+
+Alongside it, `src/agents/` runs the operations side: inbound enquiries, drafting, the human
+approval queue and the scheduled briefs. That part does use server routes and API keys, all
+optional (see [The agent system](#the-agent-system)).
 
 ## Stack
 
@@ -52,18 +57,24 @@ qualifying enquiries from WhatsApp/Instagram/Facebook, preparing a booking recap
 partner availability request, the next-day operations list, document reminders, content
 briefs, review drafts and the weekly report.
 
-It is a **pure TypeScript library** — no API route, no secret, no new dependency, and the
-site does not import it. Language, dates, party size, level and safety signals are detected
-by rules, so a normal message costs zero tokens; a model is used only to rephrase an
-already-grounded draft, and its output is re-checked.
+It runs for real: WhatsApp messages arrive by webhook, state lives in Supabase, and every
+action needing a human shows up on Telegram with Approve / Reject buttons. Three Vercel cron
+jobs handle follow-ups, the evening-before brief and the weekly report. No npm dependency was
+added and the public site imports none of it.
+
+Language, dates, party size, level and safety signals are detected by rules, so a normal
+message costs zero tokens; a model is used only to rephrase an already-grounded draft, and its
+output is re-checked.
 
 Two independent gates decide what may leave: an action-type matrix (money, seats, published
 words, anything irreversible) and a word-level guard that refuses any draft promising a seat,
 the weather, wildlife, a response time, a price outside the verified catalogue, or fitness to
 dive. Anything either gate objects to goes to a human validation queue.
 
-Start with [`docs/agents/README.md`](docs/agents/README.md); the Phase 0 audit and everything
-still unconfirmed are in [`docs/agents/AUDIT.md`](docs/agents/AUDIT.md).
+To put it in service — ten environment variables and one SQL file — see
+[`docs/agents/DEPLOY.md`](docs/agents/DEPLOY.md). For how it works, start with
+[`docs/agents/README.md`](docs/agents/README.md); the Phase 0 audit and everything still
+unconfirmed are in [`docs/agents/AUDIT.md`](docs/agents/AUDIT.md).
 
 ## Content & configuration
 
@@ -91,13 +102,18 @@ variable — drift from the stylesheet.
 
 ### Environment variables
 
-None are required. Optionally set the canonical/OG base URL:
+None are required for the site itself. Optionally set the canonical/OG base URL:
 
 ```
 NEXT_PUBLIC_SITE_URL=https://your-domain.com
 ```
 
 Falls back to `VERCEL_URL`, then `http://localhost:3000`.
+
+The agent system reads a further ten, all optional — every adapter falls back to an in-memory
+mock and reports itself as missing, so a deployment never fails for a missing key. Names and
+purposes are in `.env.example`; where to find each value is in
+[`docs/agents/DEPLOY.md`](docs/agents/DEPLOY.md).
 
 ## Deploy to Vercel
 
