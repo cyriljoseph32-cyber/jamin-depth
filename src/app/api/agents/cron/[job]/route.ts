@@ -1,6 +1,8 @@
 import { timingSafeEqual } from "node:crypto";
 import { createRuntime } from "@/agents/runtime";
 import { isJob, runJob } from "@/agents/schedule";
+import { isCommandJob, runCommandJob } from "@/command/jobs";
+import { createCommandRuntime } from "@/command/runtime";
 
 /**
  * Scheduled jobs, driven by Vercel Cron (see `vercel.json`).
@@ -8,6 +10,10 @@ import { isJob, runJob } from "@/agents/schedule";
  * Vercel sends `Authorization: Bearer $CRON_SECRET`. Without that check the
  * endpoints are public triggers: anyone could fire follow-ups in a loop and
  * burn through the two-nudge cap on every lead in the CRM.
+ *
+ * Two catalogues answer here: the dive system's jobs (`agents/schedule.ts`) and
+ * COCO COMMAND's (`command/jobs.ts`). They stay separate so the dive system
+ * keeps running with the chief-of-staff layer switched off.
  */
 
 export const runtime = "nodejs";
@@ -30,6 +36,17 @@ export async function GET(req: Request, { params }: { params: Promise<{ job: str
   if (!authorised(req)) return new Response("unauthorized", { status: 401 });
 
   const { job } = await params;
+
+  if (isCommandJob(job)) {
+    const command = createCommandRuntime();
+    try {
+      return Response.json(await runCommandJob(job, command, new Date().toISOString()));
+    } catch (err) {
+      console.error(`cron ${job} failed:`, err);
+      return Response.json({ error: "job failed", job }, { status: 500 });
+    }
+  }
+
   if (!isJob(job)) return Response.json({ error: `unknown job: ${job}` }, { status: 404 });
 
   const rt = createRuntime();

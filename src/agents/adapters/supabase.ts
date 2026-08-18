@@ -42,7 +42,7 @@ export function supabaseFromEnv(): SupabaseConfig | null {
   return { url, serviceRoleKey };
 }
 
-interface RequestOptions {
+export interface RequestOptions {
   method?: "GET" | "POST" | "PATCH" | "DELETE";
   path: string;
   body?: unknown;
@@ -60,7 +60,13 @@ class PostgrestError extends Error {
   }
 }
 
-async function request<T>(cfg: SupabaseConfig, options: RequestOptions): Promise<T> {
+/**
+ * One PostgREST call. Exported because COCO COMMAND's journal
+ * (`src/command/adapters/journal-supabase.ts`) speaks to the same project with
+ * the same key — a second copy of this would be a second place to get the
+ * headers, the `no-store` and the error handling subtly wrong.
+ */
+export async function request<T>(cfg: SupabaseConfig, options: RequestOptions): Promise<T> {
   const doFetch = cfg.fetchImpl ?? fetch;
   const res = await doFetch(`${cfg.url}/rest/v1${options.path}`, {
     method: options.method ?? "GET",
@@ -81,7 +87,7 @@ async function request<T>(cfg: SupabaseConfig, options: RequestOptions): Promise
 }
 
 /** PostgREST filter-safe encoding for a value used in `col=eq.<value>`. */
-function eq(value: string): string {
+export function eq(value: string): string {
   return encodeURIComponent(value);
 }
 

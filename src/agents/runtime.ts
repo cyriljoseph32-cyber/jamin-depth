@@ -1,5 +1,5 @@
 import { createOrchestrator, type Orchestrator } from "./orchestrator";
-import { createApprovalQueue, type ApprovalQueue } from "./queue";
+import { createApprovalQueue, type ApprovalQueue, type QueuedItem } from "./queue";
 import { createAuditLog, systemClock, type AuditEntry, type AuditLog } from "./audit";
 import {
   createMockCalendar,
@@ -20,6 +20,7 @@ import {
 } from "./adapters/supabase";
 import { createWhatsAppMessaging, whatsappFromEnv, type WhatsAppConfig } from "./adapters/whatsapp";
 import {
+  chatFor,
   createTelegramMessaging,
   sendApprovalCard,
   telegramFromEnv,
@@ -50,7 +51,18 @@ export interface Runtime {
   telegram: TelegramConfig | null;
 }
 
-export function createRuntime(): Runtime {
+/**
+ * Hooks the layer above can add without this file having to know about it.
+ *
+ * COCO COMMAND (`src/command/`) uses `onQueued` to mirror every queued action
+ * into its journal. The dependency stays one-way — `command` imports `agents`,
+ * never the reverse — which is what keeps the dive system able to run alone.
+ */
+export interface RuntimeHooks {
+  onQueued?: (item: QueuedItem) => Promise<void>;
+}
+
+export function createRuntime(hooks: RuntimeHooks = {}): Runtime {
   const clock = systemClock;
   const supabase = supabaseFromEnv();
   const whatsapp = whatsappFromEnv();
@@ -83,12 +95,18 @@ export function createRuntime(): Runtime {
     persistAudit,
     // Every queued action becomes a card with two buttons. If Telegram is not
     // configured the item still sits in the queue — silent, but not lost.
-    onQueued: telegram
-      ? async (item) => {
-          const result = await sendApprovalCard(telegram, item);
-          if (!result.ok) console.error("telegram card failed:", result.detail);
-        }
-      : undefined,
+    onQueued:
+      telegram || hooks.onQueued
+        ? async (item) => {
+            if (telegram) {
+              const result = await sendApprovalCard(telegram, item, chatFor(telegram, "alerts"));
+              if (!result.ok) console.error("telegram card failed:", result.detail);
+            }
+            // A failed card must not stop the journal entry: the queue item is
+            // the thing that matters, and the digest can still surface it.
+            if (hooks.onQueued) await hooks.onQueued(item);
+          }
+        : undefined,
   });
 
   return { bus, ports, queue, log, persistAudit, supabase, whatsapp, telegram };

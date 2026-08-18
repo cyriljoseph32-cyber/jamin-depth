@@ -14,15 +14,50 @@ import type { MessagingPort, SendResult } from "./index";
  * there is one place to look.
  */
 
+/**
+ * The four operating chats of COCO COMMAND. All optional: an unset chat falls
+ * back to `chatId`, so a single-chat setup keeps working — the hashtags carry
+ * the routing information instead.
+ */
+export interface TelegramChats {
+  /** Cyril's private commands (`/today`, `/approve`…). */
+  command?: string;
+  /** Urgencies, failures, anomalies, validations. */
+  alerts?: string;
+  /** Morning brief, evening report, 30-minute digest. */
+  daily?: string;
+  /** Per-activity follow-up, keyed by venture name (`DIVING`, `RUGBY`…). */
+  project?: Readonly<Record<string, string>>;
+}
+
+export type TelegramChatKind = "command" | "alerts" | "daily" | "project";
+
 export interface TelegramConfig {
   botToken: string;
-  /** Where cards and escalations are sent. */
+  /** Where cards and escalations are sent by default. */
   chatId: string;
   /** Chats allowed to DECIDE. Authenticating the webhook does not say who may approve. */
   allowedChatIds: readonly string[];
   /** Shared secret Telegram echoes in `X-Telegram-Bot-Api-Secret-Token`. */
   webhookSecret?: string;
+  /** Optional per-purpose chats. Anything missing falls back to `chatId`. */
+  chats?: TelegramChats;
   fetchImpl?: typeof fetch;
+}
+
+/**
+ * Which chat a message belongs in.
+ *
+ * Never throws and never returns an empty string: a misrouted notification is
+ * an annoyance, a swallowed one is a failure. `chatId` is always the floor.
+ */
+export function chatFor(cfg: TelegramConfig, kind: TelegramChatKind, project?: string): string {
+  const chats = cfg.chats;
+  if (!chats) return cfg.chatId;
+  if (kind === "project") {
+    return (project ? chats.project?.[project.toUpperCase()] : undefined) ?? cfg.chatId;
+  }
+  return chats[kind] ?? cfg.chatId;
 }
 
 export function telegramFromEnv(): TelegramConfig | null {
@@ -40,6 +75,22 @@ export function telegramFromEnv(): TelegramConfig | null {
     // explicit list, only the chat we already trust may approve.
     allowedChatIds: allowed.length > 0 ? allowed : [chatId],
     webhookSecret: process.env.TELEGRAM_WEBHOOK_SECRET?.trim() || undefined,
+    chats: {
+      command: process.env.TELEGRAM_CHAT_COMMAND?.trim() || undefined,
+      alerts: process.env.TELEGRAM_CHAT_ALERTS?.trim() || undefined,
+      daily: process.env.TELEGRAM_CHAT_DAILY?.trim() || undefined,
+      project: {
+        ...(process.env.TELEGRAM_CHAT_PROJECT_COCO?.trim()
+          ? { COCO: process.env.TELEGRAM_CHAT_PROJECT_COCO.trim() }
+          : {}),
+        ...(process.env.TELEGRAM_CHAT_PROJECT_DIVING?.trim()
+          ? { DIVING: process.env.TELEGRAM_CHAT_PROJECT_DIVING.trim() }
+          : {}),
+        ...(process.env.TELEGRAM_CHAT_PROJECT_RUGBY?.trim()
+          ? { RUGBY: process.env.TELEGRAM_CHAT_PROJECT_RUGBY.trim() }
+          : {}),
+      },
+    },
   };
 }
 
@@ -154,9 +205,26 @@ export function formatCard(item: QueuedItem): string {
   return lines.join("\n");
 }
 
-export async function sendApprovalCard(cfg: TelegramConfig, item: QueuedItem): Promise<{ ok: boolean; detail?: string }> {
+/** Plain text to one chat. Used by COCO COMMAND for briefs, digests and command replies. */
+export async function sendText(
+  cfg: TelegramConfig,
+  chatId: string,
+  text: string,
+): Promise<{ ok: boolean; detail?: string }> {
   return call(cfg, "sendMessage", {
-    chat_id: cfg.chatId,
+    chat_id: chatId,
+    text: text.slice(0, 4000),
+    disable_web_page_preview: true,
+  });
+}
+
+export async function sendApprovalCard(
+  cfg: TelegramConfig,
+  item: QueuedItem,
+  chatId: string = cfg.chatId,
+): Promise<{ ok: boolean; detail?: string }> {
+  return call(cfg, "sendMessage", {
+    chat_id: chatId,
     text: formatCard(item).slice(0, 4000),
     disable_web_page_preview: true,
     reply_markup: {
@@ -210,6 +278,33 @@ export function readCallback(update: unknown): TelegramCallback | null {
   };
 }
 
+export interface TelegramMessage {
+  chatId: string;
+  messageId?: number;
+  from: string;
+  text: string;
+}
+
+/**
+ * Pull a plain text message out of an update — how COCO COMMAND receives
+ * `/today`, `/approve`, `/status`. Returns `null` for anything else (a photo, a
+ * join event, a button press), so the caller never has to guess.
+ */
+export function readMessage(update: unknown): TelegramMessage | null {
+  const message = (update as { message?: Record<string, unknown> }).message;
+  if (!message) return null;
+  const chat = message.chat as { id?: number | string } | undefined;
+  const text = typeof message.text === "string" ? message.text.trim() : "";
+  if (chat?.id === undefined || text.length === 0) return null;
+  const from = message.from as { username?: string; first_name?: string; id?: number } | undefined;
+  return {
+    chatId: String(chat.id),
+    messageId: typeof message.message_id === "number" ? message.message_id : undefined,
+    from: from?.username ?? from?.first_name ?? String(from?.id ?? "inconnu"),
+    text,
+  };
+}
+
 export function isAllowed(cfg: TelegramConfig, chatId: string): boolean {
   return cfg.allowedChatIds.includes(chatId);
 }
@@ -231,10 +326,12 @@ export async function settleCard(
   messageId: number | undefined,
   original: string,
   verdict: string,
+  /** The chat the card lives in — with several chats, `cfg.chatId` is a guess. */
+  chatId: string = cfg.chatId,
 ): Promise<void> {
   if (messageId === undefined) return;
   await call(cfg, "editMessageText", {
-    chat_id: cfg.chatId,
+    chat_id: chatId,
     message_id: messageId,
     text: `${original}\n\n${verdict}`.slice(0, 4000),
     disable_web_page_preview: true,

@@ -85,7 +85,7 @@ système le signale explicitement (`outside-24h-window`) au lieu de faire croire
      -d '{
        "url": "https://<votre-domaine>/api/agents/telegram",
        "secret_token": "<TELEGRAM_WEBHOOK_SECRET>",
-       "allowed_updates": ["callback_query"]
+       "allowed_updates": ["callback_query", "message"]
      }'
    ```
 
@@ -115,6 +115,78 @@ endpoints planifiés répondent `401` — ils restent fermés, pas ouverts.
 | `follow-ups` | `0 * * * *` | chaque heure | Relance les prospects silencieux — 2 maximum, jamais entre 21 h et 8 h, jamais un dossier santé |
 | `daily-brief` | `0 12 * * *` | 19 h | Le brief de la veille au soir |
 | `weekly-report` | `0 1 * * 1` | lundi 8 h | Bilan hebdo + le message prêt pour Discovery Divers |
+| `morning-brief` | `0 1 * * *` | 8 h | Brief opérationnel COCO COMMAND (toutes activités) |
+| `evening-report` | `0 12 * * *` | 19 h | Bilan du soir COCO COMMAND |
+| `command-digest` | `*/30 * * * *` | toutes les 30 min | Récapitulatif groupé des événements non urgents |
+
+⚠️ Six tâches dont une toutes les 30 minutes : vérifiez le quota de votre offre
+Vercel. Si elle ne l'autorise pas, supprimez `command-digest` de `vercel.json` —
+les événements urgents partent seuls de toute façon, seul le regroupement des
+P2/P3 est perdu.
+
+---
+
+## 5. COCO COMMAND — le chef d'état-major
+
+Cette couche (`src/command/`) ajoute au système plongée un journal opérationnel
+commun à toutes vos activités, les niveaux d'action 0→4, les commandes Telegram
+et les deux rendez-vous quotidiens. Elle est **facultative** : sans les
+variables ci-dessous, la plongée continue exactement comme avant.
+
+### Les quatre chats
+
+Créez quatre conversations (ou groupes) et invitez-y le bot, puis relevez leurs
+identifiants comme à l'étape 3 :
+
+| Variable Vercel | Ce qui y arrive |
+| --- | --- |
+| `TELEGRAM_CHAT_COMMAND` | vos commandes privées et leurs réponses |
+| `TELEGRAM_CHAT_ALERTS` | urgences, échecs, et tout ce qui attend un `/approve` |
+| `TELEGRAM_CHAT_DAILY` | brief du matin, bilan du soir, récapitulatifs |
+| `TELEGRAM_CHAT_PROJECT_COCO` · `_DIVING` · `_RUGBY` | le suivi détaillé par activité |
+
+Chacune est optionnelle : ce qui manque retombe sur `TELEGRAM_CHAT_ID`, et les
+hashtags (`#DIVING`, `#RUGBY`, `#URGENT`…) suffisent alors à s'y retrouver.
+
+Relancez ensuite `setWebhook` avec `"allowed_updates": ["callback_query", "message"]`
+(étape 3) : sans `message`, Telegram ne transmet pas vos commandes.
+
+### Les commandes
+
+`/today` · `/brief` · `/report` · `/status [projet]` · `/tasks` ·
+`/approve <event_id>` · `/reject <event_id> [raison]` · `/delegate [projet] tâche` ·
+`/priority [sujet]` · `/focus [projet]` · `/pause [cible]` · `/resume [cible]` ·
+`/audit` · `/help`
+
+Seuls les chats listés dans `TELEGRAM_ALLOWED_CHAT_IDS` peuvent les utiliser.
+
+### Brancher un autre projet
+
+`COMMAND_INGEST_TOKEN` (une chaîne aléatoire de plus) ouvre l'API d'ingestion.
+N'importe lequel de vos dépôts peut alors déposer un événement :
+
+```bash
+curl -X POST https://<votre-domaine>/api/command/events \
+  -H "Authorization: Bearer $COMMAND_INGEST_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "venture": "RUGBY",
+    "agent": "marketing",
+    "type": "ACTION",
+    "priority": "P2",
+    "status": "PLANNED",
+    "summary": "Post Instagram prêt pour mardi",
+    "details": "Pourquoi : séance touch hebdomadaire",
+    "links": [],
+    "next_action": "validation de Cyril",
+    "needs_owner": true
+  }'
+```
+
+`needs_owner: true` place l'événement en attente de validation, quoi que le
+projet ait déclaré : le jeton donne le droit d'écrire dans le journal, jamais
+celui de décider. Le projet d'origine relit la décision avec
+`GET /api/command/events?since=<ISO>&venture=RUGBY`, même jeton.
 
 ---
 
