@@ -1,11 +1,13 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   callbackData,
+  chatFor,
   createTelegramMessaging,
   formatCard,
   isAllowed,
   parseCallbackData,
   readCallback,
+  readMessage,
   sendApprovalCard,
   verifyWebhookSecret,
   type TelegramConfig,
@@ -148,5 +150,37 @@ describe("createTelegramMessaging", () => {
     const port = createTelegramMessaging(config());
     expect((await port.send({ ...item.action.draft!, channel: "internal" })).ok).toBe(true);
     expect((await port.send({ ...item.action.draft!, channel: "whatsapp" })).reason).toMatch(/wrong-channel/);
+  });
+});
+
+describe("chatFor", () => {
+  it("retombe sur le chat unique quand rien n'est configuré", () => {
+    const cfg = config();
+    expect(chatFor(cfg, "alerts")).toBe("1000");
+    expect(chatFor(cfg, "project", "DIVING")).toBe("1000");
+  });
+
+  it("route vers le chat dédié quand il existe", () => {
+    const cfg = config({ chats: { alerts: "3000", project: { RUGBY: "5000" } } });
+    expect(chatFor(cfg, "alerts")).toBe("3000");
+    expect(chatFor(cfg, "project", "rugby")).toBe("5000");
+    // Une activité sans chat déclaré ne disparaît pas : elle revient au défaut.
+    expect(chatFor(cfg, "project", "COCO")).toBe("1000");
+    expect(chatFor(cfg, "daily")).toBe("1000");
+  });
+});
+
+describe("readMessage", () => {
+  it("lit une commande texte", () => {
+    const message = readMessage({
+      message: { message_id: 7, chat: { id: 1000 }, from: { username: "cyril" }, text: " /tasks " },
+    });
+    expect(message).toEqual({ chatId: "1000", messageId: 7, from: "cyril", text: "/tasks" });
+  });
+
+  it("ignore ce qui n'est pas du texte", () => {
+    expect(readMessage({ message: { chat: { id: 1000 }, photo: [] } })).toBeNull();
+    expect(readMessage({ callback_query: { id: "1" } })).toBeNull();
+    expect(readMessage({})).toBeNull();
   });
 });

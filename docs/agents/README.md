@@ -13,6 +13,12 @@ de tout ça.
 **Pour mettre en service : [`DEPLOY.md`](./DEPLOY.md)** — dix variables à coller dans Vercel et
 un fichier SQL à exécuter.
 
+Au-dessus de ce système vit **[COCO COMMAND](./COCO-COMMAND.md)**
+([`src/command/`](../../src/command)) : le journal opérationnel commun à toutes les activités,
+les niveaux d'action 0→4, les commandes Telegram (`/today`, `/approve`, `/status`…) et les deux
+rendez-vous quotidiens. Facultatif — sans ses variables, la plongée tourne exactement comme
+avant.
+
 ## Ce que le système ne fera jamais seul
 
 Ces refus sont dans le code, pas dans une note d'intention. Ils sont testés.

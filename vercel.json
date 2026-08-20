@@ -12,6 +12,18 @@
     {
       "path": "/api/agents/cron/weekly-report",
       "schedule": "0 1 * * 1"
+    },
+    {
+      "path": "/api/agents/cron/morning-brief",
+      "schedule": "0 1 * * *"
+    },
+    {
+      "path": "/api/agents/cron/evening-report",
+      "schedule": "0 12 * * *"
+    },
+    {
+      "path": "/api/agents/cron/command-digest",
+      "schedule": "*/30 * * * *"
     }
   ]
 }

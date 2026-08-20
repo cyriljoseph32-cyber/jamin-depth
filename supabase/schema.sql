@@ -100,3 +100,48 @@ alter table public.processed_events  enable row level security;
 --     delete from public.processed_events where created_at < now() - interval '30 days';
 --     delete from public.audit_log       where at         < now() - interval '365 days';
 --   $$);
+
+-- ============================================================ COCO COMMAND
+-- Le journal opérationnel transverse (plongée, rugby, Coco, global) et l'état
+-- de pilotage. Mêmes garanties que ci-dessus : service-role uniquement, RLS
+-- activée sans policy. Le journal contient des résumés d'actions et des
+-- brouillons de messages — donc, potentiellement, des données client.
+
+create table if not exists public.command_events (
+  event_id      text primary key,                  -- evt_YYYYMMDD_HHMM_xxxxxxxx
+  timestamp     timestamptz not null default now(),
+  venture       text not null,                     -- COCO | DIVING | RUGBY | GLOBAL
+  agent         text not null,
+  type          text not null,                     -- ACTION | BRIEF | ALERT | APPROVAL | RESULT | ERROR
+  priority      text not null,                     -- P0…P3
+  status        text not null,                     -- PLANNED | RUNNING | WAITING_APPROVAL | DONE | FAILED | BLOCKED
+  summary       text not null,
+  details       text not null default '',
+  links         text[] not null default '{}',
+  next_action   text not null default '',
+  needs_owner   boolean not null default false,
+  level         smallint not null default 0,       -- 0 observer … 4 critique
+  queue_item_id text,                              -- queue_items.id, quand l'action y vit
+  notified_at   timestamptz,                       -- nul = en attente du récapitulatif 30 min
+  fingerprint   text not null                      -- venture|agent|type|summary
+);
+
+-- `/status`, `/tasks` et le brief lisent tous « les plus récents, par activité ».
+create index if not exists command_events_venture_idx on public.command_events (venture, timestamp desc);
+create index if not exists command_events_open_idx    on public.command_events (status, priority, timestamp desc);
+-- La déduplication interroge empreinte + fenêtre de temps à chaque écriture.
+create index if not exists command_events_fp_idx      on public.command_events (fingerprint, timestamp desc);
+-- Le digest ne cherche que ce qui n'a jamais été notifié.
+create index if not exists command_events_notify_idx  on public.command_events (notified_at, timestamp desc);
+
+-- Une seule ligne (`id = 'singleton'`) : il n'y a qu'un pilote.
+create table if not exists public.command_state (
+  id              text primary key,
+  focus           text,
+  paused_ventures text[] not null default '{}',
+  paused_agents   text[] not null default '{}',
+  updated_at      timestamptz not null default now()
+);
+
+alter table public.command_events enable row level security;
+alter table public.command_state  enable row level security;
