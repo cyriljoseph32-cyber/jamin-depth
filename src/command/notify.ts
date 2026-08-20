@@ -1,7 +1,8 @@
 import { chatFor, sendText, type TelegramConfig } from "@/agents/adapters/telegram";
 import type { Journal } from "./journal";
 import { formatDigest, formatEvent } from "./format";
-import type { CommandEvent } from "./types";
+import { needsAttention, type CommandTask, type TaskStore } from "./tasks";
+import { bangkokDate, type CommandEvent } from "./types";
 
 /**
  * Qui est prévenu, où, et quand.
@@ -50,14 +51,45 @@ export interface Notifier {
   flush(now: string): Promise<number>;
   /** Réponse à une commande, dans le chat d'où elle vient. */
   reply(chatId: string, text: string): Promise<void>;
+  /** Échéances à moins de 72 h sans suite écrite. Renvoie le nombre signalé. */
+  watchDeadlines(now: string): Promise<number>;
 }
 
 export interface NotifierDeps {
   telegram: TelegramConfig | null;
   journal: Journal;
+  /** Absent = pas de veille d'échéances (tests, déploiements partiels). */
+  tasks?: TaskStore;
 }
 
-export function createNotifier({ telegram, journal }: NotifierDeps): Notifier {
+/**
+ * Le rappel d'échéance.
+ *
+ * Séparé du récapitulatif d'événements : une échéance n'est pas un fait qui
+ * vient de se produire, c'est un fait qui va manquer. Elle mérite son propre
+ * message, sinon elle se noie dans la liste de ce qui a déjà été fait.
+ */
+export function formatDeadlines(tasks: readonly CommandTask[]): string {
+  return [
+    `[⏳ ÉCHÉANCES] ${tasks.length} tâche(s) sans suite écrite`,
+    ...tasks.map(
+      (t) =>
+        `· ${t.priority} #${t.venture} ${t.objective} — ${t.deadline ? bangkokDate(t.deadline) : "sans date"} (${t.assigned_agent}, ${t.task_id})`,
+    ),
+    "Répondre : /delegate pour réassigner, ou /pause pour suspendre.",
+  ].join("\n");
+}
+
+export function createNotifier({ telegram, journal, tasks }: NotifierDeps): Notifier {
+  const watchDeadlines = async (now: string): Promise<number> => {
+    if (!tasks || !telegram) return 0;
+    const open = await tasks.list({ openOnly: true, limit: 200 });
+    const late = open.filter((t) => needsAttention(t, now));
+    if (late.length === 0) return 0;
+    const result = await sendText(telegram, chatFor(telegram, "alerts"), formatDeadlines(late));
+    return result.ok ? late.length : 0;
+  };
+
   return {
     async announce(event, now) {
       if (!isImmediate(event, now)) return false;
@@ -74,9 +106,11 @@ export function createNotifier({ telegram, journal }: NotifierDeps): Notifier {
     },
 
     async flush(now) {
-      const pending = await journal.pendingNotification();
-      if (pending.length === 0) return 0;
       if (!telegram) return 0;
+      const pending = await journal.pendingNotification();
+      // La veille d'échéances tourne même quand rien ne s'est passé : un jour
+      // sans activité est exactement celui où une échéance passe inaperçue.
+      if (pending.length === 0) return watchDeadlines(now);
 
       // Ce qui aurait dû partir seul mais ne l'a pas fait (Telegram indisponible
       // au moment des faits) repart seul : le groupage ne doit pas devenir la
@@ -104,6 +138,7 @@ export function createNotifier({ telegram, journal }: NotifierDeps): Notifier {
         }
       }
 
+      sent += await watchDeadlines(now);
       return sent;
     },
 
@@ -112,5 +147,7 @@ export function createNotifier({ telegram, journal }: NotifierDeps): Notifier {
       const result = await sendText(telegram, chatId, text);
       if (!result.ok) console.error("coco-command: réponse telegram échouée:", result.detail);
     },
+
+    watchDeadlines,
   };
 }

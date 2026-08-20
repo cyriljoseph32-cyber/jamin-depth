@@ -1,4 +1,4 @@
-import { eventStatuses, eventTypes, isVenture, type CommandEventInput } from "./types";
+import { eventStatuses, eventTypes, isTaskCategory, isVenture, type CommandEventInput } from "./types";
 import { levelForIngested } from "./levels";
 
 /**
@@ -62,6 +62,14 @@ export function readIngestEvent(body: unknown): IngestResult {
     problems.push("links : tableau de chaînes");
   }
 
+  const category = str(raw.category)?.toLowerCase();
+  if (category !== undefined && !isTaskCategory(category)) {
+    problems.push("category : sales | content | marketing | partner | operations | finance | support | product");
+  }
+
+  const url = str(raw.reference_url);
+  if (url && !/^https?:\/\//i.test(url)) problems.push("reference_url : http(s) uniquement");
+
   if (problems.length > 0) return { ok: false, problems };
 
   const needsOwner = raw.needs_owner === true;
@@ -84,6 +92,18 @@ export function readIngestEvent(body: unknown): IngestResult {
       level: levelForIngested({ level: typeof raw.level === "number" ? raw.level : undefined, needs_owner: needsOwner }),
       event_id: str(raw.event_id) ?? undefined,
       timestamp: timestamp ?? undefined,
+
+      // Le contexte facultatif. `impact` n'est PAS repris tel quel quand
+      // l'événement prétend qu'une action est faite sans en donner la preuve :
+      // `buildEvent` y écrit alors « non vérifié ». Un dépôt tiers ne se
+      // décerne pas son propre certificat d'exécution.
+      task_id: str(raw.task_id) ?? undefined,
+      category: category as CommandEventInput["category"],
+      impact: str(raw.impact) ?? undefined,
+      reference_url: url ?? undefined,
+      reference_id: str(raw.reference_id) ?? undefined,
+      error_message: str(raw.error_message) ?? undefined,
+      repo: str(raw.repo) ?? undefined,
     },
   };
 }

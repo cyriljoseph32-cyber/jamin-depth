@@ -4,6 +4,8 @@ import { createMockPorts } from "@/agents/adapters";
 import { createAuditLog } from "@/agents/audit";
 import { createJournal } from "./journal";
 import { createStateStore } from "./state";
+import { createTaskStore } from "./tasks";
+import { createKpiStore } from "./kpi";
 import { parseCommand, runCommand, type CommandDeps } from "./commands";
 import type { CommandEventInput } from "./types";
 
@@ -16,6 +18,8 @@ function deps(over: Partial<CommandDeps> = {}): CommandDeps {
     journal: createJournal(() => T0),
     queue,
     state: createStateStore(),
+    tasks: createTaskStore(() => T0),
+    kpis: createKpiStore(() => T0),
     release: { queue, ports, log: createAuditLog(() => T0) },
     leads: () => ports.crm.all(),
     by: "telegram:cyril",
@@ -130,7 +134,8 @@ describe("pilotage", () => {
   it("/delegate route vers l'agent de l'activité", async () => {
     const d = deps();
     const reply = await runCommand({ name: "delegate", args: "RUGBY relancer les écoles" }, d);
-    expect(reply).toContain("Délégué à assistant-cyril (#RUGBY)");
+    expect(reply).toContain("Délégué à communication — #RUGBY · sales");
+    expect(reply).toContain("Fini quand :");
     expect((await d.journal.list({ venture: "RUGBY" }))[0]?.summary).toBe("relancer les écoles");
   });
 
@@ -166,5 +171,105 @@ describe("pilotage", () => {
     const reply = await runCommand({ name: "status", args: "COCO" }, d);
     expect(reply).toContain("#COCO");
     expect(reply).toContain("blocages : Import bloqué");
+  });
+});
+
+describe("/delegate", () => {
+  it("crée une vraie tâche, liée à son événement", async () => {
+    const d = deps();
+    await runCommand({ name: "delegate", args: "DIVING répondre aux deux Français du 26 août" }, d);
+
+    const [task] = await d.tasks.list();
+    expect(task?.assigned_agent).toBe("reception");
+    expect(task?.category).toBe("support");
+
+    const events = await d.journal.list({ venture: "DIVING" });
+    expect(events[0]?.task_id).toBe(task?.task_id);
+  });
+
+  it("accepte un rôle du mandat à la place du projet", async () => {
+    const d = deps();
+    await runCommand({ name: "delegate", args: "rugby_growth_agent préparer trois reels pour la rentrée" }, d);
+    const [task] = await d.tasks.list();
+    expect(task?.venture).toBe("RUGBY");
+    expect(task?.assigned_agent).toBe("marketing");
+  });
+
+  it("lit la condition de fin et l'échéance quand elles sont données", async () => {
+    const d = deps();
+    const reply = await runCommand(
+      { name: "delegate", args: "COCO démarcher cinq hôtels de Chaweng | fini quand cinq fiches créées | avant 2026-09-01" },
+      d,
+    );
+    const [task] = await d.tasks.list();
+    expect(task?.definition_of_done).toBe("cinq fiches créées");
+    expect(task?.deadline?.startsWith("2026-09-01")).toBe(true);
+    expect(reply).toContain("Échéance : 2026-09-01");
+  });
+
+  it("écrit une condition de fin par défaut et le dit", async () => {
+    const d = deps();
+    const reply = await runCommand({ name: "delegate", args: "GLOBAL préparer le point mensuel des trois activités" }, d);
+    expect(reply).toContain("Fini quand : objectif atteint et résultat journalisé");
+  });
+
+  it("refuse un objectif qui n'est qu'un mot, sans rien stocker", async () => {
+    const d = deps();
+    const reply = await runCommand({ name: "delegate", args: "RUGBY marketing" }, d);
+    expect(reply).toContain("Tâche refusée");
+    expect(await d.tasks.list()).toHaveLength(0);
+  });
+
+  it("prévient quand personne ne couvre la catégorie", async () => {
+    const d = deps();
+    const reply = await runCommand({ name: "delegate", args: "DIVING vérifier la facture du compresseur de janvier" }, d);
+    expect(reply).toContain("Aucun agent titulaire");
+  });
+});
+
+describe("/kpi", () => {
+  it("enregistre une saisie", async () => {
+    const d = deps();
+    const reply = await runCommand({ name: "kpi", args: "DIVING bookings 3 deux Open Water" }, d);
+    expect(reply).toContain("Réservations : 3");
+    expect(await d.kpis.list()).toHaveLength(1);
+  });
+
+  it("explique l'usage quand rien n'a été saisi", async () => {
+    const reply = await runCommand({ name: "kpi", args: "" }, deps());
+    expect(reply).toContain("Utilisation : /kpi");
+  });
+
+  it("relit les saisies du jour", async () => {
+    const d = deps();
+    await runCommand({ name: "kpi", args: "RUGBY signups 2" }, d);
+    expect(await runCommand({ name: "kpi", args: "" }, d)).toContain("Inscriptions : 2");
+  });
+
+  it("refuse une métrique inconnue", async () => {
+    const d = deps();
+    expect(await runCommand({ name: "kpi", args: "DIVING sourires 12" }, d)).toContain("Métriques :");
+    expect(await d.kpis.list()).toHaveLength(0);
+  });
+});
+
+describe("/week", () => {
+  it("répond un bilan hebdomadaire, même vide", async () => {
+    const reply = await runCommand({ name: "week", args: "" }, deps());
+    expect(reply).toContain("BILAN HEBDOMADAIRE");
+    expect(reply).toContain("CA confirmé : [À COMPLÉTER PAR CYRIL]");
+  });
+});
+
+describe("/tasks", () => {
+  it("liste les tâches et les validations qui n'en dépendent pas", async () => {
+    const d = deps();
+    await runCommand({ name: "delegate", args: "RUGBY relancer les écoles de Lamai" }, d);
+    await d.journal.append(waiting(), d.now);
+
+    const reply = await runCommand({ name: "tasks", args: "" }, d);
+    expect(reply).toContain("relancer les écoles de Lamai");
+    expect(reply).toContain("Envoyer le pitch à un hôtel");
+    expect(reply).toContain("[📌 TÂCHES OUVERTES] 2");
   });
 });

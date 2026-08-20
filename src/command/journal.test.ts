@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createJournal, DEDUPE_WINDOW_MS } from "./journal";
+import { buildEvent, createJournal, DEDUPE_WINDOW_MS } from "./journal";
 import { newEventId, type CommandEventInput } from "./types";
 
 const T0 = "2026-08-18T02:00:00.000Z"; // 09:00 à Bangkok
@@ -74,5 +74,40 @@ describe("createJournal", () => {
     expect(await journal.pendingNotification()).toHaveLength(1);
     await journal.markNotified([event.event_id], T0);
     expect(await journal.pendingNotification()).toHaveLength(0);
+  });
+});
+
+describe("preuve d'exécution", () => {
+  it("marque « non vérifié » une action déclarée faite sans référence", () => {
+    const event = buildEvent(
+      { ...input(), type: "ACTION", status: "DONE" },
+      T0,
+    );
+    expect(event.impact).toContain("non vérifié");
+  });
+
+  it("laisse tranquille une action prouvée", () => {
+    const event = buildEvent(
+      { ...input(), type: "ACTION", status: "DONE", reference_url: "https://wa.me/msg/1" },
+      T0,
+    );
+    expect(event.impact).toBeUndefined();
+  });
+
+  /**
+   * Le contournement évident : remplir soi-même le champ `impact` pour faire
+   * disparaître le doute. La mention se surajoute, elle ne cède pas la place.
+   */
+  it("ne laisse pas un impact déclaré effacer l'absence de preuve", () => {
+    const event = buildEvent(
+      { ...input(), type: "ACTION", status: "DONE", impact: "réservation confirmée" },
+      T0,
+    );
+    expect(event.impact).toBe("réservation confirmée (non vérifié — aucune référence fournie)");
+  });
+
+  it("n'exige rien d'un brief ou d'une alerte, qui ne prétendent pas agir", () => {
+    expect(buildEvent({ ...input(), type: "BRIEF", status: "DONE" }, T0).impact).toBeUndefined();
+    expect(buildEvent({ ...input(), type: "ALERT", status: "DONE" }, T0).impact).toBeUndefined();
   });
 });

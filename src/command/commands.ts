@@ -2,10 +2,13 @@ import { release, type ReleaseDeps } from "@/agents/orchestrator";
 import type { ApprovalQueue } from "@/agents/queue";
 import { PRIORITY_ORDER } from "@/agents/queue";
 import type { Lead } from "@/agents/adapters";
-import { buildEveningReport, buildMorningBrief } from "./brief";
-import { formatEveningReport, formatMorningBrief } from "./format";
+import { buildEveningReport, buildMorningBrief, buildWeeklyReport } from "./brief";
+import { formatEveningReport, formatMorningBrief, formatWeeklyReport } from "./format";
 import type { Journal } from "./journal";
+import { kpiMetrics, METRIC_LABEL, parseKpi, type KpiStore } from "./kpi";
+import { agentFor, guessCategory, resolveSpecRole, UNASSIGNED } from "./routing";
 import { isPaused, pause, resume, type StateStore } from "./state";
+import { openTask, VagueTaskError, type TaskStore } from "./tasks";
 import { bangkokClock, isVenture, ventures, type CommandEvent, type Venture } from "./types";
 
 /**
@@ -31,6 +34,8 @@ export const commandNames = [
   "pause",
   "resume",
   "audit",
+  "kpi",
+  "week",
   "help",
 ] as const;
 export type CommandName = (typeof commandNames)[number];
@@ -58,6 +63,8 @@ export interface CommandDeps {
   journal: Journal;
   queue: ApprovalQueue;
   state: StateStore;
+  tasks: TaskStore;
+  kpis: KpiStore;
   /** Ce qu'il faut à `release()` pour exécuter une action approuvée. */
   release: ReleaseDeps;
   leads: () => Promise<readonly Lead[]>;
@@ -65,17 +72,6 @@ export interface CommandDeps {
   by: string;
   now: string;
 }
-
-/**
- * À qui revient une tâche déléguée. Table volontairement courte et explicite :
- * un routage deviné se trompe en silence, un routage écrit se corrige.
- */
-export const DELEGATION: Readonly<Record<Venture, string>> = {
-  DIVING: "reception",
-  RUGBY: "assistant-cyril",
-  COCO: "dev-coco",
-  GLOBAL: "coco-command",
-};
 
 export async function runCommand(cmd: ParsedCommand, deps: CommandDeps): Promise<string> {
   switch (cmd.name) {
@@ -102,6 +98,10 @@ export async function runCommand(cmd: ParsedCommand, deps: CommandDeps): Promise
       return togglePause(cmd, deps);
     case "audit":
       return audit(deps);
+    case "kpi":
+      return kpi(cmd.args, deps);
+    case "week":
+      return formatWeeklyReport(await briefDeps(deps).then(buildWeeklyReport));
     case "help":
       return help();
   }
@@ -112,6 +112,8 @@ async function briefDeps(deps: CommandDeps) {
     journal: deps.journal,
     pending: await deps.queue.pending(),
     leads: await deps.leads(),
+    tasks: await deps.tasks.list({ openOnly: true, limit: 200 }),
+    kpis: await deps.kpis.list({ limit: 500 }),
     now: deps.now,
   };
 }
@@ -144,20 +146,65 @@ async function status(args: string, deps: CommandDeps): Promise<string> {
 }
 
 async function tasks(deps: CommandDeps): Promise<string> {
+  const open = await deps.tasks.list({ openOnly: true, limit: 100 });
   const events = await deps.journal.list({ limit: 200 });
-  const open = events
+
+  // Les événements ouverts qui ne sont adossés à aucune tâche : cartes de
+  // validation de la plongée, événements poussés par un autre dépôt.
+  const loose = events
     .filter((e) => e.status === "PLANNED" || e.status === "RUNNING" || e.status === "WAITING_APPROVAL")
+    .filter((e) => !e.task_id)
     .sort((a, b) => PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority] || a.timestamp.localeCompare(b.timestamp));
 
-  if (open.length === 0) return "Aucune tâche ouverte.";
+  if (open.length === 0 && loose.length === 0) return "Aucune tâche ouverte.";
+
+  const lines = [`[📌 TÂCHES OUVERTES] ${open.length + loose.length}`];
+  for (const task of open) {
+    const due = task.deadline ? ` · échéance ${task.deadline.slice(0, 10)}` : "";
+    lines.push(
+      `${task.priority} · #${task.venture} ${task.objective} — ${task.assigned_agent}${due} (${task.task_id})`,
+    );
+  }
+  for (const e of loose) {
+    lines.push(
+      `${e.priority} · #${e.venture} ${e.summary}${e.needs_owner ? ` — /approve ${e.event_id}` : ` (${e.event_id})`}`,
+    );
+  }
+  return lines.join("\n");
+}
+
+/**
+ * `/kpi diving bookings 3 [note]` — la saisie des chiffres.
+ *
+ * Le système ne voit ni les paiements, ni les réservations prises au comptoir,
+ * ni les inscriptions signées sur le bord du terrain. Il peut soit inventer,
+ * soit demander. Il demande.
+ */
+async function kpi(args: string, deps: CommandDeps): Promise<string> {
+  if (args) {
+    const parsed = parseKpi(args);
+    if (!parsed.ok) return parsed.message;
+    const entry = await deps.kpis.record({ ...parsed.draft, by: deps.by }, deps.now);
+    return `📈 Enregistré — #${entry.venture} ${METRIC_LABEL[entry.metric]} : ${entry.value}${entry.note ? ` (${entry.note})` : ""}`;
+  }
+
+  // Sans argument : ce qui a été saisi aujourd'hui, ou le mode d'emploi.
+  const since = new Date(new Date(deps.now).getTime() - 86_400_000).toISOString();
+  const today = await deps.kpis.list({ since });
+  if (today.length === 0) return usage;
+
   return [
-    `[📌 TÂCHES OUVERTES] ${open.length}`,
-    ...open.map(
-      (e) =>
-        `${e.priority} · #${e.venture} ${e.summary}${e.needs_owner ? " — /approve " + e.event_id : ` (${e.event_id})`}`,
-    ),
+    "[📈 SAISIES 24 h]",
+    ...today.map((e) => `· #${e.venture} ${METRIC_LABEL[e.metric]} : ${e.value}${e.note ? ` — ${e.note}` : ""}`),
   ].join("\n");
 }
+
+const usage = [
+  "Utilisation : /kpi [projet] [métrique] [valeur] [note]",
+  `Projets : ${ventures.join(", ")}`,
+  `Métriques : ${kpiMetrics.join(", ")}`,
+  "Ex. /kpi DIVING bookings 3 deux Open Water",
+].join("\n");
 
 async function audit(deps: CommandDeps): Promise<string> {
   const since = new Date(new Date(deps.now).getTime() - 86_400_000).toISOString();
@@ -190,6 +237,8 @@ function help(): string {
     "/delegate [tâche] · /priority [sujet]",
     "/focus [projet] · /pause [cible] · /resume [cible]",
     "/audit — 24 dernières heures",
+    "/kpi [projet] [métrique] [valeur] — saisir un chiffre",
+    "/week — bilan de la semaine",
   ].join("\n");
 }
 
@@ -253,31 +302,104 @@ async function decide(cmd: ParsedCommand, deps: CommandDeps): Promise<string> {
  * Pilotage
  * ------------------------------------------------------------------ */
 
+/**
+ * `/delegate [projet|rôle] objectif [| fini quand …] [| avant AAAA-MM-JJ]`
+ *
+ * Trois formes acceptées, de la plus rapide à la plus complète :
+ *   /delegate RUGBY relancer les écoles de Lamai
+ *   /delegate diving_sales_agent répondre aux deux Français du 26
+ *   /delegate COCO démarcher 5 hôtels | fini quand 5 fiches créées | avant 2026-09-01
+ *
+ * Sans condition de fin explicite, une condition par défaut est écrite — et la
+ * réponse le dit. Ce qui n'est pas inventé, c'est le contenu : la condition par
+ * défaut renvoie à la preuve exigée du journal, elle ne prétend rien savoir de
+ * l'objectif.
+ */
 async function delegate(args: string, deps: CommandDeps): Promise<string> {
-  if (!args) return "Utilisation : /delegate [projet] tâche — ex. /delegate RUGBY relancer les écoles";
-  const [first, ...rest] = args.split(/\s+/);
-  const venture: Venture = isVenture((first ?? "").toUpperCase()) ? ((first ?? "").toUpperCase() as Venture) : "GLOBAL";
-  const task = (venture === "GLOBAL" && !isVenture((first ?? "").toUpperCase()) ? args : rest.join(" ")) || args;
-  const agent = DELEGATION[venture];
+  if (!args) {
+    return [
+      "Utilisation : /delegate [projet|rôle] objectif",
+      "Options : | fini quand … | avant AAAA-MM-JJ",
+      "Ex. /delegate RUGBY relancer les écoles de Lamai | avant 2026-09-01",
+    ].join("\n");
+  }
 
-  const event = await deps.journal.append(
-    {
-      venture,
-      agent,
-      type: "ACTION",
-      priority: "P2",
-      status: "PLANNED",
-      summary: task,
-      details: `Délégué par ${deps.by}.`,
-      links: [],
-      next_action: `${agent} prend la tâche`,
-      needs_owner: false,
-      level: 1,
-    },
-    deps.now,
-  );
+  const [head, ...options] = args.split("|").map((part) => part.trim());
+  const [first, ...rest] = (head ?? "").split(/\s+/);
+  const token = (first ?? "").toUpperCase();
 
-  return `📨 Délégué à ${agent} (#${venture}) : ${task}\nID : ${event.event_id}`;
+  // Un rôle du mandat (`diving_sales_agent`) ou une venture — les deux se
+  // ramènent au même triplet (venture, catégorie, agent).
+  const role = resolveSpecRole(first ?? "");
+  const explicitVenture = isVenture(token);
+  const objective = (role || explicitVenture ? rest.join(" ") : head) || head || "";
+
+  const venture: Venture = role ? role.venture : explicitVenture ? (token as Venture) : "GLOBAL";
+  const category = role ? role.category : guessCategory(objective);
+  const agent = role ? role.agent : agentFor(venture, category);
+
+  const done = option(options, /^fini quand\s+/i) ?? DEFAULT_DONE;
+  const deadline = deadlineFrom(option(options, /^avant\s+/i));
+
+  try {
+    const { task, event } = await openTask(
+      {
+        venture,
+        assigned_agent: agent,
+        category,
+        priority: "P2",
+        level: 1,
+        objective,
+        context: `Délégué par ${deps.by}.`,
+        constraints: "",
+        definition_of_done: done,
+        deadline,
+        requires_approval: false,
+        next_step_if_success: "",
+        next_step_if_failure: `remonter à ${deps.by}`,
+      },
+      { tasks: deps.tasks, journal: deps.journal, by: deps.by, now: deps.now },
+    );
+
+    return [
+      `📨 ${agent === UNASSIGNED ? "Aucun agent titulaire" : `Délégué à ${agent}`} — #${venture} · ${category}`,
+      `Objectif : ${task.objective}`,
+      `Fini quand : ${task.definition_of_done}`,
+      task.deadline ? `Échéance : ${task.deadline.slice(0, 10)}` : "Échéance : aucune",
+      `Tâche : ${task.task_id} · Événement : ${event.event_id}`,
+      agent === UNASSIGNED
+        ? "⚠️ Personne ne couvre cette catégorie — la tâche est ouverte mais sans titulaire."
+        : "",
+    ]
+      .filter((line) => line.length > 0)
+      .join("\n");
+  } catch (err) {
+    if (err instanceof VagueTaskError) {
+      return [`⚠️ Tâche refusée — elle ne pourrait pas être close :`, ...err.problems.map((p) => `· ${p}`)].join("\n");
+    }
+    throw err;
+  }
+}
+
+/**
+ * La condition de fin par défaut.
+ *
+ * Elle ne devine rien de l'objectif : elle exige la preuve. C'est la seule
+ * chose qu'on puisse affirmer sans connaître la tâche.
+ */
+const DEFAULT_DONE = "objectif atteint et résultat journalisé avec une référence vérifiable";
+
+function option(options: readonly string[], prefix: RegExp): string | undefined {
+  const found = options.find((o) => prefix.test(o));
+  return found ? found.replace(prefix, "").trim() || undefined : undefined;
+}
+
+/** `2026-09-01` → fin de journée à Bangkok. Une date sans heure veut dire « ce jour-là ». */
+function deadlineFrom(value: string | undefined): string | undefined {
+  if (!value) return undefined;
+  const day = /^\d{4}-\d{2}-\d{2}$/.test(value) ? `${value}T23:59:59+07:00` : value;
+  const parsed = new Date(day);
+  return Number.isNaN(parsed.getTime()) ? undefined : parsed.toISOString();
 }
 
 async function priority(args: string, deps: CommandDeps): Promise<string> {

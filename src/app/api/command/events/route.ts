@@ -102,6 +102,15 @@ export async function GET(req: Request) {
       links: e.links,
       next_action: e.next_action,
       needs_owner: e.needs_owner,
+      task_id: e.task_id,
+      category: e.category,
+      // L'impact sort tel que le journal l'a établi : un « fait » sans preuve
+      // revient marqué « non vérifié » au projet qui l'a poussé.
+      impact: e.impact,
+      reference_url: e.reference_url,
+      reference_id: e.reference_id,
+      error_message: e.error_message,
+      repo: e.repo,
     })),
   });
 }

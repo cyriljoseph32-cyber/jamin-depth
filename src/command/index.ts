@@ -20,6 +20,7 @@ export type {
   CommandEventInput,
   CommandEventType,
   CommandStatus,
+  TaskCategory,
   Venture,
 } from "./types";
 export {
@@ -29,16 +30,50 @@ export {
   eventStatuses,
   eventTypes,
   fingerprintOf,
+  isTaskCategory,
   isVenture,
   newEventId,
+  newTaskId,
+  taskCategories,
   ventures,
 } from "./types";
 
 export { levelFor, levelForActionType, levelForIngested, needsOwnerApproval, LEVEL_LABEL } from "./levels";
 export { agentTag, tagsFor } from "./tags";
 
-export { buildEvent, byRecency, createJournal, matches, DEDUPE_WINDOW_MS } from "./journal";
+export { buildEvent, byRecency, createJournal, impactOf, isUnverifiedClaim, matches, DEDUPE_WINDOW_MS, UNVERIFIED } from "./journal";
 export type { Journal, JournalFilter } from "./journal";
+
+export {
+  buildTask,
+  byUrgency,
+  createTaskStore,
+  isOpenTask,
+  matchesTask,
+  needsAttention,
+  openTask,
+  settleTask,
+  validateTask,
+  VagueTaskError,
+  DEADLINE_SOON_MS,
+  MIN_OBJECTIVE_CHARS,
+  OPEN_STATUSES,
+} from "./tasks";
+export type { CommandTask, OpenedTask, TaskDeps, TaskDraft, TaskFilter, TaskStore } from "./tasks";
+
+export {
+  createKpiStore,
+  displayFor,
+  isKpiMetric,
+  kpiMetrics,
+  parseKpi,
+  totalFor,
+  METRIC_LABEL,
+  NOT_PROVIDED,
+} from "./kpi";
+export type { KpiDraft, KpiEntry, KpiFilter, KpiMetric, KpiStore } from "./kpi";
+
+export { agentFor, guessCategory, isSpecRole, resolveSpecRole, routingTable, SPEC_ROLES, UNASSIGNED } from "./routing";
 
 export { createStateStore, emptyState, isPaused, pause, resume } from "./state";
 export type { CommandState, StateStore } from "./state";
@@ -48,21 +83,25 @@ export {
   formatAction,
   formatAlert,
   formatApproval,
+  formatCompleted,
+  formatDecision,
   formatDigest,
   formatEvent,
   formatEveningReport,
   formatMorningBrief,
+  formatWeeklyReport,
   plainDetails,
+  referenceOf,
 } from "./format";
-export type { EveningReport, MorningBrief } from "./format";
+export type { Decision, EveningReport, MorningBrief, WeeklyReport } from "./format";
 
-export { chatForEvent, createNotifier, isImmediate, isStuck, STUCK_AFTER_MS } from "./notify";
+export { chatForEvent, createNotifier, formatDeadlines, isImmediate, isStuck, STUCK_AFTER_MS } from "./notify";
 export type { Notifier, NotifierDeps } from "./notify";
 
-export { buildEveningReport, buildMorningBrief } from "./brief";
+export { buildEveningReport, buildMorningBrief, buildWeeklyReport } from "./brief";
 export type { BriefDeps } from "./brief";
 
-export { commandNames, DELEGATION, isCommandName, parseCommand, runCommand } from "./commands";
+export { commandNames, isCommandName, parseCommand, runCommand } from "./commands";
 export type { CommandDeps, CommandName, ParsedCommand } from "./commands";
 
 export { commandDeps, createCommandRuntime, queuedItemEvent, settleJournalForQueueItem } from "./runtime";
@@ -75,3 +114,4 @@ export { priorities, readIngestEvent } from "./ingest";
 export type { IngestResult } from "./ingest";
 
 export { createSupabaseJournal, createSupabaseStateStore } from "./adapters/journal-supabase";
+export { createSupabaseKpiStore, createSupabaseTaskStore } from "./adapters/tasks-supabase";

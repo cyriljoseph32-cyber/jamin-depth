@@ -71,10 +71,54 @@ export function buildEvent(input: CommandEventInput, now: string, id: string = n
     links: input.links ?? [],
     next_action: input.next_action,
     needs_owner: input.needs_owner,
+    task_id: input.task_id,
+    category: input.category,
+    impact: impactOf(input),
+    reference_url: input.reference_url,
+    reference_id: input.reference_id,
+    error_message: input.error_message,
+    repo: input.repo,
     level,
     queue_item_id: input.queue_item_id,
     fingerprint: fingerprintOf(input),
   };
+}
+
+/**
+ * « Fait » sans preuve reste « fait, non vérifié ».
+ *
+ * L'interdit du mandat est clair : aucun agent ne peut affirmer qu'une action a
+ * été exécutée sans référence vérifiable. Plutôt que d'en faire une consigne de
+ * prompt — que le premier agent distrait ignorera — la contrainte vit ici, sur
+ * le chemin qu'empruntent tous les écrivains du journal, interne comme ingéré.
+ *
+ * Ne concerne que ce qui prétend agir : un brief ou une alerte n'ont rien à
+ * prouver.
+ */
+export const UNVERIFIED = "non vérifié — aucune référence fournie";
+
+export function isUnverifiedClaim(
+  input: Pick<CommandEventInput, "type" | "status" | "reference_url" | "reference_id">,
+): boolean {
+  const claimsAction = input.type === "ACTION" || input.type === "RESULT";
+  if (!claimsAction || input.status !== "DONE") return false;
+  return !input.reference_url && !input.reference_id;
+}
+
+/**
+ * L'impact final.
+ *
+ * L'impact déclaré par l'agent est conservé — c'est lui qui porte le sens
+ * business — mais la mention se **surajoute** au lieu de s'effacer devant lui.
+ * Un agent qui écrit « impact : réservation confirmée » sans fournir de
+ * référence ne doit pas pouvoir faire disparaître le doute en remplissant le
+ * champ lui-même.
+ */
+export function impactOf(
+  input: Pick<CommandEventInput, "type" | "status" | "reference_url" | "reference_id" | "impact">,
+): string | undefined {
+  if (!isUnverifiedClaim(input)) return input.impact;
+  return input.impact ? `${input.impact} (${UNVERIFIED})` : UNVERIFIED;
 }
 
 export function matches(event: CommandEvent, filter: JournalFilter = {}): boolean {
