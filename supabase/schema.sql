@@ -210,3 +210,39 @@ create index if not exists command_kpis_lookup_idx on public.command_kpis (metri
 
 alter table public.command_tasks enable row level security;
 alter table public.command_kpis  enable row level security;
+
+/* ------------------------------------------------------------------ *
+ * COCO COMMAND — calendrier éditorial (v3)
+ *
+ * Additif : rien n'est renommé ni supprimé. Une base déjà en service peut
+ * rejouer ce fichier entier sans risque.
+ * ------------------------------------------------------------------ */
+
+-- Ce qui doit être publié. Sans ce registre, « quelle activité est muette
+-- depuis 72 h ? » et « qu'est-ce qui sort cette semaine ? » sont indécidables :
+-- le journal ne connaît que ce qui a déjà eu lieu.
+create table if not exists public.command_content (
+  content_id      text primary key,              -- content_YYYYMMDD_xxxxxxxx
+  created_at      timestamptz not null default now(),
+  venture         text not null,                 -- COCO | DIVING | RUGBY | GLOBAL
+  channel         text not null,                 -- instagram | facebook | google_business | blog | email | linkedin
+  format          text not null,                 -- reel | carousel | post | story | newsletter | article
+  goal            text not null,                 -- awareness | engagement | lead_generation | conversion | retention
+  target_audience text not null,
+  hook            text not null,
+  key_message     text not null default '',
+  cta             text not null,
+  asset_needed    text not null default '',      -- ce qui manque pour publier
+  caption_draft   text not null,
+  status          text not null,                 -- DRAFT | WAITING_APPROVAL | APPROVED | SCHEDULED | PUBLISHED | ABANDONED
+  scheduled_at    timestamptz,
+  published_url   text,                          -- la preuve, comme partout ailleurs
+  updated_at      timestamptz not null default now()
+);
+
+-- Le calendrier des 7 jours interroge « programmé, bientôt, par activité ».
+create index if not exists command_content_plan_idx    on public.command_content (venture, status, scheduled_at);
+-- La détection du silence cherche la dernière publication de chaque activité.
+create index if not exists command_content_published_idx on public.command_content (venture, status, updated_at desc);
+
+alter table public.command_content enable row level security;

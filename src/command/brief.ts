@@ -2,6 +2,7 @@ import type { Lead } from "@/agents/adapters";
 import type { QueuedItem } from "@/agents/queue";
 import { PRIORITY_ORDER } from "@/agents/queue";
 import type { Journal } from "./journal";
+import { silentVentures, type ContentItem } from "./content";
 import { bangkokDate, ventures, type CommandEvent, type Venture } from "./types";
 import type { EveningReport, MorningBrief, WeeklyReport } from "./format";
 import { displayFor, NOT_PROVIDED, type KpiEntry } from "./kpi";
@@ -27,6 +28,8 @@ export interface BriefDeps {
   tasks: readonly CommandTask[];
   /** Chiffres saisis par Cyril. Vide = rien de déclaré, pas « zéro ». */
   kpis: readonly KpiEntry[];
+  /** Le calendrier éditorial. Vide = rien d'enregistré, le bloc disparaît. */
+  content?: readonly ContentItem[];
   now: string;
 }
 
@@ -103,6 +106,25 @@ export async function buildMorningBrief(deps: BriefDeps): Promise<MorningBrief> 
     blockers,
     opportunities,
     plan,
+    social: socialSummary(deps),
+  };
+}
+
+/**
+ * L'état du calendrier, ou rien.
+ *
+ * Rien d'enregistré ⇒ `undefined` : afficher « 0 à valider, 0 programmé »
+ * ressemblerait à un suivi qui tourne à vide, alors qu'en réalité personne
+ * n'alimente encore la table.
+ */
+function socialSummary(deps: BriefDeps): MorningBrief["social"] {
+  const items = deps.content ?? [];
+  if (items.length === 0) return undefined;
+  return {
+    waiting: items.filter((i) => i.status === "WAITING_APPROVAL").length,
+    ready: items.filter((i) => i.status === "APPROVED").length,
+    scheduled: items.filter((i) => i.status === "SCHEDULED").length,
+    silent: silentVentures(items, ventures, deps.now).map((s) => s.venture),
   };
 }
 

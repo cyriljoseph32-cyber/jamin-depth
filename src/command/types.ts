@@ -59,6 +59,72 @@ export function isTaskCategory(value: string): value is TaskCategory {
   return (taskCategories as readonly string[]).includes(value);
 }
 
+/* ------------------------------------------------------------------ *
+ * Le contenu éditorial
+ * ------------------------------------------------------------------ */
+
+/**
+ * Le calendrier éditorial a son propre vocabulaire.
+ *
+ * Une tâche se clôt ; un contenu, lui, traverse des états (rédigé, validé,
+ * programmé, publié) et porte un canal, un format et une légende. Le forcer
+ * dans `CommandTask` reviendrait à mettre « publié » et « fait » dans la même
+ * colonne, alors qu'un contenu validé mais jamais publié est précisément le cas
+ * qu'on veut voir.
+ */
+export const contentChannels = [
+  "instagram",
+  "facebook",
+  "google_business",
+  "blog",
+  "email",
+  "linkedin",
+] as const;
+export type ContentChannel = (typeof contentChannels)[number];
+
+export function isContentChannel(value: string): value is ContentChannel {
+  return (contentChannels as readonly string[]).includes(value);
+}
+
+export const contentFormats = ["reel", "carousel", "post", "story", "newsletter", "article"] as const;
+export type ContentFormat = (typeof contentFormats)[number];
+
+export function isContentFormat(value: string): value is ContentFormat {
+  return (contentFormats as readonly string[]).includes(value);
+}
+
+export const contentGoals = [
+  "awareness",
+  "engagement",
+  "lead_generation",
+  "conversion",
+  "retention",
+] as const;
+export type ContentGoal = (typeof contentGoals)[number];
+
+export function isContentGoal(value: string): value is ContentGoal {
+  return (contentGoals as readonly string[]).includes(value);
+}
+
+/**
+ * En majuscules comme les statuts d'événement et de tâche : `WAITING_APPROVAL`
+ * désigne partout la même chose dans ce système, et un contenu en attente n'est
+ * pas différent d'une action en attente du point de vue de Cyril.
+ */
+export const contentStatuses = [
+  "DRAFT",
+  "WAITING_APPROVAL",
+  "APPROVED",
+  "SCHEDULED",
+  "PUBLISHED",
+  "ABANDONED",
+] as const;
+export type ContentStatus = (typeof contentStatuses)[number];
+
+export function isContentStatus(value: string): value is ContentStatus {
+  return (contentStatuses as readonly string[]).includes(value);
+}
+
 /**
  * Le niveau d'action, de l'observation à l'irréversible.
  *
@@ -162,6 +228,12 @@ export function newEventId(now: string, rand: () => string = randomSuffix): stri
 export function newTaskId(now: string, rand: () => string = randomSuffix): string {
   const local = bangkokTime(now).toISOString();
   return `task_${local.slice(0, 10).replace(/-/g, "")}_${local.slice(11, 19).replace(/:/g, "")}_${rand()}`;
+}
+
+/** `content_YYYYMMDD_<8 hex>` — daté du jour de conception, pas de publication. */
+export function newContentId(now: string, rand: () => string = randomSuffix): string {
+  const local = bangkokTime(now).toISOString();
+  return `content_${local.slice(0, 10).replace(/-/g, "")}_${rand()}`;
 }
 
 function randomSuffix(): string {

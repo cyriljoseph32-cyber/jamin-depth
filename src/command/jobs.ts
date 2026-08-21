@@ -63,6 +63,7 @@ export async function runCommandJob(
     leads: await rt.agents.ports.crm.all(),
     tasks: await rt.tasks.list({ openOnly: true, limit: 200 }),
     kpis: await rt.kpis.list({ limit: 500 }),
+    content: await rt.content.list({ limit: 300 }),
     now,
   };
 

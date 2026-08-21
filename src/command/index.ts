@@ -113,5 +113,30 @@ export type { CommandJob, CommandJobResult } from "./jobs";
 export { priorities, readIngestEvent } from "./ingest";
 export type { IngestResult } from "./ingest";
 
+export {
+  buildContent,
+  bySchedule,
+  createContentStore,
+  draftContent,
+  EmptyContentError,
+  isOpenContent,
+  matchesContent,
+  silentVentures,
+  validateContent,
+  CALENDAR_HORIZON_MS,
+  OPEN_CONTENT_STATUSES,
+  SILENCE_AFTER_MS,
+} from "./content";
+export type {
+  ContentDeps,
+  ContentDraft,
+  ContentFilter,
+  ContentItem,
+  ContentStore,
+  DraftedContent,
+  SilenceReport,
+} from "./content";
+
 export { createSupabaseJournal, createSupabaseStateStore } from "./adapters/journal-supabase";
+export { createSupabaseContentStore } from "./adapters/content-supabase";
 export { createSupabaseKpiStore, createSupabaseTaskStore } from "./adapters/tasks-supabase";

@@ -229,6 +229,18 @@ export interface MorningBrief {
   opportunities: readonly string[];
   /** Une action principale par activité. */
   plan: readonly { venture: Venture; action: string }[];
+  /**
+   * L'état du calendrier éditorial. Absent quand aucun contenu n'est enregistré
+   * — le bloc disparaît alors du brief au lieu d'afficher quatre zéros, qui
+   * donneraient l'impression fausse d'un suivi actif mais vide.
+   */
+  social?: {
+    waiting: number;
+    ready: number;
+    scheduled: number;
+    /** Activités muettes depuis plus de 72 h. */
+    silent: readonly Venture[];
+  };
 }
 
 const COMMANDS_FOOTER = "Commandes : /today | /approve ID | /priority [sujet] | /status [projet]";
@@ -246,6 +258,7 @@ export function formatMorningBrief(brief: MorningBrief): string {
     `3. Leads / clients : ${brief.leads.count}`,
     ...bullets(brief.leads.actions),
     "",
+    ...socialBlock(brief.social),
     "4. Blocages nécessitant Cyril",
     ...bullets(brief.blockers.slice(0, 3)),
     "",
@@ -305,6 +318,22 @@ export function formatEveningReport(report: EveningReport): string {
     "🎯 Demain :",
     ...bullets(report.tomorrow.slice(0, 3)),
   ].join("\n");
+}
+
+/** Le bloc réseaux sociaux, ou rien du tout s'il n'y a aucun contenu à suivre. */
+function socialBlock(social: MorningBrief["social"]): string[] {
+  if (!social) return [];
+  const lines = [
+    "📱 Réseaux sociaux",
+    `- À valider : ${social.waiting}`,
+    `- Prêts à programmer : ${social.ready}`,
+    `- Programmés : ${social.scheduled}`,
+  ];
+  if (social.silent.length > 0) {
+    lines.push(`- Silencieux depuis 72 h : ${social.silent.map((v) => `#${v}`).join(" ")}`);
+  }
+  lines.push("");
+  return lines;
 }
 
 /** Une liste, ou une ligne honnête quand il n'y a rien. Jamais de remplissage. */
