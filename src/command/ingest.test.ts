@@ -64,3 +64,29 @@ describe("readIngestEvent", () => {
     if (!result.ok) expect(result.problems).toContain("timestamp : ISO-8601");
   });
 });
+
+describe("contexte facultatif", () => {
+  it("accepte les champs de preuve et de rattachement", () => {
+    const parsed = readIngestEvent({
+      ...valid,
+      category: "content",
+      task_id: "task_20260818_090000_abcd1234",
+      reference_url: "https://instagram.com/p/123",
+      repo: "coco2",
+    });
+    expect(parsed.ok).toBe(true);
+    expect(parsed.ok && parsed.event.category).toBe("content");
+    expect(parsed.ok && parsed.event.repo).toBe("coco2");
+  });
+
+  it("refuse une catégorie inventée", () => {
+    const parsed = readIngestEvent({ ...valid, category: "croissance" });
+    expect(parsed.ok).toBe(false);
+    expect(parsed.ok === false && parsed.problems.join(" ")).toContain("category");
+  });
+
+  it("refuse une référence qui n'est pas une URL", () => {
+    const parsed = readIngestEvent({ ...valid, reference_url: "vu sur whatsapp" });
+    expect(parsed.ok === false && parsed.problems.join(" ")).toContain("reference_url");
+  });
+});

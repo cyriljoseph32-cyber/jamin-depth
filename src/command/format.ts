@@ -118,6 +118,53 @@ export function formatAlert(event: CommandEvent): string {
 }
 
 /**
+ * `[✅ TERMINÉ]` — une tâche close, avec sa preuve.
+ *
+ * Distinct de `formatAction`, qui rend compte d'un geste isolé : celui-ci clôt
+ * quelque chose qui avait été annoncé, et la ligne « Résultat » porte la
+ * référence vérifiable plutôt qu'un adjectif.
+ */
+export function formatCompleted(event: CommandEvent): string {
+  const reference = referenceOf(event);
+  return [
+    header(event, "[✅ TERMINÉ]"),
+    `Action : ${event.summary}`,
+    `Résultat : ${reference ?? facet(event.details, ["résultat", "resultat"], "fait — aucune référence fournie")}`,
+    `Impact : ${defaultImpact(event)}`,
+    `Suite : ${event.next_action || "—"}`,
+    `ID : ${event.event_id}`,
+  ].join("\n");
+}
+
+export interface Decision {
+  question: string;
+  optionA: string;
+  optionB: string;
+  recommendation: "A" | "B";
+  because: string;
+  eventId: string;
+}
+
+/**
+ * Le format d'arbitrage : deux options, une recommandation, une raison.
+ *
+ * Une question ouverte posée à quelqu'un qui gère trois activités depuis son
+ * téléphone coûte plus cher qu'elle ne rapporte. Deux options et un avis se
+ * tranchent en une lettre.
+ */
+export function formatDecision(decision: Decision): string {
+  return [
+    `Décision nécessaire : ${decision.question}`,
+    "",
+    `Option A : ${decision.optionA}`,
+    `Option B : ${decision.optionB}`,
+    `Recommandation Coco : ${decision.recommendation} — ${decision.because}`,
+    "",
+    `Répondre : A / B / /approve ${decision.eventId}`,
+  ].join("\n");
+}
+
+/**
  * L'impact par défaut.
  *
  * Volontairement factuel : le niveau et la priorité sont des faits du système,
@@ -125,13 +172,20 @@ export function formatAlert(event: CommandEvent): string {
  * genre de remplissage que ce mandat interdit.
  */
 function defaultImpact(event: CommandEvent): string {
+  if (event.impact) return event.impact;
   return `${LEVEL_LABEL[event.level]} · ${event.priority}${event.needs_owner ? " · décision de Cyril attendue" : ""}`;
+}
+
+/** La preuve, telle qu'elle se lit sur un téléphone. */
+export function referenceOf(event: CommandEvent): string | null {
+  return event.reference_url ?? event.reference_id ?? null;
 }
 
 /** Le message qui convient à l'événement, sans avoir à choisir au point d'appel. */
 export function formatEvent(event: CommandEvent): string {
   if (event.priority === "P0" || event.type === "ALERT" || event.type === "ERROR") return formatAlert(event);
   if (event.status === "WAITING_APPROVAL" || event.needs_owner) return formatApproval(event);
+  if (event.status === "DONE" && (event.type === "RESULT" || event.task_id)) return formatCompleted(event);
   return formatAction(event);
 }
 
@@ -210,11 +264,19 @@ export interface EveningReport {
   now: string;
   done: readonly string[];
   numbers: {
+    /** Comptés par le système. */
     leads: number;
-    bookings: number;
-    revenueTHB: string;
     contentPublished: number;
     ticketsHandled: number;
+    /**
+     * Déclarés par Cyril (`/kpi`), ou `[À COMPLÉTER PAR CYRIL]`. Aucun
+     * encaissement, aucune réservation et aucune inscription ne transitent par
+     * ce système : il ne peut que restituer ce qu'on lui a dit.
+     */
+    bookings: string;
+    revenueTHB: string;
+    signups: string;
+    prospects: string;
   };
   watch: readonly string[];
   /** 3 maximum. */
@@ -231,6 +293,8 @@ export function formatEveningReport(report: EveningReport): string {
     "📈 Chiffres :",
     `- Leads : ${report.numbers.leads}`,
     `- Réservations : ${report.numbers.bookings}`,
+    `- Inscriptions : ${report.numbers.signups}`,
+    `- Prospects : ${report.numbers.prospects}`,
     `- CA confirmé : ${report.numbers.revenueTHB}`,
     `- Contenu publié : ${report.numbers.contentPublished}`,
     `- Tickets/requests traités : ${report.numbers.ticketsHandled}`,
@@ -247,4 +311,60 @@ export function formatEveningReport(report: EveningReport): string {
 function bullets(items: readonly string[]): string[] {
   if (items.length === 0) return ["- rien à signaler"];
   return items.map((item) => `- ${item}`);
+}
+
+/* ------------------------------------------------------------------ *
+ * Bilan hebdomadaire
+ * ------------------------------------------------------------------ */
+
+export interface WeeklyReport {
+  now: string;
+  numbers: {
+    revenueTHB: string;
+    leads: string;
+    bookings: string;
+    signups: string;
+    prospects: string;
+    contentPublished: number;
+    actionsDone: number;
+  };
+  /** 3 maximum — ce qui a produit un résultat vérifiable. */
+  valuable: readonly string[];
+  /** 3 maximum. */
+  failed: readonly string[];
+  /** Tâches répétées assez souvent pour mériter une automatisation. */
+  automations: readonly string[];
+  /** 3 maximum. */
+  opportunities: readonly string[];
+  /** La seule décision qui mérite d'être posée. `null` s'il n'y en a pas. */
+  decision: string | null;
+}
+
+export function formatWeeklyReport(report: WeeklyReport): string {
+  return [
+    `[📊 BILAN HEBDOMADAIRE — ${bangkokDate(report.now)}]`,
+    "",
+    "Résultats :",
+    `- CA confirmé : ${report.numbers.revenueTHB}`,
+    `- Leads : ${report.numbers.leads}`,
+    `- Réservations : ${report.numbers.bookings}`,
+    `- Inscriptions : ${report.numbers.signups}`,
+    `- Prospects : ${report.numbers.prospects}`,
+    `- Contenus publiés : ${report.numbers.contentPublished}`,
+    `- Actions terminées : ${report.numbers.actionsDone}`,
+    "",
+    "Ce qui a généré le plus de valeur :",
+    ...bullets(report.valuable.slice(0, 3)),
+    "",
+    "Ce qui a échoué ou ralenti :",
+    ...bullets(report.failed.slice(0, 3)),
+    "",
+    "Automatisations à améliorer :",
+    ...bullets(report.automations.slice(0, 3)),
+    "",
+    "Opportunités semaine prochaine :",
+    ...bullets(report.opportunities.slice(0, 3)),
+    "",
+    `Décision fondateur recommandée : ${report.decision ?? "aucune — rien ne bloque de ton côté"}`,
+  ].join("\n");
 }

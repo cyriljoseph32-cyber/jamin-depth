@@ -3,10 +3,13 @@ import {
   formatAction,
   formatAlert,
   formatApproval,
+  formatCompleted,
+  formatDecision,
   formatDigest,
   formatEveningReport,
   formatEvent,
   formatMorningBrief,
+  formatWeeklyReport,
 } from "./format";
 import type { CommandEvent } from "./types";
 
@@ -131,15 +134,95 @@ describe("brief et bilan", () => {
       done: ["Réponse envoyée"],
       numbers: {
         leads: 2,
-        bookings: 0,
-        revenueTHB: "[À COMPLÉTER PAR CYRIL]",
         contentPublished: 1,
         ticketsHandled: 4,
+        bookings: "[À COMPLÉTER PAR CYRIL]",
+        revenueTHB: "[À COMPLÉTER PAR CYRIL]",
+        signups: "[À COMPLÉTER PAR CYRIL]",
+        prospects: "[À COMPLÉTER PAR CYRIL]",
       },
       watch: [],
       tomorrow: ["Relancer Marie"],
     });
     expect(text).toContain("- CA confirmé : [À COMPLÉTER PAR CYRIL]");
     expect(text).toContain("🎯 Demain :");
+  });
+});
+
+describe("formatCompleted", () => {
+  it("met la preuve en résultat", () => {
+    const text = formatCompleted(
+      event({ type: "RESULT", reference_url: "https://wa.me/msg/42", next_action: "attendre la réponse" }),
+    );
+    expect(text).toContain("[✅ TERMINÉ]");
+    expect(text).toContain("Résultat : https://wa.me/msg/42");
+    expect(text).toContain("Suite : attendre la réponse");
+  });
+
+  it("dit l'absence de preuve au lieu de la masquer", () => {
+    const text = formatCompleted(event({ type: "RESULT", details: "" }));
+    expect(text).toContain("aucune référence fournie");
+  });
+});
+
+describe("formatDecision", () => {
+  it("pose deux options, une recommandation et une seule façon de répondre", () => {
+    const text = formatDecision({
+      question: "Ouvrir un créneau Open Water samedi ?",
+      optionA: "Ouvrir — deux demandes en attente",
+      optionB: "Refuser — le staff est déjà à trois sorties",
+      recommendation: "A",
+      because: "les deux demandes ont un séjour qui se termine dimanche",
+      eventId: "evt_20260818_0900_abcd1234",
+    });
+    expect(text).toContain("Option A :");
+    expect(text).toContain("Option B :");
+    expect(text).toContain("Recommandation Coco : A —");
+    expect(text).toContain("Répondre : A / B / /approve evt_20260818_0900_abcd1234");
+  });
+});
+
+describe("formatEvent", () => {
+  it("choisit le format TERMINÉ pour un résultat clos", () => {
+    expect(formatEvent(event({ type: "RESULT", status: "DONE" }))).toContain("[✅ TERMINÉ]");
+  });
+});
+
+describe("formatWeeklyReport", () => {
+  const base = {
+    now: T0,
+    numbers: {
+      revenueTHB: "[À COMPLÉTER PAR CYRIL]",
+      leads: "4",
+      bookings: "[À COMPLÉTER PAR CYRIL]",
+      signups: "2",
+      prospects: "[À COMPLÉTER PAR CYRIL]",
+      contentPublished: 3,
+      actionsDone: 11,
+    },
+    valuable: ["DIVING · Réponse à Marie → https://wa.me/msg/42"],
+    failed: [],
+    automations: ["RUGBY · Relance hebdomadaire — 4× cette semaine"],
+    opportunities: [],
+    decision: null,
+  };
+
+  it("n'invente aucun chiffre absent", () => {
+    const text = formatWeeklyReport(base);
+    expect(text).toContain("- CA confirmé : [À COMPLÉTER PAR CYRIL]");
+    expect(text).toContain("- Inscriptions : 2");
+  });
+
+  it("dit qu'aucune décision n'attend plutôt que d'en fabriquer une", () => {
+    expect(formatWeeklyReport(base)).toContain("aucune — rien ne bloque de ton côté");
+  });
+
+  it("porte la décision quand il y en a une", () => {
+    const text = formatWeeklyReport({ ...base, decision: "Valider le devis Six Senses — /approve evt_9" });
+    expect(text).toContain("Décision fondateur recommandée : Valider le devis Six Senses");
+  });
+
+  it("assume les sections vides sans remplissage", () => {
+    expect(formatWeeklyReport(base)).toContain("- rien à signaler");
   });
 });

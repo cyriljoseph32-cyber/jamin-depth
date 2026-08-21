@@ -145,3 +145,68 @@ create table if not exists public.command_state (
 
 alter table public.command_events enable row level security;
 alter table public.command_state  enable row level security;
+
+/* ------------------------------------------------------------------ *
+ * COCO COMMAND — tâches et chiffres (v2)
+ *
+ * Additif : rien n'est renommé ni supprimé, les colonnes ajoutées à
+ * `command_events` sont toutes facultatives. Une base déjà en service peut
+ * rejouer ce fichier entier sans risque.
+ * ------------------------------------------------------------------ */
+
+-- Le contexte facultatif des événements. `task_id` relie l'événement à la
+-- tâche ; `reference_url` / `reference_id` portent la preuve qu'une action a
+-- bien eu lieu.
+alter table public.command_events add column if not exists task_id       text;
+alter table public.command_events add column if not exists category      text;
+alter table public.command_events add column if not exists impact        text;
+alter table public.command_events add column if not exists reference_url text;
+alter table public.command_events add column if not exists reference_id  text;
+alter table public.command_events add column if not exists error_message text;
+alter table public.command_events add column if not exists repo          text;
+
+-- Ce qui doit encore arriver. Le journal dit ce qui s'est passé ; sans cette
+-- table, une échéance manquée ne laisse aucune trace avant d'être manquée.
+create table if not exists public.command_tasks (
+  task_id              text primary key,             -- task_YYYYMMDD_HHMMSS_xxxxxxxx
+  created_at           timestamptz not null default now(),
+  venture              text not null,                -- COCO | DIVING | RUGBY | GLOBAL
+  assigned_agent       text not null,
+  category             text not null,                -- sales | content | marketing | partner | operations | finance | support | product
+  priority             text not null,                -- P0…P3
+  level                smallint not null default 0,  -- 0 observer … 4 critique (affiché A0…A4)
+  objective            text not null,                -- résultat attendu, mesurable
+  context              text not null default '',
+  constraints          text not null default '',
+  definition_of_done   text not null,                -- jamais vide : sans elle, la tâche ne peut pas être close
+  deadline             timestamptz,
+  status               text not null,                -- PLANNED | RUNNING | WAITING_APPROVAL | DONE | FAILED | BLOCKED
+  requires_approval    boolean not null default false,
+  approval_event_id    text,                         -- command_events.event_id
+  next_step_if_success text not null default '',
+  next_step_if_failure text not null default '',
+  updated_at           timestamptz not null default now()
+);
+
+-- La veille d'échéances interroge « ouvert, et bientôt dû » toutes les 30 min.
+create index if not exists command_tasks_due_idx    on public.command_tasks (status, deadline);
+create index if not exists command_tasks_venture_idx on public.command_tasks (venture, updated_at desc);
+create index if not exists command_tasks_agent_idx   on public.command_tasks (assigned_agent, status);
+
+-- Les chiffres que le système ne peut pas connaître : CA, réservations,
+-- inscriptions. Saisis par Cyril (`/kpi`), jamais déduits. Une métrique absente
+-- ressort `[À COMPLÉTER PAR CYRIL]` — pas zéro.
+create table if not exists public.command_kpis (
+  id          text primary key,
+  recorded_at timestamptz not null default now(),
+  venture     text not null,
+  metric      text not null,                         -- leads | bookings | signups | revenue_thb | content_published | prospects
+  value       numeric not null,
+  note        text not null default '',
+  recorded_by text not null                          -- c'est une déclaration humaine : elle est signée
+);
+
+create index if not exists command_kpis_lookup_idx on public.command_kpis (metric, recorded_at desc);
+
+alter table public.command_tasks enable row level security;
+alter table public.command_kpis  enable row level security;

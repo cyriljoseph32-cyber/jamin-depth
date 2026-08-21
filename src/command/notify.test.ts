@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { TelegramConfig } from "@/agents/adapters/telegram";
 import { createJournal } from "./journal";
 import { chatForEvent, createNotifier, isImmediate, isStuck } from "./notify";
+import { createTaskStore, type CommandTask } from "./tasks";
 import type { CommandEvent, CommandEventInput } from "./types";
 
 const T0 = "2026-08-18T02:00:00.000Z";
@@ -148,5 +149,77 @@ describe("createNotifier", () => {
     expect(await notifier.announce(urgent, T0)).toBe(false);
     // L'événement reste en attente : rien n'est perdu, il ressortira plus tard.
     expect(await journal.pendingNotification()).toHaveLength(1);
+  });
+});
+
+describe("veille des échéances", () => {
+  const tomorrow = "2026-08-19T02:00:00.000Z";
+
+  async function storeWith(over: Partial<CommandTask> = {}) {
+    const tasks = createTaskStore(() => T0);
+    await tasks.create(
+      {
+        venture: "RUGBY",
+        assigned_agent: "communication",
+        category: "sales",
+        priority: "P1",
+        level: 1,
+        objective: "Relancer les écoles avant la rentrée scolaire",
+        context: "",
+        constraints: "",
+        definition_of_done: "cinq brouillons prêts",
+        deadline: tomorrow,
+        requires_approval: false,
+        next_step_if_success: "",
+        next_step_if_failure: "",
+        ...over,
+      },
+      T0,
+    );
+    return tasks;
+  }
+
+  it("alerte sur une échéance à moins de 72 h sans suite écrite", async () => {
+    const send = vi.fn().mockResolvedValue({ ok: true, status: 200 });
+    const notifier = createNotifier({
+      telegram: telegram({ fetchImpl: send as unknown as typeof fetch }),
+      journal: createJournal(() => T0),
+      tasks: await storeWith(),
+    });
+
+    expect(await notifier.watchDeadlines(T0)).toBe(1);
+    const body = String(send.mock.calls[0]?.[1]?.body ?? "");
+    expect(body).toContain("ÉCHÉANCES");
+    expect(body).toContain("3000"); // le chat des alertes
+  });
+
+  it("se tait quand l'échéance a un plan", async () => {
+    const send = vi.fn().mockResolvedValue({ ok: true, status: 200 });
+    const notifier = createNotifier({
+      telegram: telegram({ fetchImpl: send as unknown as typeof fetch }),
+      journal: createJournal(() => T0),
+      tasks: await storeWith({ next_step_if_success: "envoyer lundi" }),
+    });
+
+    expect(await notifier.watchDeadlines(T0)).toBe(0);
+    expect(send).not.toHaveBeenCalled();
+  });
+
+  it("veille même un jour sans le moindre événement", async () => {
+    const send = vi.fn().mockResolvedValue({ ok: true, status: 200 });
+    const notifier = createNotifier({
+      telegram: telegram({ fetchImpl: send as unknown as typeof fetch }),
+      journal: createJournal(() => T0),
+      tasks: await storeWith(),
+    });
+
+    // Journal vide : `flush` sortait autrefois immédiatement, et l'échéance
+    // passait inaperçue exactement les jours calmes.
+    expect(await notifier.flush(T0)).toBe(1);
+  });
+
+  it("ne veille pas quand aucune tâche n'est branchée", async () => {
+    const notifier = createNotifier({ telegram: telegram(), journal: createJournal(() => T0) });
+    expect(await notifier.watchDeadlines(T0)).toBe(0);
   });
 });

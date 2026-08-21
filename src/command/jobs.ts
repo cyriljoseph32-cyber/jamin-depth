@@ -1,6 +1,6 @@
 import { chatFor, sendText } from "@/agents/adapters/telegram";
-import { buildEveningReport, buildMorningBrief } from "./brief";
-import { formatEveningReport, formatMorningBrief } from "./format";
+import { buildEveningReport, buildMorningBrief, buildWeeklyReport } from "./brief";
+import { formatEveningReport, formatMorningBrief, formatWeeklyReport } from "./format";
 import type { CommandRuntime } from "./runtime";
 
 /**
@@ -11,11 +11,12 @@ import type { CommandRuntime } from "./runtime";
  * d'abord les tâches agents, puis celles-ci — un seul point d'entrée, deux
  * catalogues indépendants.
  *
- * Heures locales (Asia/Bangkok) : brief 08 h, bilan 19 h, récapitulatif toutes
- * les 30 minutes. Les expressions cron de `vercel.json` sont en UTC.
+ * Heures locales (Asia/Bangkok) : brief 08 h, bilan 19 h, bilan hebdomadaire le
+ * dimanche 18 h, récapitulatif toutes les 30 minutes. Les expressions cron de
+ * `vercel.json` sont en UTC.
  */
 
-export const commandJobs = ["morning-brief", "evening-report", "command-digest"] as const;
+export const commandJobs = ["morning-brief", "evening-report", "command-week", "command-digest"] as const;
 export type CommandJob = (typeof commandJobs)[number];
 
 export function isCommandJob(value: string): value is CommandJob {
@@ -28,6 +29,19 @@ export interface CommandJobResult {
   details: string[];
   sent: number;
 }
+
+/** Le titre du rapport au journal, par tâche planifiée. */
+const BRIEF_SUMMARY: Readonly<Record<Exclude<CommandJob, "command-digest">, string>> = {
+  "morning-brief": "Brief opérationnel du matin",
+  "evening-report": "Bilan du soir",
+  "command-week": "Bilan hebdomadaire",
+};
+
+const BRIEF_NEXT: Readonly<Record<Exclude<CommandJob, "command-digest">, string>> = {
+  "morning-brief": "traiter les priorités du jour",
+  "evening-report": "préparer demain",
+  "command-week": "arbitrer les priorités de la semaine",
+};
 
 export async function runCommandJob(
   job: CommandJob,
@@ -47,13 +61,17 @@ export async function runCommandJob(
     journal: rt.journal,
     pending: await rt.agents.queue.pending(),
     leads: await rt.agents.ports.crm.all(),
+    tasks: await rt.tasks.list({ openOnly: true, limit: 200 }),
+    kpis: await rt.kpis.list({ limit: 500 }),
     now,
   };
 
   const text =
     job === "morning-brief"
       ? formatMorningBrief(await buildMorningBrief(deps))
-      : formatEveningReport(await buildEveningReport(deps));
+      : job === "command-week"
+        ? formatWeeklyReport(await buildWeeklyReport(deps))
+        : formatEveningReport(await buildEveningReport(deps));
 
   // Le brief est écrit au journal AVANT d'être envoyé : si Telegram est en
   // panne, il reste consultable par `/brief` au lieu d'avoir disparu.
@@ -64,10 +82,10 @@ export async function runCommandJob(
       type: "BRIEF",
       priority: "P3",
       status: "DONE",
-      summary: job === "morning-brief" ? "Brief opérationnel du matin" : "Bilan du soir",
+      summary: BRIEF_SUMMARY[job],
       details: text,
       links: [],
-      next_action: job === "morning-brief" ? "traiter les priorités du jour" : "préparer demain",
+      next_action: BRIEF_NEXT[job],
       needs_owner: false,
       level: 0,
     },

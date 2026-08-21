@@ -37,6 +37,29 @@ export const eventStatuses = [
 export type CommandStatus = (typeof eventStatuses)[number];
 
 /**
+ * Le domaine d'une tâche ou d'un événement.
+ *
+ * Sert au routage (`routing.ts`) et aux tags Telegram. Volontairement fermé :
+ * une catégorie libre finit en synonymes divergents (« marketing », « mktg »,
+ * « comm »), et un routage sur des synonymes rate sa cible en silence.
+ */
+export const taskCategories = [
+  "sales",
+  "content",
+  "marketing",
+  "partner",
+  "operations",
+  "finance",
+  "support",
+  "product",
+] as const;
+export type TaskCategory = (typeof taskCategories)[number];
+
+export function isTaskCategory(value: string): value is TaskCategory {
+  return (taskCategories as readonly string[]).includes(value);
+}
+
+/**
  * Le niveau d'action, de l'observation à l'irréversible.
  *
  *  0 — Observer : lire, classer, analyser.
@@ -66,6 +89,22 @@ export interface CommandEvent {
   links: readonly string[];
   next_action: string;
   needs_owner: boolean;
+
+  /* --- contexte facultatif : absent des événements de la v1 --- */
+
+  /** La tâche dont cet événement rend compte, quand il y en a une. */
+  task_id?: string;
+  category?: TaskCategory;
+  /** Revenu, temps gagné, risque évité, KPI. Alimente la ligne « Impact ». */
+  impact?: string;
+  /** La preuve : URL du message, du post, du commit, de la réservation. */
+  reference_url?: string;
+  /** La preuve, quand ce n'est pas une URL : message ID, ticket, booking. */
+  reference_id?: string;
+  /** Rempli sur FAILED / ERROR, vide partout ailleurs. */
+  error_message?: string;
+  /** Dépôt émetteur, pour les événements poussés par l'API d'ingestion. */
+  repo?: string;
 
   /* --- champs internes : jamais affichés dans les formats Telegram --- */
 
@@ -113,6 +152,16 @@ export function bangkokClock(iso: string): string {
 export function newEventId(now: string, rand: () => string = randomSuffix): string {
   const local = bangkokTime(now).toISOString();
   return `evt_${local.slice(0, 10).replace(/-/g, "")}_${local.slice(11, 16).replace(":", "")}_${rand()}`;
+}
+
+/**
+ * `task_YYYYMMDD_HHMMSS_<8 hex>` — les secondes, contrairement aux événements.
+ * Deux tâches déléguées dans la même minute sont banales ; deux événements
+ * identiques dans la même minute sont un doublon, que l'empreinte attrape.
+ */
+export function newTaskId(now: string, rand: () => string = randomSuffix): string {
+  const local = bangkokTime(now).toISOString();
+  return `task_${local.slice(0, 10).replace(/-/g, "")}_${local.slice(11, 19).replace(/:/g, "")}_${rand()}`;
 }
 
 function randomSuffix(): string {

@@ -19,11 +19,11 @@ Trois idées, et rien d'autre :
 
 | Niveau | Ce que c'est | Ce qui se passe |
 | --- | --- | --- |
-| 0 — observer | lire, classer, analyser | exécuté, journalisé |
-| 1 — préparer | brouillon, plan, proposition | exécuté, remonte dans le bilan |
-| 2 — réversible | écriture interne, planification non publique | exécuté et notifié |
-| 3 — externe/sensible | envoyer, publier, modifier un dossier client | **attend `/approve`** |
-| 4 — critique | paiement, contrat, accès, incident | **s'arrête et alerte** |
+| A0 — observer | lire, classer, analyser | exécuté, journalisé |
+| A1 — préparer | brouillon, plan, proposition | exécuté, remonte dans le bilan |
+| A2 — réversible | écriture interne, planification non publique | exécuté et notifié |
+| A3 — externe/sensible | envoyer, publier, modifier un dossier client | **attend `/approve`** |
+| A4 — critique | paiement, contrat, accès, incident | **s'arrête et alerte** |
 
 Le niveau est dérivé dans [`levels.ts`](../../src/command/levels.ts) à partir du
 type d'action et de la classe de risque déjà définie par
@@ -62,13 +62,62 @@ reste maître de ses données.
 | `/status [projet]` | événements, blocages, prochaine étape |
 | `/tasks` | tout ce qui est ouvert, du P0 au P3 |
 | `/approve ID` · `/reject ID [raison]` | la décision, sur l'identifiant exact |
-| `/delegate [projet] tâche` · `/priority [sujet]` | créer du travail |
+| `/delegate [projet\|rôle] objectif` · `/priority [sujet]` | créer du travail |
+| `/kpi [projet] [métrique] [valeur]` | saisir un chiffre que le système ne peut pas connaître |
+| `/week` | bilan de la semaine, aussi envoyé le dimanche à 18 h |
 | `/focus [projet]` · `/pause [cible]` · `/resume [cible]` | piloter |
-| `/audit` | actions, erreurs, validations et niveau 4 des 24 h |
+| `/audit` | actions, erreurs, validations et niveau A4 des 24 h |
 
 `/pause` suspend les automatisations non critiques — **jamais** les P0 : une
 alerte de sécurité qu'on aurait mise en sourdine est le seul échec que ce
 système ne peut pas se permettre.
+
+## Les tâches — ce qui doit encore arriver
+
+Le journal dit ce qui s'est passé. Il ne suffisait pas : un événement `PLANNED`
+n'a ni objectif mesurable, ni condition de réussite, ni échéance, donc personne
+ne peut constater qu'il a été oublié. [`tasks.ts`](../../src/command/tasks.ts)
+ferme ce trou.
+
+```
+/delegate RUGBY relancer les écoles de Lamai | fini quand 5 brouillons prêts | avant 2026-09-01
+  → routing.ts : (RUGBY, sales) → communication
+  → tasks.create()   ← refusée si l'objectif tient en un mot ou si « fini quand » manque
+  → journal.append() ← la tâche et son événement naissent ensemble, task_id ↔ event_id
+  → veille 30 min : échéance < 72 h sans suite écrite → alerte
+  → settleTask() → RESULT (ou ERROR) avec sa référence vérifiable
+```
+
+Deux refus mécaniques, écrits dans le code plutôt que dans un prompt :
+
+- **une tâche sans condition de fin n'est pas créée** — sans elle, personne ne
+  pourrait la clore, et elle pourrirait dans la liste ;
+- **un `DONE` sans `reference_url` ni `reference_id` est marqué « non
+  vérifié »** — y compris quand l'agent remplit lui-même le champ `impact`, où
+  la mention se surajoute au lieu de céder la place.
+
+## Les chiffres
+
+Aucun paiement, aucune réservation et aucune inscription ne transitent par ce
+système. Il ne peut donc ni les compter ni les deviner : Cyril les saisit avec
+`/kpi`, et **toute métrique non saisie sort `[À COMPLÉTER PAR CYRIL]`, jamais
+zéro** — une absence de saisie et un zéro constaté ne disent pas la même chose.
+
+Le jour où une vraie source existe, elle poussera dans la même table par l'API
+d'ingestion, sans rien changer aux rapports.
+
+## À qui va une tâche
+
+[`routing.ts`](../../src/command/routing.ts) associe `(activité, catégorie)` à
+un agent qui **existe réellement** : les rôles de ce dépôt pour la plongée
+(`reception`, `content`, `ops`), les `.claude/agents/` des autres dépôts
+ailleurs. Les seize rôles nommés dans le mandat (`growth_director`,
+`diving_sales_agent`…) sont des **alias** vers ces agents — `/delegate` les
+accepte — et non seize nouveaux fichiers qui dédoubleraient l'équipe.
+
+La catégorie `finance` n'a de titulaire nulle part : aucun agent de Cyril ne
+touche à l'argent, et en inventer un router­ait des décisions financières vers
+le vide.
 
 ## Ce qui est vrai même quand tout est éteint
 
@@ -76,6 +125,8 @@ système ne peut pas se permettre.
   redéploiement. `persistent: false` le dit dans les réponses de l'API.
 - Sans Telegram : les événements s'écrivent quand même, ils sont lus plus tard.
 - Sans `COMMAND_INGEST_TOKEN` : l'API répond `401`. Fermée, jamais ouverte.
+- Sans tâches branchées : la veille d'échéances ne remonte rien plutôt que de
+  bloquer le récapitulatif.
 - Le site public n'importe rien de tout ça et se construit sans aucune variable.
 
 Mise en service : [`DEPLOY.md`](./DEPLOY.md), section 5.

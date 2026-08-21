@@ -117,12 +117,14 @@ endpoints planifiés répondent `401` — ils restent fermés, pas ouverts.
 | `weekly-report` | `0 1 * * 1` | lundi 8 h | Bilan hebdo + le message prêt pour Discovery Divers |
 | `morning-brief` | `0 1 * * *` | 8 h | Brief opérationnel COCO COMMAND (toutes activités) |
 | `evening-report` | `0 12 * * *` | 19 h | Bilan du soir COCO COMMAND |
-| `command-digest` | `*/30 * * * *` | toutes les 30 min | Récapitulatif groupé des événements non urgents |
+| `command-week` | `0 11 * * 0` | dimanche 18 h | Bilan hebdomadaire COCO COMMAND |
+| `command-digest` | `*/30 * * * *` | toutes les 30 min | Récapitulatif groupé + veille des échéances à moins de 72 h |
 
-⚠️ Six tâches dont une toutes les 30 minutes : vérifiez le quota de votre offre
+⚠️ Sept tâches dont une toutes les 30 minutes : vérifiez le quota de votre offre
 Vercel. Si elle ne l'autorise pas, supprimez `command-digest` de `vercel.json` —
-les événements urgents partent seuls de toute façon, seul le regroupement des
-P2/P3 est perdu.
+les événements urgents partent seuls de toute façon. Ce qui est perdu : le
+regroupement des P2/P3 **et la veille des échéances**, qui vit dans la même
+tâche. Dans ce cas, `/tasks` reste le filet, à la main.
 
 ---
 
@@ -153,12 +155,39 @@ Relancez ensuite `setWebhook` avec `"allowed_updates": ["callback_query", "messa
 
 ### Les commandes
 
-`/today` · `/brief` · `/report` · `/status [projet]` · `/tasks` ·
-`/approve <event_id>` · `/reject <event_id> [raison]` · `/delegate [projet] tâche` ·
+`/today` · `/brief` · `/report` · `/week` · `/status [projet]` · `/tasks` ·
+`/approve <event_id>` · `/reject <event_id> [raison]` ·
+`/delegate [projet|rôle] objectif` · `/kpi [projet] [métrique] [valeur]` ·
 `/priority [sujet]` · `/focus [projet]` · `/pause [cible]` · `/resume [cible]` ·
 `/audit` · `/help`
 
 Seuls les chats listés dans `TELEGRAM_ALLOWED_CHAT_IDS` peuvent les utiliser.
+
+#### Déléguer une vraie tâche
+
+```
+/delegate RUGBY relancer les écoles de Lamai | fini quand 5 brouillons prêts | avant 2026-09-01
+```
+
+Les deux options sont facultatives. Sans « fini quand », une condition par
+défaut est écrite (« objectif atteint et résultat journalisé avec une référence
+vérifiable ») et la réponse le dit. Un objectif d'un seul mot est **refusé** :
+sans condition de fin vérifiable, la tâche ne pourrait jamais être close.
+
+Le premier mot peut aussi être un rôle du mandat — `/delegate diving_sales_agent
+répondre aux deux Français du 26` — qui est traduit vers l'agent réel.
+
+#### Saisir les chiffres
+
+```
+/kpi DIVING bookings 3 deux Open Water
+/kpi RUGBY signups 2
+```
+
+Métriques : `leads`, `bookings`, `signups`, `revenue_thb`, `content_published`,
+`prospects`. Aucun paiement ni réservation ne transitant par le système, tout ce
+qui n'est pas saisi ressort `[À COMPLÉTER PAR CYRIL]` dans le bilan — jamais
+zéro. `/kpi` sans argument relit les saisies des dernières 24 heures.
 
 ### Brancher un autre projet
 
@@ -187,6 +216,13 @@ curl -X POST https://<votre-domaine>/api/command/events \
 projet ait déclaré : le jeton donne le droit d'écrire dans le journal, jamais
 celui de décider. Le projet d'origine relit la décision avec
 `GET /api/command/events?since=<ISO>&venture=RUGBY`, même jeton.
+
+Champs facultatifs : `category`, `task_id`, `impact`, `reference_url`,
+`reference_id`, `error_message`, `repo`. Un événement `"status": "DONE"` de type
+`ACTION` ou `RESULT` **sans `reference_url` ni `reference_id`** est journalisé,
+mais son `impact` revient marqué « non vérifié — aucune référence fournie ».
+Remplir `impact` soi-même n'y change rien : la mention se surajoute. Un dépôt ne
+se décerne pas son propre certificat d'exécution.
 
 ---
 
