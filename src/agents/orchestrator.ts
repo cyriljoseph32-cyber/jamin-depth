@@ -1,6 +1,7 @@
 import type { Locale } from "@/content/i18n";
 import { POLICIES, isTodo, type Verified } from "./config";
 import { detectLanguage } from "./language";
+import { computeConfidence } from "./confidence";
 import { extract } from "./extract";
 import { auditDraft, detectSensitiveTopics, hasHardStop, requiresHumanApproval, type DraftViolation } from "./policy";
 import { createAuditLog, note, systemClock, type AuditEntry, type AuditLog, type Clock } from "./audit";
@@ -239,13 +240,27 @@ export function createOrchestrator(deps: OrchestratorDeps = {}): Orchestrator {
       const agent = routes[kind];
       note(log, event.id, "orchestrator", "routed", `→ ${agent.name}`);
 
-      const outcome = agent.handle(event, signals);
+      const rawOutcome = agent.handle(event, signals);
+
+      // How sure the language call itself was — an input to computeConfidence(),
+      // not a re-classification: `signals.locale`/`foreignLanguage` above already
+      // came from this same call inside readSignals().
+      const languageConfidence = detectLanguage(event.text, event.locale).confidence;
+
+      // Most agents leave `confidence` unset; the orchestrator is the single
+      // place that ever needs a default, so it computes one here rather than
+      // asking every role file to.
+      const outcome: AgentOutcome =
+        rawOutcome.confidence !== undefined
+          ? rawOutcome
+          : { ...rawOutcome, confidence: computeConfidence({ signals, gaps: rawOutcome.gaps, languageConfidence }) };
+
       note(
         log,
         event.id,
         agent.name,
         "proposed",
-        `${outcome.actions.length} action(s), priorité ${outcome.priority}${
+        `${outcome.actions.length} action(s), priorité ${outcome.priority}, confiance ${outcome.confidence}${
           outcome.gaps.length > 0 ? `, lacunes : ${outcome.gaps.join(" | ")}` : ""
         }`,
       );
@@ -258,16 +273,6 @@ export function createOrchestrator(deps: OrchestratorDeps = {}): Orchestrator {
 
         // Gate 2: what does the message actually say?
         const violations = action.draft ? auditDraft(action.draft.body) : [];
-        if (violations.length > 0) {
-          result.blocked.push({ action, violations });
-          note(
-            log,
-            event.id,
-            agent.name,
-            "blocked",
-            `${action.type} — ${violations.map((v) => `${v.rule} (« ${v.excerpt} »)`).join("; ")}`,
-          );
-        }
 
         const decided: ProposedAction = {
           ...action,
@@ -281,6 +286,27 @@ export function createOrchestrator(deps: OrchestratorDeps = {}): Orchestrator {
               : verdict,
         };
 
+        // Confidence for this specific action, once its final verdict (gate 1
+        // plus any draft-guard violations from gate 2) is known — capped
+        // whenever that verdict requires a human, per `confidence.ts`.
+        const actionConfidence = computeConfidence({
+          signals,
+          gaps: outcome.gaps,
+          languageConfidence,
+          verdict: decided.approval,
+        });
+
+        if (violations.length > 0) {
+          result.blocked.push({ action, violations });
+          note(
+            log,
+            event.id,
+            agent.name,
+            "blocked",
+            `${action.type} — ${violations.map((v) => `${v.rule} (« ${v.excerpt} »)`).join("; ")} · confiance ${actionConfidence}`,
+          );
+        }
+
         if (decided.approval?.required) {
           const item = await queue.enqueue({
             eventId: event.id,
@@ -289,7 +315,13 @@ export function createOrchestrator(deps: OrchestratorDeps = {}): Orchestrator {
             priority: outcome.priority,
           });
           result.queued.push(item);
-          note(log, event.id, agent.name, "queued", `${item.id} · ${action.type} — ${item.reasons.join(", ")}`);
+          note(
+            log,
+            event.id,
+            agent.name,
+            "queued",
+            `${item.id} · ${action.type} — ${item.reasons.join(", ")} · confiance ${actionConfidence}`,
+          );
           if (deps.onQueued) {
             try {
               await deps.onQueued(item);
@@ -305,7 +337,7 @@ export function createOrchestrator(deps: OrchestratorDeps = {}): Orchestrator {
         const run = await executeAction(decided, { ports, event, signals, kind, now: clock() });
         if (run.ok) {
           result.executed.push(decided);
-          note(log, event.id, agent.name, "executed", `${action.type} — ${action.summary}`);
+          note(log, event.id, agent.name, "executed", `${action.type} — ${action.summary} · confiance ${actionConfidence}`);
         } else {
           result.skipped.push({ action: decided, reason: run.reason ?? "unknown" });
           note(log, event.id, agent.name, "skipped", `${action.type} — ${run.reason ?? "raison inconnue"}`);
