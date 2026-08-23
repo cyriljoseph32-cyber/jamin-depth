@@ -9,6 +9,11 @@ import { kpiMetrics, METRIC_LABEL, parseKpi, type KpiStore } from "./kpi";
 import { agentFor, guessCategory, resolveSpecRole, UNASSIGNED } from "./routing";
 import { isPaused, pause, resume, type StateStore } from "./state";
 import { openTask, VagueTaskError, type TaskStore } from "./tasks";
+import {
+  CALENDAR_HORIZON_MS,
+  silentVentures,
+  type ContentStore,
+} from "./content";
 import { bangkokClock, isVenture, ventures, type CommandEvent, type Venture } from "./types";
 
 /**
@@ -36,6 +41,8 @@ export const commandNames = [
   "audit",
   "kpi",
   "week",
+  "contenu",
+  "silence",
   "help",
 ] as const;
 export type CommandName = (typeof commandNames)[number];
@@ -65,6 +72,7 @@ export interface CommandDeps {
   state: StateStore;
   tasks: TaskStore;
   kpis: KpiStore;
+  content: ContentStore;
   /** Ce qu'il faut à `release()` pour exécuter une action approuvée. */
   release: ReleaseDeps;
   leads: () => Promise<readonly Lead[]>;
@@ -84,6 +92,10 @@ export async function runCommand(cmd: ParsedCommand, deps: CommandDeps): Promise
       return status(cmd.args, deps);
     case "tasks":
       return tasks(deps);
+    case "contenu":
+      return contentCalendar(cmd.args, deps);
+    case "silence":
+      return silence(deps);
     case "approve":
     case "reject":
       return decide(cmd, deps);
@@ -114,6 +126,7 @@ async function briefDeps(deps: CommandDeps) {
     leads: await deps.leads(),
     tasks: await deps.tasks.list({ openOnly: true, limit: 200 }),
     kpis: await deps.kpis.list({ limit: 500 }),
+    content: await deps.content.list({ limit: 300 }),
     now: deps.now,
   };
 }
@@ -440,4 +453,69 @@ async function togglePause(cmd: ParsedCommand, deps: CommandDeps): Promise<strin
   return cmd.name === "pause"
     ? `⏸ ${target} en pause — les automatisations non critiques s'arrêtent. Les P0 continuent de remonter.`
     : `▶️ ${target} reprend.`;
+}
+
+/* ------------------------------------------------------------------ *
+ * Calendrier éditorial
+ * ------------------------------------------------------------------ */
+
+/** `/contenu [activité]` — ce qui doit sortir dans les 7 jours. */
+async function contentCalendar(args: string, deps: CommandDeps): Promise<string> {
+  const wanted = args.trim().toUpperCase();
+  const venture = isVenture(wanted) ? wanted : undefined;
+  if (wanted.length > 0 && !venture) {
+    return `Activité inconnue : ${args.trim()}. Attendu : ${ventures.join(", ")}.`;
+  }
+
+  const horizon = new Date(new Date(deps.now).getTime() + CALENDAR_HORIZON_MS).toISOString();
+  const planned = await deps.content.list({ venture, openOnly: true, limit: 100 });
+  const soon = planned.filter((i) => i.scheduled_at !== undefined && i.scheduled_at <= horizon);
+  // Un contenu prêt mais sans date ne sortira jamais tout seul : il mérite
+  // autant d'être vu que celui qui est programmé.
+  const undated = planned.filter((i) => i.scheduled_at === undefined);
+
+  if (soon.length === 0 && undated.length === 0) {
+    return venture
+      ? `Rien de prévu pour #${venture} dans les 7 jours.`
+      : "Rien de prévu dans les 7 jours, aucune activité.";
+  }
+
+  const lines = [`[📅 CALENDRIER — 7 JOURS] ${soon.length + undated.length} contenu(s)`];
+  if (soon.length > 0) {
+    lines.push("", "Programmés :");
+    for (const i of soon) {
+      lines.push(
+        `· ${i.scheduled_at?.slice(0, 10)} #${i.venture} ${i.format}/${i.channel} — ${i.hook} [${i.status}]`,
+      );
+    }
+  }
+  if (undated.length > 0) {
+    lines.push("", "Prêts, sans date :");
+    for (const i of undated) {
+      const missing = i.asset_needed ? ` — manque ${i.asset_needed}` : "";
+      lines.push(`· #${i.venture} ${i.format}/${i.channel} — ${i.hook} [${i.status}]${missing}`);
+    }
+  }
+  return lines.join("\n");
+}
+
+/** `/silence` — les activités muettes depuis plus de 72 heures. */
+async function silence(deps: CommandDeps): Promise<string> {
+  const all = await deps.content.list({ limit: 300 });
+  const silent = silentVentures(all, ventures, deps.now);
+  if (silent.length === 0) return "Aucune activité silencieuse — toutes ont publié sous 72 h.";
+
+  const lines = [`[🔇 SILENCE] ${silent.length} activité(s) muette(s) depuis plus de 72 h`];
+  for (const s of silent) {
+    const last = s.lastPublishedAt
+      ? `dernière publication ${s.lastPublishedAt.slice(0, 10)}`
+      : "aucune publication enregistrée";
+    // Distinction qui change l'action : produire, ou publier ce qui attend.
+    const ready =
+      s.readyToPublish > 0
+        ? ` — ${s.readyToPublish} contenu(s) prêt(s), il manque la publication`
+        : " — rien de prêt, il manque la production";
+    lines.push(`· #${s.venture} : ${last}${ready}`);
+  }
+  return lines.join("\n");
 }

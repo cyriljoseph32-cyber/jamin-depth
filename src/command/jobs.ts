@@ -1,5 +1,9 @@
+import { anthropicDraftGenerator } from "@/agents/adapters/anthropic-content";
 import { chatFor, sendText } from "@/agents/adapters/telegram";
+import { CONTENT_PILLARS } from "@/agents/roles/content";
 import { buildEveningReport, buildMorningBrief, buildWeeklyReport } from "./brief";
+import { composeDivingDraft, pillarForDay } from "./content-draft";
+import { draftContent } from "./content";
 import { formatEveningReport, formatMorningBrief, formatWeeklyReport } from "./format";
 import type { CommandRuntime } from "./runtime";
 
@@ -16,7 +20,13 @@ import type { CommandRuntime } from "./runtime";
  * `vercel.json` sont en UTC.
  */
 
-export const commandJobs = ["morning-brief", "evening-report", "command-week", "command-digest"] as const;
+export const commandJobs = [
+  "morning-brief",
+  "evening-report",
+  "command-week",
+  "command-digest",
+  "coco-contenu",
+] as const;
 export type CommandJob = (typeof commandJobs)[number];
 
 export function isCommandJob(value: string): value is CommandJob {
@@ -30,14 +40,16 @@ export interface CommandJobResult {
   sent: number;
 }
 
+type BriefJob = Exclude<CommandJob, "command-digest" | "coco-contenu">;
+
 /** Le titre du rapport au journal, par tâche planifiée. */
-const BRIEF_SUMMARY: Readonly<Record<Exclude<CommandJob, "command-digest">, string>> = {
+const BRIEF_SUMMARY: Readonly<Record<BriefJob, string>> = {
   "morning-brief": "Brief opérationnel du matin",
   "evening-report": "Bilan du soir",
   "command-week": "Bilan hebdomadaire",
 };
 
-const BRIEF_NEXT: Readonly<Record<Exclude<CommandJob, "command-digest">, string>> = {
+const BRIEF_NEXT: Readonly<Record<BriefJob, string>> = {
   "morning-brief": "traiter les priorités du jour",
   "evening-report": "préparer demain",
   "command-week": "arbitrer les priorités de la semaine",
@@ -57,12 +69,33 @@ export async function runCommandJob(
     return result;
   }
 
+  if (job === "coco-contenu") {
+    const pillar = pillarForDay(now, CONTENT_PILLARS);
+    const generate = anthropicDraftGenerator();
+    const draft = await composeDivingDraft(
+      pillar,
+      "fr",
+      generate ?? (async () => null),
+    );
+    const { item } = await draftContent(draft, {
+      content: rt.content,
+      journal: rt.journal,
+      agent: "content",
+      now,
+    });
+    result.details.push(
+      `Brouillon ${item.content_id} créé (pilier ${pillar.id}${generate ? "" : ", ANTHROPIC_API_KEY absente — habillage déterministe"}) — en attente de validation.`,
+    );
+    return result;
+  }
+
   const deps = {
     journal: rt.journal,
     pending: await rt.agents.queue.pending(),
     leads: await rt.agents.ports.crm.all(),
     tasks: await rt.tasks.list({ openOnly: true, limit: 200 }),
     kpis: await rt.kpis.list({ limit: 500 }),
+    content: await rt.content.list({ limit: 300 }),
     now,
   };
 

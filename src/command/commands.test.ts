@@ -6,6 +6,7 @@ import { createJournal } from "./journal";
 import { createStateStore } from "./state";
 import { createTaskStore } from "./tasks";
 import { createKpiStore } from "./kpi";
+import { createContentStore } from "./content";
 import { parseCommand, runCommand, type CommandDeps } from "./commands";
 import type { CommandEventInput } from "./types";
 
@@ -20,6 +21,7 @@ function deps(over: Partial<CommandDeps> = {}): CommandDeps {
     state: createStateStore(),
     tasks: createTaskStore(() => T0),
     kpis: createKpiStore(() => T0),
+    content: createContentStore(() => T0),
     release: { queue, ports, log: createAuditLog(() => T0) },
     leads: () => ports.crm.all(),
     by: "telegram:cyril",
@@ -271,5 +273,69 @@ describe("/tasks", () => {
     expect(reply).toContain("relancer les écoles de Lamai");
     expect(reply).toContain("Envoyer le pitch à un hôtel");
     expect(reply).toContain("[📌 TÂCHES OUVERTES] 2");
+  });
+});
+
+describe("/contenu", () => {
+  it("liste ce qui sort dans les 7 jours et ce qui attend une date", async () => {
+    const content = createContentStore(() => T0);
+    const d = deps({ content });
+    const soon = await content.create(
+      {
+        venture: "DIVING",
+        channel: "instagram",
+        format: "reel",
+        goal: "conversion",
+        target_audience: "Voyageurs français",
+        hook: "Ton premier souffle sous l'eau",
+        key_message: "Baptême encadré",
+        cta: "Réserve ton créneau",
+        asset_needed: "",
+        caption_draft: "Le baptême, du début à la fin.",
+      },
+      T0,
+    );
+    await content.schedule(soon.content_id, "2026-08-20T03:00:00.000Z", T0);
+
+    const out = await runCommand(parseCommand("/contenu")!, d);
+    expect(out).toContain("CALENDRIER");
+    expect(out).toContain("Ton premier souffle sous l'eau");
+  });
+
+  it("refuse une activité inconnue en la nommant", async () => {
+    const out = await runCommand(parseCommand("/contenu HELMETIK")!, deps());
+    expect(out).toContain("Activité inconnue");
+  });
+
+  it("dit clairement qu'il n'y a rien plutôt que d'afficher un tableau vide", async () => {
+    const out = await runCommand(parseCommand("/contenu")!, deps());
+    expect(out).toContain("Rien de prévu");
+  });
+});
+
+describe("/silence", () => {
+  it("distingue « rien de prêt » de « prêt mais pas publié »", async () => {
+    const content = createContentStore(() => T0);
+    const item = await content.create(
+      {
+        venture: "RUGBY",
+        channel: "instagram",
+        format: "post",
+        goal: "engagement",
+        target_audience: "Familles de Lamai",
+        hook: "La séance de samedi en images",
+        key_message: "Esprit d'équipe",
+        cta: "Viens essayer",
+        asset_needed: "",
+        caption_draft: "Retour sur la séance.",
+      },
+      T0,
+    );
+    await content.setStatus(item.content_id, "APPROVED", T0);
+
+    const out = await runCommand(parseCommand("/silence")!, deps({ content }));
+    expect(out).toContain("#RUGBY");
+    expect(out).toContain("il manque la publication");
+    expect(out).toContain("il manque la production");
   });
 });

@@ -5,9 +5,11 @@ import type { QueuedItem } from "@/agents/queue";
 import { createJournal, type Journal } from "./journal";
 import { createStateStore, type StateStore } from "./state";
 import { createTaskStore, type TaskStore } from "./tasks";
+import { createContentStore, type ContentStore } from "./content";
 import { createKpiStore, type KpiStore } from "./kpi";
 import { createSupabaseJournal, createSupabaseStateStore } from "./adapters/journal-supabase";
 import { createSupabaseKpiStore, createSupabaseTaskStore } from "./adapters/tasks-supabase";
+import { createSupabaseContentStore } from "./adapters/content-supabase";
 import { createNotifier, type Notifier } from "./notify";
 import type { CommandDeps } from "./commands";
 import type { CommandEventInput } from "./types";
@@ -28,6 +30,7 @@ export interface CommandRuntime {
   state: StateStore;
   tasks: TaskStore;
   kpis: KpiStore;
+  content: ContentStore;
   notifier: Notifier;
   /** Vrai quand le journal survit à un redéploiement. */
   persistent: boolean;
@@ -46,6 +49,7 @@ let memoryJournal: Journal | undefined;
 let memoryState: StateStore | undefined;
 let memoryTasks: TaskStore | undefined;
 let memoryKpis: KpiStore | undefined;
+let memoryContent: ContentStore | undefined;
 
 export function createCommandRuntime(): CommandRuntime {
   const supabase = supabaseFromEnv();
@@ -55,11 +59,15 @@ export function createCommandRuntime(): CommandRuntime {
     memoryState ??= createStateStore();
     memoryTasks ??= createTaskStore(clock);
     memoryKpis ??= createKpiStore(clock);
+    memoryContent ??= createContentStore(clock);
   }
   const journal = supabase ? createSupabaseJournal(supabase, clock) : (memoryJournal as Journal);
   const state = supabase ? createSupabaseStateStore(supabase) : (memoryState as StateStore);
   const tasks = supabase ? createSupabaseTaskStore(supabase, clock) : (memoryTasks as TaskStore);
   const kpis = supabase ? createSupabaseKpiStore(supabase, clock) : (memoryKpis as KpiStore);
+  const content = supabase
+    ? createSupabaseContentStore(supabase, clock)
+    : (memoryContent as ContentStore);
 
   // Toute action mise en file par le système plongée devient un événement du
   // journal : c'est ce qui rend `/tasks` et `/approve <event_id>` capables de
@@ -80,7 +88,7 @@ export function createCommandRuntime(): CommandRuntime {
 
   const notifier = createNotifier({ telegram: agents.telegram, journal, tasks });
 
-  return { agents, journal, state, tasks, kpis, notifier, persistent: supabase !== null };
+  return { agents, journal, state, tasks, kpis, content, notifier, persistent: supabase !== null };
 }
 
 /** Un item de la file de validation, vu comme un événement du journal. */
@@ -138,6 +146,7 @@ export function commandDeps(rt: CommandRuntime, by: string, now: string): Comman
     state: rt.state,
     tasks: rt.tasks,
     kpis: rt.kpis,
+    content: rt.content,
     release: {
       queue: rt.agents.queue,
       ports: rt.agents.ports,
