@@ -155,7 +155,20 @@ export const FOLLOW_UP = {
  * blocks a reply, a human handoff.
  */
 export const POLICIES = {
-  cancellation: TODO as Verified<string>,
+  /**
+   * Discovery Divers' own printed cancellation policy — confirmed by the owner
+   * from the partner centre's paper form (photographed and handed over
+   * directly), not scraped from a reseller page. This is what a refund
+   * question is actually decided against.
+   */
+  cancellation:
+    "Politique du centre partenaire (Discovery Divers) : annulation gratuite jusqu'à 24h avant l'heure de départ (frais de 5% si le paiement a été fait par carte ou PayPal ; calculé à la minute près). Annulation à moins de 24h avant le départ, ou absence au rendez-vous : facturée 100% du montant, sans exception, calculé à la minute près. Un retard qui empêche de rejoindre une sortie déjà partie est traité comme une annulation du jour et n'est pas remboursable ; un report reste possible s'il y a de la place, moyennant 2000 THB par personne. Un plongeur non certifié qui n'arrive pas à se mettre à l'eau (peur, panique) n'est pas remboursé non plus : la place, le matériel et le temps du staff ont déjà été mobilisés." as Verified<string>,
+  /**
+   * Confirmed from the same document. Frequently asked and safety-relevant —
+   * decompression sickness risk rises with altitude too soon after diving.
+   */
+  flyingAfterDiving:
+    "Ne jamais prendre l'avion le jour même d'une plongée. Attendre au moins 18h avant toute activité au-dessus de 300 m d'altitude (vol inclus) après une plongée en mer — en général, un vol pris après 8h le lendemain matin est acceptable. Le staff peut refuser une plongée prévue si elle mettrait en danger un vol déjà réservé ; c'est alors traité comme une annulation du jour, non remboursable." as Verified<string>,
   deposit: TODO as Verified<string>,
   paymentMethods: TODO as Verified<readonly string[]>,
   meetingPoint: TODO as Verified<string>,
@@ -192,15 +205,18 @@ export const POLICIES = {
   /**
    * The protocol to follow when a diver discloses something medical.
    *
-   * **Partial, on purpose.** The site states two things and no more: a medical
-   * questionnaire is completed, and the centre may refuse anyone judged unfit to
-   * dive (alcohol in particular). It says nothing about specific
-   * contraindications or the standard PADI medical certificate — so this text
+   * **Partial, on purpose.** The site confirmed a questionnaire and a right to
+   * refuse; Discovery Divers' own printed form (photographed, handed over
+   * directly by the owner) adds the procedure: the questionnaire link travels
+   * in the confirmation e-mail, must be completed before arrival, and a
+   * disclosed condition without a doctor's signed waiver means no dive AND no
+   * refund. It still does not list which conditions actually disqualify
+   * someone, or mention the standard PADI medical certificate — so this text
    * says that too, and travels with every escalation. A protocol that pretended
    * to be complete would be read as one.
    */
   medicalProtocol:
-    "Questionnaire médical à compléter avant de plonger. Le centre peut refuser la plongée à toute personne jugée inapte (alcool notamment). NON COUVERT : contre-indications précises et certificat médical PADI — à confirmer avec le centre, et à trancher par un humain au cas par cas." as Verified<string>,
+    "Le questionnaire médical (« Diver Medical Questionnaire ») est envoyé par lien dans l'e-mail de confirmation et doit être complété avant l'arrivée. Le centre peut refuser la plongée à toute personne jugée inapte (alcool notamment), ou si le questionnaire révèle une condition nécessitant une décharge signée par un médecin qui n'a pas été fournie — dans ce cas, aucun remboursement (la place retirée de la liste d'attente n'est pas récupérable). Le centre peut recommander un médecin local si besoin. NON COUVERT : liste précise des contre-indications et certificat médical PADI standard — à confirmer avec le centre, et à trancher par un humain au cas par cas." as Verified<string>,
   /** Documents to bring on day one. Confirmed from the site. */
   requiredDocuments: [
     "carte de certification (vérification en ligne possible si elle est perdue)",

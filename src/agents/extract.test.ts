@@ -137,6 +137,9 @@ describe("detectPolicyQuestions", () => {
     expect(detectPolicyQuestions("what's your cancellation policy?")).toContain("cancellation");
     expect(detectPolicyQuestions("on se retrouve où ?")).toContain("meetingPoint");
     expect(detectPolicyQuestions("à quelle heure le départ ?")).toContain("boatSchedule");
+    expect(detectPolicyQuestions("je peux prendre l'avion le lendemain ?")).toContain(
+      "flyingAfterDiving",
+    );
   });
 
   it("stays quiet on a plain enquiry", () => {
