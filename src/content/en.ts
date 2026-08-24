@@ -462,6 +462,16 @@ export const en = {
         a: "Weather, current and visibility decide the day, and we'd rather move a dive than force one. If that happens, we sort out a new date or a refund directly with you — no small print, just a conversation.",
         confirmed: true,
       },
+      {
+        q: "What's the cancellation policy if I need to pull out?",
+        a: "Free cancellation up to 24h before departure (a 5% fee applies if you paid by card or PayPal). Under 24h, or a no-show at the meeting point, the trip is charged in full — the space, the gear and the staff's time are already committed. Rescheduling stays possible depending on availability, for ฿2,000 per person.",
+        confirmed: true,
+      },
+      {
+        q: "Can I fly right after diving?",
+        a: "Never on the same day as a dive. Wait at least 18h before any activity at altitude, flights included — in practice, a flight after 8am the next morning is fine. This is a strict safety rule against decompression sickness, not a suggestion.",
+        confirmed: true,
+      },
     ],
   },
 

@@ -174,7 +174,11 @@ texte, à dessein.
    que le système réponde lui-même dans ces langues. Je ne ferai pas traduire les gabarits par un
    modèle : ils portent des formulations de sécurité, et une nuance perdue sur « savoir nager » ou
    sur un point médical ne se rattrape pas.
-9. *(décision distincte)* Ces deux politiques sont confirmées **en interne** (`config.ts`), mais
-   ne sont pas encore citées mot pour mot à un client comme la FAQ du site l'est : les publier
-   comme réponse directe est une décision de contenu, pas une simple confirmation de fait — dites-
-   moi si vous voulez que je les ajoute à la FAQ FR/EN du site.
+9. ~~Publication de ces deux politiques dans la FAQ du site~~ **fait**, sur demande explicite du
+   propriétaire : `POLICIES.cancellation` et `POLICIES.flyingAfterDiving` sont maintenant citées
+   dans `src/content/fr.ts` et `en.ts` (`faq.items`, `confirmed: true`), avec le même garde-fou de
+   sortie que les neuf autres réponses. Le frais de report (฿2,000) a nécessité une petite
+   extension du garde-fou : `src/agents/catalog.ts` distingue désormais les tarifs d'offre
+   (`OFFERS`) des frais confirmés hors catalogue (`CONFIRMED_FEES`), chacun avec sa propre source
+   auditable — le garde-fou n'accepte toujours que des chiffres explicitement approuvés, il en
+   connaît simplement une deuxième catégorie.

@@ -418,6 +418,16 @@ export const fr: Dictionary = {
         a: "La météo, le courant et la visibilité décident de la journée, et nous préférons décaler une plongée que la forcer. Le cas échéant, on convient d'une nouvelle date ou d'un remboursement directement avec vous — pas de petites lignes, juste une conversation.",
         confirmed: true,
       },
+      {
+        q: "Quelle est la politique d'annulation si je me désiste ?",
+        a: "Annulation gratuite jusqu'à 24h avant le départ (frais de 5% si vous avez payé par carte ou PayPal). En dessous de 24h, ou en cas d'absence au point de rendez-vous, la sortie est facturée en totalité — la place, le matériel et le temps du staff sont déjà mobilisés. Un report reste possible selon les disponibilités, moyennant ฿2,000 par personne.",
+        confirmed: true,
+      },
+      {
+        q: "Puis-je prendre l'avion juste après avoir plongé ?",
+        a: "Jamais le jour même d'une plongée. Comptez au moins 18h avant toute activité en altitude, vol compris — en pratique, un vol pris après 8h le lendemain matin convient. C'est une règle de sécurité stricte contre les accidents de décompression, pas une simple recommandation.",
+        confirmed: true,
+      },
     ],
   },
 
