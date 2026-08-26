@@ -144,12 +144,15 @@ describe("runJob('weekly-report')", () => {
     const supplier = pending.find((p) => p.action.type === "supplier_message");
     expect(supplier).toBeDefined();
     expect(supplier?.reasons).toContain("rule:external-commitment");
-    // The list shrinks as config.ts fills in: documents, the medical procedure
-    // and cancellation are confirmed now (the last one from Discovery Divers'
-    // own printed form), deposit is not.
-    expect(supplier?.action.draft?.body).toMatch(/deposit/i);
+    // The list shrinks as config.ts fills in: documents, the medical procedure,
+    // cancellation (from Discovery Divers' own printed form), and deposit and
+    // pickup (confirmed directly by the owner) are all confirmed now;
+    // paymentMethods is not.
+    expect(supplier?.action.draft?.body).toMatch(/payment methods/i);
     expect(supplier?.action.draft?.body).not.toMatch(/cancellation/i);
     expect(supplier?.action.draft?.body).not.toMatch(/medical condition/i);
+    expect(supplier?.action.draft?.body).not.toMatch(/deposit/i);
+    expect(supplier?.action.draft?.body).not.toMatch(/hotel pick-up/i);
   });
 });
 
