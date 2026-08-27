@@ -169,10 +169,21 @@ export const POLICIES = {
    */
   flyingAfterDiving:
     "Ne jamais prendre l'avion le jour même d'une plongée. Attendre au moins 18h avant toute activité au-dessus de 300 m d'altitude (vol inclus) après une plongée en mer — en général, un vol pris après 8h le lendemain matin est acceptable. Le staff peut refuser une plongée prévue si elle mettrait en danger un vol déjà réservé ; c'est alors traité comme une annulation du jour, non remboursable." as Verified<string>,
-  deposit: TODO as Verified<string>,
+  /**
+   * Confirmed by the owner (26/08/2026): there is no fixed amount — the
+   * partner sets the deposit per reservation, based on what is actually
+   * booked (activity, duration, group size).
+   */
+  deposit:
+    "Pas de montant fixe : l'acompte dépend de ce qui est réservé (activité, durée, nombre de personnes) — déterminé par le centre partenaire au moment de la réservation." as Verified<string>,
   paymentMethods: TODO as Verified<readonly string[]>,
   meetingPoint: TODO as Verified<string>,
-  pickupIncluded: TODO as Verified<boolean>,
+  /**
+   * Confirmed by the owner (26/08/2026): transfer is offered, but which
+   * hotels/areas it covers depends on the guest's hotel — checked per booking,
+   * not a single site-wide policy.
+   */
+  pickupIncluded: true as Verified<boolean>,
   /**
    * When the centre can be REACHED — confirmed from the site.
    *

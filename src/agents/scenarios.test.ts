@@ -230,9 +230,9 @@ describe("scénario 6 — la veille au soir et le bilan de la semaine", () => {
     expect(body).toMatch(/- whatsapp : 1/);
     expect(body).toMatch(/- instagram : 1/);
     expect(body).toMatch(/En attente de validation humaine : \d+/);
-    // cancellation is confirmed now (Discovery Divers' printed form); deposit
-    // still isn't.
-    expect(body).toMatch(/policies\.deposit/);
+    // cancellation, deposit and pickupIncluded are confirmed now (Discovery
+    // Divers' printed form, then the owner directly); paymentMethods still isn't.
+    expect(body).toMatch(/policies\.paymentMethods/);
     expect(body).toMatch(/Canaux désactivés/);
     expect(report.gaps.length).toBeGreaterThan(0);
   });
