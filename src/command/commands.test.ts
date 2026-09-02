@@ -120,6 +120,75 @@ describe("/approve et /reject", () => {
     expect(settled?.status).toBe("BLOCKED");
     expect(settled?.details).toContain("hors budget");
   });
+
+  it("approuver un événement de contenu fait avancer le contenu lié en APPROVED", async () => {
+    const d = deps();
+    const item = await d.content.create({
+      venture: "DIVING",
+      channel: "instagram",
+      format: "post",
+      goal: "awareness",
+      target_audience: "voyageurs",
+      hook: "hook",
+      key_message: "",
+      cta: "cta",
+      asset_needed: "",
+      caption_draft: "légende",
+      status: "WAITING_APPROVAL",
+    });
+    const event = await d.journal.append(waiting({ links: [item.content_id] }));
+
+    const reply = await runCommand({ name: "approve", args: event.event_id }, d);
+
+    expect(reply).toContain("Contenu passé en APPROVED");
+    expect((await d.content.get(item.content_id))?.status).toBe("APPROVED");
+  });
+
+  it("rejeter un événement de contenu abandonne le contenu lié", async () => {
+    const d = deps();
+    const item = await d.content.create({
+      venture: "DIVING",
+      channel: "instagram",
+      format: "post",
+      goal: "awareness",
+      target_audience: "voyageurs",
+      hook: "hook",
+      key_message: "",
+      cta: "cta",
+      asset_needed: "",
+      caption_draft: "légende",
+      status: "WAITING_APPROVAL",
+    });
+    const event = await d.journal.append(waiting({ links: [item.content_id] }));
+
+    const reply = await runCommand({ name: "reject", args: `${event.event_id} pas le bon ton` }, d);
+
+    expect(reply).toContain("Contenu abandonné");
+    expect((await d.content.get(item.content_id))?.status).toBe("ABANDONED");
+  });
+
+  it("ne touche pas un contenu déjà programmé ou publié entre-temps", async () => {
+    const d = deps();
+    const item = await d.content.create({
+      venture: "DIVING",
+      channel: "instagram",
+      format: "post",
+      goal: "awareness",
+      target_audience: "voyageurs",
+      hook: "hook",
+      key_message: "",
+      cta: "cta",
+      asset_needed: "",
+      caption_draft: "légende",
+      status: "WAITING_APPROVAL",
+    });
+    await d.content.schedule(item.content_id, "2026-08-25T00:00:00.000Z", T0);
+    const event = await d.journal.append(waiting({ links: [item.content_id] }));
+
+    await runCommand({ name: "approve", args: event.event_id }, d);
+
+    expect((await d.content.get(item.content_id))?.status).toBe("SCHEDULED");
+  });
 });
 
 describe("pilotage", () => {
