@@ -303,12 +303,26 @@ async function decide(cmd: ParsedCommand, deps: CommandDeps): Promise<string> {
     }
   }
 
-  // Événement poussé par un autre projet : il n'y a rien à exécuter ici, la
-  // décision est enregistrée et le projet d'origine la relit sur l'API.
+  // Un événement de calendrier éditorial (draftContent) lie un content_id dans
+  // ses `links` : approuver l'événement doit faire avancer le contenu dans son
+  // propre cycle, sinon la décision de Cyril ne bouge rien dans `/contenu` et
+  // reste purement cosmétique. Idempotent — seul un contenu encore en attente
+  // est touché, jamais un déjà programmé ou publié entre-temps.
+  const contentId = event.links.find((link) => link.startsWith("content_"));
+  if (contentId) {
+    const item = await deps.content.get(contentId);
+    if (item && item.status === "WAITING_APPROVAL") {
+      await deps.content.setStatus(contentId, approving ? "APPROVED" : "ABANDONED", deps.now);
+    }
+  }
+
+  // Événement poussé par un autre projet : il n'y a rien d'autre à exécuter
+  // ici, la décision est enregistrée et le projet d'origine la relit sur l'API.
   const status = approving ? "DONE" : "BLOCKED";
   const verb = approving ? "Approuvé" : "Rejeté";
   await deps.journal.setStatus(id, status, `${verb} par ${deps.by}${reason ? ` — ${reason}` : ""}.`);
-  return `${approving ? "✅" : "✖️"} ${id} ${approving ? "approuvé" : "rejeté"} — décision enregistrée pour ${event.venture}.`;
+  const contentNote = contentId ? approving ? " Contenu passé en APPROVED." : " Contenu abandonné." : "";
+  return `${approving ? "✅" : "✖️"} ${id} ${approving ? "approuvé" : "rejeté"} — décision enregistrée pour ${event.venture}.${contentNote}`;
 }
 
 /* ------------------------------------------------------------------ *
