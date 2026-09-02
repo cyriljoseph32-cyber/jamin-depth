@@ -198,6 +198,14 @@ export interface AgentOutcome {
   gaps: string[];
   escalation?: Escalation;
   notes: string[];
+  /**
+   * 0-100 confidence in this proposal, from `confidence.ts::computeConfidence()`.
+   * Optional here because most agents do not set it themselves — the
+   * orchestrator fills it in from signals, gaps and the policy verdict when
+   * an agent leaves it unset, so every `AgentOutcome` it journals ends up
+   * with one.
+   */
+  confidence?: number;
 }
 
 export const agentNames = [

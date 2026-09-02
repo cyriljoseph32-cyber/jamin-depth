@@ -124,7 +124,7 @@ describe("scénario 3 — question médicale", () => {
 
     // The confirmed (partial) protocol travels with the escalation, including
     // what it does NOT cover — a partial protocol must not read as a complete one.
-    expect(escalation?.body).toMatch(/Questionnaire médical/);
+    expect(escalation?.body).toMatch(/questionnaire médical/i);
     expect(escalation?.body).toMatch(/NON COUVERT/);
   });
 });
@@ -230,7 +230,9 @@ describe("scénario 6 — la veille au soir et le bilan de la semaine", () => {
     expect(body).toMatch(/- whatsapp : 1/);
     expect(body).toMatch(/- instagram : 1/);
     expect(body).toMatch(/En attente de validation humaine : \d+/);
-    expect(body).toMatch(/policies\.cancellation/);
+    // cancellation, deposit and pickupIncluded are confirmed now (Discovery
+    // Divers' printed form, then the owner directly); paymentMethods still isn't.
+    expect(body).toMatch(/policies\.paymentMethods/);
     expect(body).toMatch(/Canaux désactivés/);
     expect(report.gaps.length).toBeGreaterThan(0);
   });

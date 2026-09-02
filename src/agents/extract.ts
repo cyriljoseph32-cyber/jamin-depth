@@ -352,6 +352,12 @@ const POLICY_QUESTION_RULES: readonly { key: string; re: RegExp }[] = [
   },
   { key: "insurance", re: words("assurance|insurance|couvert\\w*|covered") },
   {
+    key: "flyingAfterDiving",
+    re: words(
+      "prendre\\s+l'avion|avion\\s+(?:le\\s+m[êe]me\\s+jour|apr[èe]s|demain)|fly\\w*\\s+(?:after|the\\s+same\\s+day)|flight\\s+after\\s+div\\w*|altitude\\s+apr[èe]s|caisson\\s+hyperbare",
+    ),
+  },
+  {
     key: "minorMinimumAge",
     re: words(
       "[âa]ge\\s+minimum|mon\\s+fils|ma\\s+fille|enfants?|kids?|child|children|ans\\s.{0,12}(peut|plonger)|years?\\s+old",

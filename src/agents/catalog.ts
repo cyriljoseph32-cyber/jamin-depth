@@ -148,9 +148,26 @@ export function offersFor(activity: Activity): Offer[] {
   });
 }
 
+/**
+ * Confirmed figures that are not dive/course prices but are still safe to
+ * write down — a fee, not an offer. Each needs its own `source`, same
+ * discipline as `Offer`, so the guard's allowlist never grows on trust alone.
+ */
+const CONFIRMED_FEES: readonly { id: string; thb: number; source: string }[] = [
+  {
+    id: "rescheduling_fee",
+    thb: 2000,
+    source:
+      "Discovery Divers cancellation policy (printed form, photographed and provided by the owner).",
+  },
+];
+
 /** Every price an agent is allowed to write down. Used by the draft guard. */
 export function quotablePrices(): number[] {
-  return OFFERS.map((o) => verified(o.fromPriceTHB)).filter((p): p is number => p !== null);
+  const offerPrices = OFFERS.map((o) => verified(o.fromPriceTHB)).filter(
+    (p): p is number => p !== null,
+  );
+  return [...offerPrices, ...CONFIRMED_FEES.map((f) => f.thb)];
 }
 
 /** `฿5,850` — the format already used across the site. */

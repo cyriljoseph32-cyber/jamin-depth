@@ -143,24 +143,30 @@ Jammin's Depths. Les inscrire comme vérifiées les ferait citer à un client co
 
 | Piste | Source | Ce qu'il faut confirmer |
 | --- | --- | --- |
-| « Annulation gratuite jusqu'à 24 h avant, réservation sans paiement immédiat » | GetYourGuide / Viator | Est-ce la politique du centre, ou seulement celle de la plateforme ? Et quelle est la nôtre ? |
 | « Divers assurés via le programme PADI Asia Pacific » | pages revendeurs | À confirmer auprès du centre, et préciser ce qui est couvert |
 | « Membre du réseau de caissons SSS » | pages revendeurs | Fait vérifiable, utile en cas d'incident — à confirmer |
 | « Savoir nager, déclarer toute condition médicale avant réservation » | pages revendeurs | Formulation exacte de l'exigence, et **qui décide** de l'aptitude |
 | Horaires d'ouverture du centre | 10 h–21 h *et* 11 h–18 h selon les pages | Deux valeurs contradictoires sur le même domaine — inutilisable en l'état |
 
-La page qui ferait autorité est `discoverydivers.com/faqs/`. Deux façons de débloquer :
-copiez-collez son contenu (je remplis `config.ts` en une passe), ou approuvez le message de
-questions que le rapport hebdomadaire prépare déjà pour le centre.
+Ces quatre-là restent ouverts. **L'annulation, en revanche, n'est plus dans ce tableau** : le
+propriétaire a photographié et transmis directement le formulaire papier de Discovery Divers
+(« Cancellations », remis aux clients) — une source primaire du centre, pas un extrait de
+revendeur contradictoire. `POLICIES.cancellation` et `POLICIES.flyingAfterDiving` sont maintenant
+confirmés dans `config.ts` à partir de ce document, et `POLICIES.medicalProtocol` a été complété
+avec le déroulé qu'il décrit (questionnaire envoyé par lien dans l'e-mail de confirmation, à
+compléter avant l'arrivée). Ce que le document ne donne toujours pas — la liste précise des
+contre-indications médicales et le certificat PADI standard — reste marqué `NON COUVERT` dans le
+texte, à dessein.
 
 ## Ce qu'il reste à faire, par ordre d'utilité
 
 1. **Renseigner les approbateurs** (question 4). Une ligne dans `config.ts`.
-2. **Compléter le protocole médical** : contre-indications précises et certificat médical PADI —
-   la seule partie sécurité encore ouverte.
+2. **Compléter le protocole médical** : il ne manque plus que la liste précise des contre-
+   indications et le certificat médical PADI standard — la seule partie sécurité encore ouverte.
 3. **Confirmer point de rendez-vous, horaires de départ, transport** avec Discovery Divers.
    Débloque le message pré-activité et la liste de la veille.
-4. **Politique d'annulation, acompte, moyens de paiement.** Les questions les plus fréquentes.
+4. ~~Politique d'annulation~~ **confirmée** (`POLICIES.cancellation`, `POLICIES.flyingAfterDiving`)
+   à partir du formulaire papier du centre. Restent **acompte et moyens de paiement**.
 5. **Âge minimum et assurance.**
 6. **Confirmer l'adresse e-mail** ou renoncer au canal.
 7. **Fournir de vrais échanges clients** pour enrichir la base de connaissance au-delà de la FAQ.
@@ -168,3 +174,11 @@ questions que le rapport hebdomadaire prépare déjà pour le centre.
    que le système réponde lui-même dans ces langues. Je ne ferai pas traduire les gabarits par un
    modèle : ils portent des formulations de sécurité, et une nuance perdue sur « savoir nager » ou
    sur un point médical ne se rattrape pas.
+9. ~~Publication de ces deux politiques dans la FAQ du site~~ **fait**, sur demande explicite du
+   propriétaire : `POLICIES.cancellation` et `POLICIES.flyingAfterDiving` sont maintenant citées
+   dans `src/content/fr.ts` et `en.ts` (`faq.items`, `confirmed: true`), avec le même garde-fou de
+   sortie que les neuf autres réponses. Le frais de report (฿2,000) a nécessité une petite
+   extension du garde-fou : `src/agents/catalog.ts` distingue désormais les tarifs d'offre
+   (`OFFERS`) des frais confirmés hors catalogue (`CONFIRMED_FEES`), chacun avec sa propre source
+   auditable — le garde-fou n'accepte toujours que des chiffres explicitement approuvés, il en
+   connaît simplement une deuxième catégorie.
