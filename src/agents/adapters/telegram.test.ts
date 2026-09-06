@@ -3,12 +3,15 @@ import {
   callbackData,
   chatFor,
   createTelegramMessaging,
+  eventCallbackData,
   formatCard,
   isAllowed,
   parseCallbackData,
+  parseEventCallbackData,
   readCallback,
   readMessage,
   sendApprovalCard,
+  sendDecisionCard,
   verifyWebhookSecret,
   type TelegramConfig,
 } from "./telegram";
@@ -84,6 +87,47 @@ describe("callback data", () => {
     for (const bad of [undefined, "", "q:only-two", "x:id:approve", "q:id:delete", "q::approve", "q:id:approve:extra"]) {
       expect(parseCallbackData(bad), String(bad)).toBeNull();
     }
+  });
+});
+
+describe("event callback data", () => {
+  it("round-trips a journal event id and fits the 64-byte limit", () => {
+    const eventId = "evt_20260824_0115_ab12cd34";
+    const data = eventCallbackData(eventId, "approve");
+    expect(Buffer.byteLength(data, "utf8")).toBeLessThanOrEqual(64);
+    expect(parseEventCallbackData(data)).toEqual({ id: eventId, decision: "approve" });
+  });
+
+  it("never gets read as a queue callback, or vice versa — the prefix is the whole disambiguation", () => {
+    const eventData = eventCallbackData("evt_1", "reject");
+    const queueData = callbackData("q-item-1", "reject");
+    expect(parseCallbackData(eventData)).toBeNull();
+    expect(parseEventCallbackData(queueData)).toBeNull();
+  });
+
+  it("refuses anything malformed", () => {
+    for (const bad of [undefined, "", "e:only-two", "q:evt_1:approve", "e:evt_1:delete", "e::approve"]) {
+      expect(parseEventCallbackData(bad), String(bad)).toBeNull();
+    }
+  });
+});
+
+describe("sendDecisionCard", () => {
+  it("attaches exactly the two callback_data strings it was given", async () => {
+    const fetchImpl = vi.fn(async () => new Response("{}", { status: 200 })) as unknown as typeof fetch;
+    const result = await sendDecisionCard(
+      config({ fetchImpl }),
+      "Un brouillon de contenu à valider",
+      "e:evt_1:approve",
+      "e:evt_1:reject",
+    );
+    expect(result.ok).toBe(true);
+
+    const [, init] = (fetchImpl as unknown as ReturnType<typeof vi.fn>).mock.calls[0] as [string, RequestInit];
+    const body = JSON.parse(String(init.body));
+    const [approve, reject] = body.reply_markup.inline_keyboard[0];
+    expect(approve.callback_data).toBe("e:evt_1:approve");
+    expect(reject.callback_data).toBe("e:evt_1:reject");
   });
 });
 

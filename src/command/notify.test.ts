@@ -93,10 +93,14 @@ describe("chatForEvent", () => {
 
 describe("createNotifier", () => {
   function withFetch() {
-    const calls: { chat: string; text: string }[] = [];
+    const calls: { chat: string; text: string; hasButtons: boolean }[] = [];
     const fetchImpl = vi.fn(async (_url: string, init: RequestInit) => {
-      const body = JSON.parse(String(init.body)) as { chat_id: string; text: string };
-      calls.push({ chat: body.chat_id, text: body.text });
+      const body = JSON.parse(String(init.body)) as {
+        chat_id: string;
+        text: string;
+        reply_markup?: unknown;
+      };
+      calls.push({ chat: body.chat_id, text: body.text, hasButtons: body.reply_markup !== undefined });
       return new Response("{}", { status: 200 });
     }) as unknown as typeof fetch;
     return { calls, cfg: telegram({ fetchImpl }) };
@@ -140,6 +144,34 @@ describe("createNotifier", () => {
 
     expect(calls.map((c) => c.chat)).toEqual(["3000", "4000"]);
     expect(calls[0]?.text).toContain("🚨");
+  });
+
+  it("porte deux boutons plutôt qu'un /approve à retaper, pour tout ce qui attend une décision", async () => {
+    const { calls, cfg } = withFetch();
+    const journal = createJournal(() => T0);
+    const notifier = createNotifier({ telegram: cfg, journal });
+
+    const waiting = await journal.append(
+      input({ status: "WAITING_APPROVAL", needs_owner: true, summary: "Brouillon Instagram" }),
+      T0,
+    );
+    expect(await notifier.announce(waiting, T0)).toBe(true);
+    expect(calls[0]?.hasButtons).toBe(true);
+  });
+
+  it("n'ajoute pas de boutons à une alerte — elle appelle une action, pas une décision réversible", async () => {
+    const { calls, cfg } = withFetch();
+    const journal = createJournal(() => T0);
+    const notifier = createNotifier({ telegram: cfg, journal });
+
+    // P0 et needs_owner en même temps : le texte d'alerte l'emporte quand même,
+    // exactement comme formatEvent() choisit formatAlert avant formatApproval.
+    const alert = await journal.append(
+      input({ priority: "P0", needs_owner: true, type: "ALERT", summary: "Incident" }),
+      T0,
+    );
+    expect(await notifier.announce(alert, T0)).toBe(true);
+    expect(calls[0]?.hasButtons).toBe(false);
   });
 
   it("n'échoue pas quand Telegram n'est pas configuré", async () => {

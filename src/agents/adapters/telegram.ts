@@ -162,6 +162,26 @@ export function parseCallbackData(
 }
 
 /**
+ * Same shape, `e:` prefix — a COCO COMMAND journal event (`evt_…`) rather than
+ * an agents' queue item (`uuid`). Kept distinct so a stray digit never lets one
+ * ID type be misread as the other; `q:`/`e:` is the whole disambiguation.
+ */
+export function eventCallbackData(eventId: string, decision: "approve" | "reject"): string {
+  return `e:${eventId}:${decision}`;
+}
+
+export function parseEventCallbackData(
+  data: string | undefined,
+): { id: string; decision: "approve" | "reject" } | null {
+  if (!data) return null;
+  const parts = data.split(":");
+  if (parts.length !== 3 || parts[0] !== "e") return null;
+  const [, id, decision] = parts;
+  if (!id || (decision !== "approve" && decision !== "reject")) return null;
+  return { id, decision };
+}
+
+/**
  * The card text. Deliberately shows the draft in full: approving something you
  * cannot read is not approving.
  */
@@ -218,24 +238,46 @@ export async function sendText(
   });
 }
 
+/**
+ * The two-button primitive behind every approval card — the agents' queue and
+ * COCO COMMAND's journal events both end up here, whatever `callback_data`
+ * scheme they use. One request shape, so a new kind of decision never means a
+ * new way of asking Telegram to render it.
+ */
+export async function sendDecisionCard(
+  cfg: TelegramConfig,
+  text: string,
+  approveData: string,
+  rejectData: string,
+  chatId: string = cfg.chatId,
+): Promise<{ ok: boolean; detail?: string }> {
+  return call(cfg, "sendMessage", {
+    chat_id: chatId,
+    text: text.slice(0, 4000),
+    disable_web_page_preview: true,
+    reply_markup: {
+      inline_keyboard: [
+        [
+          { text: "✅ Approuver", callback_data: approveData },
+          { text: "✖️ Rejeter", callback_data: rejectData },
+        ],
+      ],
+    },
+  });
+}
+
 export async function sendApprovalCard(
   cfg: TelegramConfig,
   item: QueuedItem,
   chatId: string = cfg.chatId,
 ): Promise<{ ok: boolean; detail?: string }> {
-  return call(cfg, "sendMessage", {
-    chat_id: chatId,
-    text: formatCard(item).slice(0, 4000),
-    disable_web_page_preview: true,
-    reply_markup: {
-      inline_keyboard: [
-        [
-          { text: "✅ Approuver", callback_data: callbackData(item.id, "approve") },
-          { text: "✖️ Rejeter", callback_data: callbackData(item.id, "reject") },
-        ],
-      ],
-    },
-  });
+  return sendDecisionCard(
+    cfg,
+    formatCard(item),
+    callbackData(item.id, "approve"),
+    callbackData(item.id, "reject"),
+    chatId,
+  );
 }
 
 /* ------------------------------------------------------------------ *

@@ -77,14 +77,21 @@ export async function runCommandJob(
       "fr",
       generate ?? (async () => null),
     );
-    const { item } = await draftContent(draft, {
+    const { item, event } = await draftContent(draft, {
       content: rt.content,
       journal: rt.journal,
       agent: "content",
       now,
     });
+    // Un brouillon attend une décision : ne pas le laisser dormir jusqu'au
+    // prochain command-digest (jusqu'à 30 min) alors que la carte à boutons
+    // peut partir tout de suite.
+    const announced = await rt.notifier.announce(event, now);
+    result.sent = announced ? 1 : 0;
     result.details.push(
-      `Brouillon ${item.content_id} créé (pilier ${pillar.id}${generate ? "" : ", ANTHROPIC_API_KEY absente — habillage déterministe"}) — en attente de validation.`,
+      `Brouillon ${item.content_id} créé (pilier ${pillar.id}${generate ? "" : ", ANTHROPIC_API_KEY absente — habillage déterministe"}) — ${
+        announced ? "carte envoyée, en attente de validation." : "en attente de validation (Telegram non joignable, reste au digest)."
+      }`,
     );
     return result;
   }

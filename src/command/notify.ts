@@ -1,4 +1,4 @@
-import { chatFor, sendText, type TelegramConfig } from "@/agents/adapters/telegram";
+import { chatFor, eventCallbackData, sendDecisionCard, sendText, type TelegramConfig } from "@/agents/adapters/telegram";
 import type { Journal } from "./journal";
 import { formatDigest, formatEvent } from "./format";
 import { needsAttention, type CommandTask, type TaskStore } from "./tasks";
@@ -44,6 +44,19 @@ export function chatForEvent(cfg: TelegramConfig, event: CommandEvent): string {
   return chatFor(cfg, "project", event.venture);
 }
 
+/**
+ * Est-ce que ce message doit porter les deux boutons ?
+ *
+ * Même condition que le choix de `formatApproval` dans `formatEvent` — sinon
+ * les deux dérivent, et une carte finirait par montrer un bouton « Approuver »
+ * sur un texte d'alerte qui ne demande pas de décision. Une alerte P0 reste du
+ * texte : elle appelle une action humaine immédiate, pas un tap réversible.
+ */
+function needsDecisionButtons(event: CommandEvent): boolean {
+  if (event.priority === "P0" || event.type === "ALERT" || event.type === "ERROR") return false;
+  return event.status === "WAITING_APPROVAL" || event.needs_owner;
+}
+
 export interface Notifier {
   /** Envoie tout de suite si l'événement l'exige ; sinon le laisse au digest. */
   announce(event: CommandEvent, now: string): Promise<boolean>;
@@ -81,6 +94,23 @@ export function formatDeadlines(tasks: readonly CommandTask[]): string {
 }
 
 export function createNotifier({ telegram, journal, tasks }: NotifierDeps): Notifier {
+  /**
+   * Un seul point d'envoi pour un événement : décide lui-même s'il porte des
+   * boutons. `/approve evt_…` reste disponible en secours (le clavier, une
+   * réinstallation de Telegram, un chat sans boutons), mais approuver depuis le
+   * téléphone devient un tap, pas une saisie d'identifiant à la main.
+   */
+  const sendEvent = (cfg: TelegramConfig, event: CommandEvent, chatId: string) =>
+    needsDecisionButtons(event)
+      ? sendDecisionCard(
+          cfg,
+          formatEvent(event),
+          eventCallbackData(event.event_id, "approve"),
+          eventCallbackData(event.event_id, "reject"),
+          chatId,
+        )
+      : sendText(cfg, chatId, formatEvent(event));
+
   const watchDeadlines = async (now: string): Promise<number> => {
     if (!tasks || !telegram) return 0;
     const open = await tasks.list({ openOnly: true, limit: 200 });
@@ -96,7 +126,7 @@ export function createNotifier({ telegram, journal, tasks }: NotifierDeps): Noti
       // Sans Telegram, l'événement reste simplement non notifié : il sortira
       // dans le prochain digest ou dans `/tasks`. Jamais perdu, jamais bloquant.
       if (!telegram) return false;
-      const result = await sendText(telegram, chatForEvent(telegram, event), formatEvent(event));
+      const result = await sendEvent(telegram, event, chatForEvent(telegram, event));
       if (!result.ok) {
         console.error("coco-command: notification telegram échouée:", result.detail);
         return false;
@@ -120,7 +150,7 @@ export function createNotifier({ telegram, journal, tasks }: NotifierDeps): Noti
 
       let sent = 0;
       for (const event of urgent) {
-        const result = await sendText(telegram, chatForEvent(telegram, event), formatEvent(event));
+        const result = await sendEvent(telegram, event, chatForEvent(telegram, event));
         if (result.ok) {
           await journal.markNotified([event.event_id], now);
           sent += 1;
