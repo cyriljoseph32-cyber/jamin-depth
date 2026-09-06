@@ -11,7 +11,9 @@ Trois idées, et rien d'autre :
    journal opérationnel, *puis* est notifiée. Le journal est la source de
    vérité ; Telegram n'en est que l'affichage.
 2. **Chaque geste a un niveau.** De 0 (observer) à 4 (critique). À partir de 3,
-   rien ne part sans un `/approve` portant l'identifiant exact.
+   rien ne part sans une décision — Approuver/Rejeter d'un tap sur la carte
+   Telegram, ou `/approve`/`/reject <event_id>` en secours (clavier, chat sans
+   boutons).
 3. **Le fondateur n'est dérangé que quand c'est nécessaire.** Urgences et
    validations partent seules ; le reste attend le récapitulatif de 30 minutes.
 
@@ -40,10 +42,17 @@ agent (ici ou dans un autre dépôt)
   → urgent ?  ─ oui ─→ Telegram tout de suite (chat alertes)
               └ non ─→ file d'attente → récapitulatif groupé toutes les 30 min
   → si niveau ≥ 3 : WAITING_APPROVAL, et rien ne bouge
-  → /approve <event_id>
-      ├ action de la file plongée → release() : même chemin que le bouton ✅
+  → carte Telegram avec [ ✅ Approuver ] [ ✖️ Rejeter ]
+      (ou, si le bouton n'est pas disponible : /approve <event_id>)
+      ├ action de la file plongée → release() : même chemin que le bouton d'une carte agent
+      ├ brouillon de contenu → content passe en APPROVED / ABANDONED
       └ événement d'un autre dépôt → décision enregistrée, relue par son API
 ```
+
+Un tap et un `/approve` tapé à la main tombent dans **le même code** —
+`src/app/api/agents/telegram/route.ts` fait juste la conversion bouton → commande
+avant d'appeler `runCommand()`. Il n'y a jamais deux chemins qui pourraient
+diverger, seulement deux façons d'entrer dans le même.
 
 ## Les activités
 

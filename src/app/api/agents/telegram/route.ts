@@ -3,6 +3,7 @@ import {
   answerCallback,
   isAllowed,
   parseCallbackData,
+  parseEventCallbackData,
   readCallback,
   readMessage,
   sendText,
@@ -11,6 +12,7 @@ import {
 } from "@/agents/adapters/telegram";
 import { commandDeps, createCommandRuntime, settleJournalForQueueItem } from "@/command/runtime";
 import { parseCommand, runCommand } from "@/command/commands";
+import { formatEvent } from "@/command/format";
 
 /**
  * Telegram webhook — where an approval actually happens.
@@ -21,10 +23,14 @@ import { parseCommand, runCommand } from "@/command/commands";
  * 2. `isAllowed` proves the chat is allowed to DECIDE. A verified webhook only
  *    means Telegram sent it — it says nothing about who pressed the button.
  *
- * Two kinds of update land here: a button press on an approval card, and a
- * COCO COMMAND text command (`/today`, `/approve evt_…`). Both go through the
- * same two checks, and `/approve` ends in the same `release()` as the button —
- * one execution path, never two.
+ * Three kinds of update land here: a button press on an agents' queue card
+ * (`q:…`), a button press on a COCO COMMAND journal card (`e:…` — a content
+ * draft, a task needing approval, anything `needs_owner`), and a plain text
+ * command (`/today`, `/approve evt_…`). All three go through the same two
+ * checks, and a button press ends in exactly the code a human typing the
+ * equivalent `/approve` or `/reject` would run — one execution path per kind,
+ * never a shortcut that skips it. The point of the button is to remove the
+ * typing, not to open a second door.
  *
  * The response is always 200 once authenticated: Telegram retries otherwise, and
  * a retried approval is exactly what we do not want. The queue's conditional
@@ -83,6 +89,29 @@ export async function POST(req: Request) {
   if (!isAllowed(telegram, callback.chatId)) {
     console.error(`telegram webhook: chat ${callback.chatId} is not allowed to decide`);
     await answerCallback(telegram, callback.callbackQueryId, "Ce compte n'est pas autorisé à valider.");
+    return new Response("ok", { status: 200 });
+  }
+
+  // `e:` first: a journal event card (content, tasks…) — the same path as
+  // typing `/approve evt_…`, just without the typing.
+  const parsedEvent = parseEventCallbackData(callback.data);
+  if (parsedEvent) {
+    const eventBefore = await command.journal.get(parsedEvent.id);
+    const originalText = eventBefore ? formatEvent(eventBefore) : parsedEvent.id;
+
+    let reply: string;
+    try {
+      reply = await runCommand(
+        { name: parsedEvent.decision === "approve" ? "approve" : "reject", args: parsedEvent.id },
+        commandDeps(command, `telegram:${callback.from}`, new Date().toISOString()),
+      );
+    } catch (err) {
+      console.error(`coco-command: /${parsedEvent.decision} (bouton) a échoué:`, err);
+      reply = `⛔ ${parsedEvent.decision === "approve" ? "/approve" : "/reject"} a échoué. Rien n'a été exécuté.`;
+    }
+
+    await answerCallback(telegram, callback.callbackQueryId, reply.slice(0, 200));
+    await settleCard(telegram, callback.messageId, originalText, reply, callback.chatId);
     return new Response("ok", { status: 200 });
   }
 
