@@ -112,6 +112,10 @@ export async function POST(req: Request) {
 
     await answerCallback(telegram, callback.callbackQueryId, reply.slice(0, 200));
     await settleCard(telegram, callback.messageId, originalText, reply, callback.chatId);
+    // The toast disappears in under two seconds and Telegram never notifies on
+    // an edited message — on a phone that has moved on, both are invisible. A
+    // normal chat message is the one confirmation a tap actually leaves behind.
+    await sendText(telegram, callback.chatId, reply);
     return new Response("ok", { status: 200 });
   }
 
@@ -153,6 +157,9 @@ export async function POST(req: Request) {
   if (result.status !== "not_found" && result.status !== "already_decided") {
     await settleCard(telegram, callback.messageId, original, verdict[result.status], callback.chatId);
   }
+  // Same reasoning as the `e:` path: a toast and a silent edit are not proof of
+  // anything to someone who has already looked away — a chat message is.
+  await sendText(telegram, callback.chatId, verdict[result.status]);
 
   return new Response("ok", { status: 200 });
 }
