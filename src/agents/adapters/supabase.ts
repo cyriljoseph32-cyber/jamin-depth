@@ -66,24 +66,87 @@ class PostgrestError extends Error {
  * the same key — a second copy of this would be a second place to get the
  * headers, the `no-store` and the error handling subtly wrong.
  */
+/**
+ * Les statuts qui valent un réessai : la passerelle PostgREST n'a pas pu joindre
+ * la base ou a rendu la main trop tôt. La base elle-même n'a rien vu passer, donc
+ * rejouer la requête ne peut rien dupliquer.
+ *
+ * 429 est volontairement ABSENT : un quota dépassé ne se règle pas en insistant.
+ */
+const RETRIABLE_STATUS = new Set([502, 503, 504]);
+
+/** Deux réessais, ~300 ms puis ~600 ms. Le cron Vercel a 30 s : on tient large. */
+const MAX_ATTEMPTS = 3;
+const BASE_BACKOFF_MS = 300;
+const REQUEST_TIMEOUT_MS = 8_000;
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+/**
+ * Une écriture ne se rejoue pas à l'aveugle : un POST qui a abouti côté base mais
+ * dont la réponse s'est perdue créerait un doublon si on le rejouait. Seules les
+ * lectures sont réessayées.
+ *
+ * Exception : un `POST` d'upsert (`resolution=merge-duplicates`) est idempotent
+ * par construction — c'est exactement ce que la clause ON CONFLICT garantit — donc
+ * il est réessayable lui aussi.
+ */
+function isRetriable(options: RequestOptions): boolean {
+  const method = options.method ?? "GET";
+  if (method === "GET") return true;
+  if (method === "POST" && options.prefer?.includes("merge-duplicates")) return true;
+  return false;
+}
+
 export async function request<T>(cfg: SupabaseConfig, options: RequestOptions): Promise<T> {
   const doFetch = cfg.fetchImpl ?? fetch;
-  const res = await doFetch(`${cfg.url}/rest/v1${options.path}`, {
-    method: options.method ?? "GET",
-    headers: {
-      apikey: cfg.serviceRoleKey,
-      Authorization: `Bearer ${cfg.serviceRoleKey}`,
-      "Content-Type": "application/json",
-      ...(options.prefer ? { Prefer: options.prefer } : {}),
-    },
-    body: options.body === undefined ? undefined : JSON.stringify(options.body),
-    cache: "no-store",
-  });
+  const retriable = isRetriable(options);
+  const attempts = retriable ? MAX_ATTEMPTS : 1;
+  let lastError: unknown;
 
-  if (!res.ok) throw new PostgrestError(res.status, await res.text().catch(() => "<no body>"));
-  if (res.status === 204) return undefined as T;
-  const text = await res.text();
-  return (text.length > 0 ? JSON.parse(text) : undefined) as T;
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    // Un 504 met parfois 30 s à arriver ; sans plafond, le cron entier expire
+    // avant d'avoir pu réessayer. AbortSignal.timeout existe sur le runtime
+    // Node de Vercel comme dans vitest.
+    let res: Response;
+    try {
+      res = await doFetch(`${cfg.url}/rest/v1${options.path}`, {
+        method: options.method ?? "GET",
+        headers: {
+          apikey: cfg.serviceRoleKey,
+          Authorization: `Bearer ${cfg.serviceRoleKey}`,
+          "Content-Type": "application/json",
+          ...(options.prefer ? { Prefer: options.prefer } : {}),
+        },
+        body: options.body === undefined ? undefined : JSON.stringify(options.body),
+        cache: "no-store",
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      });
+    } catch (err) {
+      // Coupure réseau ou timeout : même traitement qu'un 504, mêmes garanties.
+      lastError = err;
+      if (!retriable || attempt === attempts) throw err;
+      await sleep(BASE_BACKOFF_MS * attempt);
+      continue;
+    }
+
+    if (res.ok || res.status === 204) {
+      if (res.status === 204) return undefined as T;
+      const text = await res.text();
+      return (text.length > 0 ? JSON.parse(text) : undefined) as T;
+    }
+
+    const detail = await res.text().catch(() => "<no body>");
+    lastError = new PostgrestError(res.status, detail);
+
+    // Une 4xx ne s'arrangera pas en réessayant : on remonte tout de suite.
+    if (!retriable || !RETRIABLE_STATUS.has(res.status) || attempt === attempts) {
+      throw lastError;
+    }
+    await sleep(BASE_BACKOFF_MS * attempt);
+  }
+
+  throw lastError;
 }
 
 /** PostgREST filter-safe encoding for a value used in `col=eq.<value>`. */
