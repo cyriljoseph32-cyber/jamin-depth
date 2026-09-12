@@ -70,6 +70,14 @@ export function readIngestEvent(body: unknown): IngestResult {
   const url = str(raw.reference_url);
   if (url && !/^https?:\/\//i.test(url)) problems.push("reference_url : http(s) uniquement");
 
+  // Les coordonnées de la personne concernée, facultatives : la plupart des
+  // événements n'en portent pas. Quand elles sont là, elles alimentent la fiche
+  // unique (voir `people.ts`) — c'est ce qui fait qu'une personne écrivant sur
+  // deux canaux ne compte qu'une fois.
+  if (raw.contact !== undefined && (typeof raw.contact !== "object" || raw.contact === null || Array.isArray(raw.contact))) {
+    problems.push("contact : objet { name?, email?, phone?, handle? }");
+  }
+
   if (problems.length > 0) return { ok: false, problems };
 
   const needsOwner = raw.needs_owner === true;
@@ -104,6 +112,12 @@ export function readIngestEvent(body: unknown): IngestResult {
       reference_id: str(raw.reference_id) ?? undefined,
       error_message: str(raw.error_message) ?? undefined,
       repo: str(raw.repo) ?? undefined,
+
+      // Repris tels quels : `people.ts` est seul juge de ce qui constitue une
+      // identité exploitable, et rejette ce qui n'en est pas une.
+      contact: (raw.contact as CommandEventInput["contact"]) ?? undefined,
+      channel: str(raw.channel) ?? undefined,
+      source: str(raw.source) ?? undefined,
     },
   };
 }
