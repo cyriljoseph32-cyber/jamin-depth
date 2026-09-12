@@ -169,6 +169,7 @@ interface LeadRow {
   party_size: number | null;
   certified: boolean | null;
   stage: string;
+  opted_out: boolean | null;
   sensitive_topics: string[] | null;
   follow_ups: number;
   last_follow_up_at: string | null;
@@ -189,6 +190,7 @@ function toLead(row: LeadRow): Lead {
     partySize: row.party_size ?? undefined,
     certified: row.certified ?? undefined,
     stage: row.stage as LeadStage,
+    optedOut: row.opted_out ?? undefined,
     sensitiveTopics: (row.sensitive_topics ?? []) as SensitiveTopic[],
     followUps: row.follow_ups,
     lastFollowUpAt: row.last_follow_up_at ?? undefined,
@@ -210,6 +212,9 @@ function fromLead(lead: Lead): LeadRow {
     party_size: lead.partySize ?? null,
     certified: lead.certified ?? null,
     stage: lead.stage,
+    // Jamais `null` : la colonne est `not null default false`, et un refus qui
+    // se perdrait en base rouvrirait exactement la porte que R1 a fermée.
+    opted_out: lead.optedOut === true,
     sensitive_topics: lead.sensitiveTopics,
     follow_ups: lead.followUps,
     last_follow_up_at: lead.lastFollowUpAt ?? null,

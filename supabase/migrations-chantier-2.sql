@@ -33,3 +33,18 @@ create index if not exists leads_ventures_idx      on public.leads using gin (ve
 -- En garder une de chaque suffit ; l'autre coûte de l'écriture à chaque insert.
 drop index if exists public.command_kpis_metric_idx;
 drop index if exists public.command_tasks_status_idx;
+
+-- ─────────────────────────────────────────────────────────────
+-- Chantier 3 — le refus, rendu indélébile
+--
+-- `opted_out` double le stade `lost`. Les deux disent la même chose, et c'est
+-- voulu : le jour où un stade est mal écrit par un chemin qu'on n'avait pas
+-- prévu, il reste un drapeau que rien ne remet à faux. R1 (relance après refus)
+-- a coûté assez cher pour mériter cette redondance.
+alter table public.leads
+  add column if not exists opted_out boolean not null default false;
+
+-- La requête des relances écarte les refus d'entrée de jeu.
+create index if not exists leads_relançables_idx
+  on public.leads (stage, opted_out)
+  where opted_out = false;

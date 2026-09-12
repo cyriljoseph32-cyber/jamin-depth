@@ -1,6 +1,7 @@
 import type { Activity, Channel, Contact, MessageDraft, Priority, SensitiveTopic } from "../types";
 import { CHANNELS, AVAILABILITY } from "../config";
 import type { Clock } from "../audit";
+import { TERMINAL_STAGES } from "../refusal";
 import { systemClock } from "../audit";
 
 /**
@@ -97,6 +98,12 @@ export interface Lead {
   partySize?: number;
   certified?: boolean;
   stage: LeadStage;
+  /**
+   * Refus explicite. Sticky par conception : aucun message entrant, aucun
+   * import, aucun upsert ne peut le remettre à `false` — seule une décision
+   * humaine rouvre la porte. C'est la garantie qui manquait à R1.
+   */
+  optedOut?: boolean;
   sensitiveTopics: SensitiveTopic[];
   /** Follow-ups already sent — capped by `FOLLOW_UP.maxPerLead`. */
   followUps: number;
@@ -179,7 +186,17 @@ export function mergeLead(existing: Lead, input: LeadUpsert, now: string): Lead 
     dates: input.dates.length > 0 ? input.dates : existing.dates,
     partySize: input.partySize ?? existing.partySize,
     certified: input.certified ?? existing.certified,
-    stage: input.stage,
+
+    // Un dossier fermé ne se rouvre pas tout seul.
+    //
+    // Avant ce garde-fou, `stage: input.stage` écrasait tout : un lead passé en
+    // `lost` après un refus redevenait `new` au premier événement suivant le
+    // mentionnant — et repartait dans la file des relances. C'est précisément
+    // le scénario R1. L'ingestion inter-projets, qui upsert avec `stage: "new"`
+    // à chaque événement, l'aurait déclenché quotidiennement.
+    stage: TERMINAL_STAGES.has(existing.stage) ? existing.stage : input.stage,
+    // Le refus ne s'annule jamais par accumulation de données.
+    optedOut: existing.optedOut === true ? true : input.optedOut,
     sensitiveTopics: [...new Set([...existing.sensitiveTopics, ...input.sensitiveTopics])],
     locale: input.locale,
     updatedAt: now,
