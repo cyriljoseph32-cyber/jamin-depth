@@ -1,0 +1,45 @@
+# CI — chantier 4.1
+#
+# 35 fichiers de tests (428 cas) vivaient dans le dépôt sans jamais tourner
+# nulle part. Une règle qui n'est vérifiée par personne finit par être fausse :
+# celles-ci couvrent les niveaux A0→A4, la politique d'envoi et les relances.
+# À partir d'ici, une PR qui les casse ne se fond plus dans main.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # Trois vérifications, du moins cher au plus cher. Elles tournent toutes
+      # même si la première échoue : un seul passage de CI doit donner la liste
+      # complète de ce qui ne va pas, pas la première erreur rencontrée.
+      - name: Types
+        run: npm run typecheck
+
+      - name: Lint
+        if: ${{ !cancelled() }}
+        run: npm run lint
+
+      - name: Tests
+        if: ${{ !cancelled() }}
+        run: npm test

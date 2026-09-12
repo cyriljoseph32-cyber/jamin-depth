@@ -13,7 +13,9 @@
     "test:watch": "vitest",
     "e2e": "playwright test",
     "brand:logo": "node scripts/build-logo.mjs",
-    "media:import": "node scripts/import-photo.mjs"
+    "media:import": "node scripts/import-photo.mjs",
+    "activate": "node scripts/activate.mjs",
+    "import:leads": "node scripts/import-leads.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.68.0",
