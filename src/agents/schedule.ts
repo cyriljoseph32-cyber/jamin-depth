@@ -1,6 +1,8 @@
 import type { Locale } from "@/content/i18n";
 import { FOLLOW_UP } from "./config";
 import { auditDraft, requiresHumanApproval } from "./policy";
+import { isOptedOut } from "./refusal";
+import { isLoopEnabled } from "./loops";
 import { render } from "./templates";
 import { nextDayBrief } from "./roles/booking";
 import { weeklyReport } from "./roles/ops";
@@ -65,6 +67,11 @@ export function dueFollowUps(leads: readonly Lead[], now: string): { lead: Lead;
   const due: { lead: Lead; attempt: 1 | 2 }[] = [];
 
   for (const lead of leads) {
+    // Ceinture ET bretelles sur le refus : `lost` n'est plus chaseable, mais on
+    // vérifie aussi le drapeau. Les deux disent la même chose ; le jour où un
+    // stage est mal écrit quelque part, il en reste un qui tient. R1 a coûté
+    // assez cher pour mériter la redondance.
+    if (isOptedOut(lead)) continue;
     if (!CHASEABLE.has(lead.stage)) continue;
     if (lead.sensitiveTopics.length > 0) continue;
     if (lead.followUps >= FOLLOW_UP.maxPerLead) continue;
@@ -143,6 +150,15 @@ async function gateAndDispatch(
 
 async function runFollowUps(deps: JobDeps): Promise<JobResult> {
   const result: JobResult = { job: "follow-ups", details: [], queued: 0, executed: 0, skipped: 0 };
+
+  // La boucle B2 s'allume explicitement (`LOOPS_ENABLED`), conformément au
+  // « une boucle par semaine » du plan. Éteinte par défaut : un déploiement ne
+  // doit jamais réveiller tout seul une mécanique qui écrit à des clients.
+  if (!isLoopEnabled("B2")) {
+    result.details.push("Boucle B2 (relances) éteinte — LOOPS_ENABLED ne la contient pas.");
+    result.skipped += 1;
+    return result;
+  }
 
   if (inQuietHours(deps.now)) {
     result.details.push("Heures calmes (21 h–8 h, Asia/Bangkok) : aucune relance.");

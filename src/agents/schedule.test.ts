@@ -1,9 +1,24 @@
-import { describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createAuditLog } from "./audit";
 import { createMockPorts, type Lead, type MessagingPort } from "./adapters";
 import { createApprovalQueue } from "./queue";
 import { dueFollowUps, runJob, tomorrowInBangkok, weekStartInBangkok } from "./schedule";
 import type { MessageDraft } from "./types";
+
+/**
+ * La boucle B2 est éteinte par défaut depuis le chantier 3 : un déploiement ne
+ * doit jamais réveiller tout seul une mécanique qui écrit à des clients. Ces
+ * tests portent sur le comportement de la boucle allumée, donc ils l'allument.
+ * Le cas « éteinte » a son propre test dans loops.test.ts.
+ */
+const PREVIOUS_LOOPS = process.env.LOOPS_ENABLED;
+beforeAll(() => {
+  process.env.LOOPS_ENABLED = "B2";
+});
+afterAll(() => {
+  if (PREVIOUS_LOOPS === undefined) delete process.env.LOOPS_ENABLED;
+  else process.env.LOOPS_ENABLED = PREVIOUS_LOOPS;
+});
 
 /** 09:00 UTC = 16:00 in Bangkok — inside working hours. */
 const NOW = "2026-03-11T09:00:00.000Z";

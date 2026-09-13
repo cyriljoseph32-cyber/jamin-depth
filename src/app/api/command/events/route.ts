@@ -1,7 +1,9 @@
 import { timingSafeEqual } from "node:crypto";
 import { priorities, readIngestEvent } from "@/command/ingest";
+import { personFromEvent } from "@/command/people";
 import { createCommandRuntime } from "@/command/runtime";
 import { isVenture } from "@/command/types";
+import { createSupabaseCrm, supabaseFromEnv } from "@/agents/adapters/supabase";
 
 /**
  * L'entrée du journal pour les autres projets.
@@ -35,6 +37,40 @@ function authorised(req: Request): boolean {
   return timingSafeEqual(a, b);
 }
 
+/**
+ * Rattache l'événement à une personne, si tant est qu'il en porte une.
+ *
+ * Ne lève jamais : un lead entrant qui n'aboutit pas à une fiche doit laisser
+ * une trace lisible dans les logs, pas faire échouer l'ingestion du projet
+ * émetteur. Rend la clé de déduplication, ou `undefined`.
+ */
+async function upsertPerson(event: Parameters<typeof personFromEvent>[0]): Promise<string | undefined> {
+  const seed = personFromEvent(event);
+  if (!seed) return undefined;
+
+  const cfg = supabaseFromEnv();
+  if (!cfg) {
+    console.warn("coco-command: personne non enregistrée (Supabase non configuré):", seed.key);
+    return seed.key;
+  }
+
+  try {
+    const crm = createSupabaseCrm(cfg);
+    await crm.upsert({
+      contact: seed.contact,
+      channel: seed.channel,
+      locale: "fr",
+      dates: [],
+      stage: "new",
+      sensitiveTopics: [],
+    });
+    return seed.key;
+  } catch (err) {
+    console.error("coco-command: upsert personne échoué pour", seed.key, err);
+    return undefined;
+  }
+}
+
 export async function POST(req: Request) {
   if (!authorised(req)) return new Response("unauthorized", { status: 401 });
 
@@ -54,6 +90,14 @@ export async function POST(req: Request) {
   try {
     const event = await rt.journal.append(parsed.event, now);
     const notified = await rt.notifier.announce(event, now);
+
+    // Chantier 2 — la fiche personne, dérivée de l'événement.
+    //
+    // Délibérément APRÈS le journal et hors du chemin d'échec : le journal est
+    // la source de vérité, la fiche en est une vue. Si l'upsert échoue, on perd
+    // une ligne reconstructible, pas l'événement — l'inverse serait inacceptable.
+    const person = await upsertPerson(parsed.event);
+
     return Response.json(
       {
         event_id: event.event_id,
@@ -61,6 +105,9 @@ export async function POST(req: Request) {
         level: event.level,
         notified,
         persistent: rt.persistent,
+        // L'émetteur apprend sous quelle identité la personne a été rattachée,
+        // ce qui lui permet de recouper de son côté sans nous réinterroger.
+        person_key: person,
       },
       { status: 202 },
     );

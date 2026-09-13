@@ -1,6 +1,7 @@
 import { FOLLOW_UP } from "./config";
 import { auditDraft } from "./policy";
 import { contactKey, type Ports } from "./adapters";
+import { detectRefusal, isOptedOut } from "./refusal";
 import type { EventKind, InboundEvent, LeadSignals, ProposedAction } from "./types";
 import { hasHardStop } from "./policy";
 import type { LeadStage } from "./adapters";
@@ -33,8 +34,15 @@ export interface ExecuteResult {
   reason?: string;
 }
 
-export function stageFor(kind: EventKind | undefined, signals: LeadSignals | undefined): LeadStage {
+export function stageFor(
+  kind: EventKind | undefined,
+  signals: LeadSignals | undefined,
+  message?: string,
+): LeadStage {
   if (signals && hasHardStop(signals.sensitiveTopics)) return "escalated";
+  // Un refus prime sur tout le reste : quelqu'un qui écrit « ne me recontactez
+  // plus » en demandant le prix d'un baptême n'est pas un lead qualifié.
+  if (message && detectRefusal(message).refused) return "lost";
   if (kind === "booking") return "awaiting_partner";
   if (signals?.activity !== undefined) return "qualified";
   return "new";
@@ -51,6 +59,22 @@ export async function executeAction(action: ProposedAction, ctx: ExecuteContext)
     case "supplier_message":
     case "reply_review": {
       if (!action.draft) return { ok: true };
+
+      // Dernier verrou avant la sortie : cette personne a-t-elle dit non ?
+      //
+      // Il est ici, et pas seulement dans `dueFollowUps()`, parce que c'est le
+      // seul point par lequel TOUT message sortant passe — relance de cadence,
+      // approche partenaire, brouillon validé la veille, action dépilée de la
+      // file. Un brouillon peut attendre des heures en validation ; si le refus
+      // arrive entre-temps, c'est ici qu'on l'arrête. C'est la garde qui a
+      // manqué le 11/08 et le 24/08 (risque R1).
+      const recipient = action.draft.to;
+      if (recipient) {
+        const lead = await ports.crm.find(contactKey(recipient, action.draft.channel));
+        if (lead && isOptedOut(lead)) {
+          return { ok: false, reason: "opted-out: la personne a refusé, aucun envoi" };
+        }
+      }
 
       // The guard runs again here. A draft can sit in the queue for hours, and
       // the catalogue or the confirmed policies may have changed underneath it.
@@ -74,7 +98,10 @@ export async function executeAction(action: ProposedAction, ctx: ExecuteContext)
         dates: signals?.dates ?? [],
         partySize: signals?.partySize,
         certified: signals?.certified,
-        stage: stageFor(ctx.kind, signals),
+        stage: stageFor(ctx.kind, signals, event.text),
+        // Le refus est porté explicitement, en plus du stade : `mergeLead` le
+        // rend collant, donc plus aucun upsert ultérieur ne peut l'effacer.
+        optedOut: detectRefusal(event.text ?? "").refused || undefined,
         sensitiveTopics: signals?.sensitiveTopics ?? [],
       });
       return { ok: true };

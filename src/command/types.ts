@@ -192,6 +192,20 @@ export type CommandEventInput = Omit<
   Partial<Pick<CommandEvent, "event_id" | "timestamp" | "level">> & {
     /** Type d'action sous-jacent, quand il y en a un : il donne le niveau. */
     action_type?: ActionType;
+
+    /* --- identité de la personne concernée (chantier 2) --------------- *
+     * Ces trois champs ne sont PAS stockés dans `command_events` : ils ne
+     * servent qu'au rattachement à une fiche unique (`people.ts`), qui décide
+     * seul de ce qui constitue une identité exploitable. Garder les
+     * coordonnées hors du journal évite d'en éparpiller des copies dans une
+     * table qui, elle, part en notification Telegram.                     */
+
+    /** Coordonnées de la personne, quand l'événement en porte une. */
+    contact?: { name?: string; handle?: string; phone?: string; email?: string };
+    /** Canal d'origine, parmi `channels` — validé en aval. */
+    channel?: string;
+    /** D'où vient la personne : page, formulaire, campagne. */
+    source?: string;
   };
 
 const BANGKOK_OFFSET_MS = 7 * 3_600_000;

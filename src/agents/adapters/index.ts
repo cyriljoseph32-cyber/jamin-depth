@@ -1,6 +1,7 @@
 import type { Activity, Channel, Contact, MessageDraft, Priority, SensitiveTopic } from "../types";
 import { CHANNELS, AVAILABILITY } from "../config";
 import type { Clock } from "../audit";
+import { TERMINAL_STAGES } from "../refusal";
 import { systemClock } from "../audit";
 
 /**
@@ -97,6 +98,12 @@ export interface Lead {
   partySize?: number;
   certified?: boolean;
   stage: LeadStage;
+  /**
+   * Refus explicite. Sticky par conception : aucun message entrant, aucun
+   * import, aucun upsert ne peut le remettre à `false` — seule une décision
+   * humaine rouvre la porte. C'est la garantie qui manquait à R1.
+   */
+  optedOut?: boolean;
   sensitiveTopics: SensitiveTopic[];
   /** Follow-ups already sent — capped by `FOLLOW_UP.maxPerLead`. */
   followUps: number;
@@ -117,9 +124,42 @@ export type LeadUpsert = Omit<Lead, "id" | "key" | "createdAt" | "updatedAt" | "
  * writes on Instagram and then on WhatsApp from the same number is one lead —
  * that de-duplication is what stops a visitor getting two different answers.
  */
+/**
+ * L'indicatif supposé quand un numéro arrive au format local.
+ *
+ * Choix assumé : l'activité est à Koh Samui et les clients qui écrivent depuis
+ * l'île tapent leur numéro en local (`081 234 5678`). Les contacts français,
+ * eux, écrivent depuis l'étranger et donnent presque toujours l'international
+ * (`+33 6 …`), forme que l'on reconnaît telle quelle.
+ *
+ * La limite est réelle et vaut d'être connue : un numéro français saisi en
+ * local (`0612345678`) serait lu comme thaï. On accepte ce risque parce que le
+ * cas ne se présente pas dans le sens où arrivent les leads — mais si un jour
+ * l'activité bascule en France, c'est cette constante qu'il faut changer.
+ */
+const DEFAULT_COUNTRY_CODE = "66";
+
+/**
+ * Ramène un numéro à sa forme comparable.
+ *
+ * Sans cela, `+66 81 234 5678` (WhatsApp) et `081 234 5678` (formulaire) sont
+ * deux personnes différentes pour le système — alors que c'est le cas le plus
+ * courant à Samui : le même client écrit d'abord sur WhatsApp, puis remplit le
+ * formulaire en tapant son numéro comme il le fait tous les jours.
+ */
+export function normalisePhone(raw: string): string | null {
+  let digits = raw.replace(/[^\d]/g, "");
+  if (digits.length === 0) return null;
+  // `00` est le préfixe international composé à la main : équivalent de `+`.
+  if (digits.startsWith("00")) digits = digits.slice(2);
+  // Format local : un 0 initial remplace l'indicatif pays.
+  else if (digits.startsWith("0")) digits = DEFAULT_COUNTRY_CODE + digits.replace(/^0+/, "");
+  return digits.length >= 8 ? digits : null;
+}
+
 export function contactKey(contact: Contact, channel: Channel): string {
-  const phone = contact.phone?.replace(/[^\d]/g, "");
-  if (phone && phone.length >= 8) return `phone:${phone}`;
+  const phone = contact.phone ? normalisePhone(contact.phone) : null;
+  if (phone) return `phone:${phone}`;
   const email = contact.email?.trim().toLowerCase();
   if (email) return `email:${email}`;
   const handle = contact.handle?.trim().toLowerCase();
@@ -146,7 +186,17 @@ export function mergeLead(existing: Lead, input: LeadUpsert, now: string): Lead 
     dates: input.dates.length > 0 ? input.dates : existing.dates,
     partySize: input.partySize ?? existing.partySize,
     certified: input.certified ?? existing.certified,
-    stage: input.stage,
+
+    // Un dossier fermé ne se rouvre pas tout seul.
+    //
+    // Avant ce garde-fou, `stage: input.stage` écrasait tout : un lead passé en
+    // `lost` après un refus redevenait `new` au premier événement suivant le
+    // mentionnant — et repartait dans la file des relances. C'est précisément
+    // le scénario R1. L'ingestion inter-projets, qui upsert avec `stage: "new"`
+    // à chaque événement, l'aurait déclenché quotidiennement.
+    stage: TERMINAL_STAGES.has(existing.stage) ? existing.stage : input.stage,
+    // Le refus ne s'annule jamais par accumulation de données.
+    optedOut: existing.optedOut === true ? true : input.optedOut,
     sensitiveTopics: [...new Set([...existing.sensitiveTopics, ...input.sensitiveTopics])],
     locale: input.locale,
     updatedAt: now,
