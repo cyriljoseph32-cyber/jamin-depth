@@ -1,5 +1,6 @@
 import { anthropicDraftGenerator } from "@/agents/adapters/anthropic-content";
 import { chatFor, sendText } from "@/agents/adapters/telegram";
+import { isLoopEnabled } from "@/agents/loops";
 import { CONTENT_PILLARS } from "@/agents/roles/content";
 import { buildEveningReport, buildMorningBrief, buildWeeklyReport } from "./brief";
 import { composeDivingDraft, pillarForDay } from "./content-draft";
@@ -70,6 +71,15 @@ export async function runCommandJob(
   }
 
   if (job === "coco-contenu") {
+    // Le propriétaire a repris la publication à la main (2026-09) : générer un
+    // brouillon chaque matin sans qu'on lui demande n'était plus un service,
+    // c'était du bruit. Même interrupteur que B2 — B4 s'allume avec
+    // `LOOPS_ENABLED`, jamais tout seul au déploiement.
+    if (!isLoopEnabled("B4")) {
+      result.details.push("Boucle B4 (contenu quotidien) éteinte — LOOPS_ENABLED ne la contient pas.");
+      return result;
+    }
+
     const pillar = pillarForDay(now, CONTENT_PILLARS);
     const generate = anthropicDraftGenerator();
     const draft = await composeDivingDraft(
