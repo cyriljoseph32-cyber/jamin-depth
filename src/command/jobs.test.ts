@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import type { TelegramConfig } from "@/agents/adapters/telegram";
 import type { Runtime } from "@/agents/runtime";
 import { createJournal } from "./journal";
@@ -13,9 +13,24 @@ import type { CommandRuntime } from "./runtime";
  * path goes out the moment it is created. These tests lock in that it no
  * longer does, and that the card it sends carries the two buttons rather than
  * a bare `/approve evt_…` a human has to retype on a phone.
+ *
+ * Since 2026-09 it is also gated behind loop B4 (`LOOPS_ENABLED`), off by
+ * default — the owner took publishing back by hand, and a silent daily draft
+ * nobody asked for is noise, not a service. Most tests here turn B4 on to
+ * exercise the behaviour above; the "off by default" test does not.
  */
 
 const NOW = "2026-08-24T01:15:00.000Z";
+
+const PREVIOUS_LOOPS = process.env.LOOPS_ENABLED;
+beforeAll(() => {
+  process.env.LOOPS_ENABLED = "B4";
+});
+afterAll(() => {
+  if (PREVIOUS_LOOPS === undefined) delete process.env.LOOPS_ENABLED;
+  else process.env.LOOPS_ENABLED = PREVIOUS_LOOPS;
+});
+
 
 function harness() {
   const clock = () => NOW;
@@ -97,5 +112,22 @@ describe("runCommandJob('coco-contenu')", () => {
     expect(result.sent).toBe(0);
     expect(result.details.join(" ")).toMatch(/reste au digest/);
     expect(await content.list({ status: "WAITING_APPROVAL" })).toHaveLength(1);
+  });
+
+  it("stays off by default — no draft, no card, until LOOPS_ENABLED names B4", async () => {
+    const previous = process.env.LOOPS_ENABLED;
+    delete process.env.LOOPS_ENABLED;
+    try {
+      const { rt, content, calls } = harness();
+      const result = await runCommandJob("coco-contenu", rt, NOW);
+
+      expect(result.sent).toBe(0);
+      expect(calls).toHaveLength(0);
+      expect(result.details.join(" ")).toMatch(/Boucle B4.*éteinte/);
+      expect(await content.list({ status: "WAITING_APPROVAL" })).toHaveLength(0);
+    } finally {
+      if (previous === undefined) delete process.env.LOOPS_ENABLED;
+      else process.env.LOOPS_ENABLED = previous;
+    }
   });
 });
