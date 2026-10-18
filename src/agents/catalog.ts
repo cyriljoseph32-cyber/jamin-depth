@@ -84,6 +84,16 @@ export const OFFERS: readonly Offer[] = [
     source: PARTNER_SOURCE,
   },
   {
+    id: "sail_rock_discovery",
+    activity: "discover_scuba",
+    name: { fr: "Baptême à Sail Rock", en: "Discover Scuba Diving at Sail Rock" },
+    fromPriceTHB: 5850,
+    duration: { fr: "1 journée", en: "1 day" },
+    requiresCertification: false,
+    equipmentIncluded: true,
+    source: PARTNER_SOURCE,
+  },
+  {
     id: "koh_tao",
     activity: "certified_fun_dive",
     name: { fr: "Sortie Koh Tao (2 plongées)", en: "Koh Tao day trip (2 dives)" },

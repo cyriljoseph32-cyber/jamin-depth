@@ -332,11 +332,12 @@ export const en = {
     tripsKicker: "Already certified?",
     tripsTitle: "Fun dives & day trips.",
     tripsIntro:
-      "Got your card? Jump on the boat with Discovery Divers to the region's best water — the famous Sail Rock pinnacle, Koh Tao and Chumphon — or just come along to snorkel.",
+      "Got your card? Jump on the boat with Discovery Divers to the region's best water — the famous Sail Rock pinnacle, Koh Tao and Chumphon — or just come along to snorkel. Not certified yet? Sail Rock is also open as a Discover Scuba Diving trip.",
     tripsNote:
       "Prices are per person with Discovery Divers — equipment included, subject to change and confirmed at booking.",
     trips: [
       { name: "Sail Rock", detail: "Fun dive", price: "฿4,550" },
+      { name: "Sail Rock", detail: "Discover Scuba Diving, no certification needed", price: "฿5,850" },
       { name: "Koh Tao", detail: "2 dives", price: "฿4,850" },
       { name: "Chumphon Pinnacle", detail: "Certified divers", price: "฿5,050" },
       { name: "Snorkelling", detail: "All sites", price: "฿2,450" },

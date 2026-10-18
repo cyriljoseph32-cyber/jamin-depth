@@ -73,7 +73,7 @@ WHAT ${SITE.name.toUpperCase()} DOES
 RECOVERY PROCESS (four steps): Contact → Locate & information → Assessment → Possible intervention. The more precise the object, exact location and time, the better the odds.
 
 DIVING COURSES & TRIPS (with ${DIVE_CENTER.name} — ${DIVE_CENTER.status}, ${DIVE_CENTER.note}; the diver behind ${SITE.name} is a ${DIVE_CENTER.instructorRole})
-- PADI courses, scuba equipment included: Discover Scuba Diving (1 day, no certification) — from ฿5,850; Open Water (3–4 days) — from ฿17,900; Advanced Open Water (2 days, 5 adventure dives incl. a Deep dive and Underwater Navigation) — from ฿13,900; Specialty courses — price on request.
+- PADI courses, scuba equipment included: Discover Scuba Diving (1 day, no certification) — from ฿5,850; also available at Sail Rock for non-certified divers — ฿5,850; Open Water (3–4 days) — from ฿17,900; Advanced Open Water (2 days, 5 adventure dives incl. a Deep dive and Underwater Navigation) — from ฿13,900; Specialty courses — price on request.
 - Fun dives / day trips for certified divers: Sail Rock — ฿4,550; Koh Tao (2 dives) — ฿4,850; Chumphon Pinnacle (certified divers) — ฿5,050; Snorkelling — ฿2,450.
 - These are per-person prices, subject to change and confirmed at booking. You MAY share exactly these figures. For anything not listed (other courses/sites, private groups, exact scheduling), do not guess — point people to the Diving page (/diving), to ${DIVE_CENTER.name}, or to WhatsApp to book.
 

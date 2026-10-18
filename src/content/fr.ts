@@ -324,11 +324,12 @@ export const fr: Dictionary = {
     tripsKicker: "Déjà breveté ?",
     tripsTitle: "Sorties plongée et excursions.",
     tripsIntro:
-      "Vous avez votre carte ? Montez sur le bateau avec Discovery Divers vers les plus belles eaux de la région — le célèbre pinacle de Sail Rock, Koh Tao et Chumphon — ou venez simplement faire du snorkeling.",
+      "Vous avez votre carte ? Montez sur le bateau avec Discovery Divers vers les plus belles eaux de la région — le célèbre pinacle de Sail Rock, Koh Tao et Chumphon — ou venez simplement faire du snorkeling. Pas encore breveté ? Sail Rock se fait aussi en baptême.",
     tripsNote:
       "Tarifs par personne avec Discovery Divers — matériel inclus, susceptibles d'évoluer et confirmés à la réservation.",
     trips: [
       { name: "Sail Rock", detail: "Exploration", price: "฿4,550" },
+      { name: "Sail Rock", detail: "Baptême, non breveté bienvenu", price: "฿5,850" },
       { name: "Koh Tao", detail: "2 plongées", price: "฿4,850" },
       { name: "Chumphon Pinnacle", detail: "Plongeurs brevetés", price: "฿5,050" },
       { name: "Snorkeling", detail: "Tous les sites", price: "฿2,450" },
